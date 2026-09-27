@@ -29,7 +29,7 @@ npm run dev
 ```
 
 - Сайт: http://localhost:3000 (откроется `/ru`).
-- Админка: http://localhost:3000/admin. Письма со ссылкой для входа локально не уходят на почту — они в Mailpit: http://127.0.0.1:54324.
+- Админка: http://localhost:3000/admin (объекты, заявки, статистика, импорт). Письма со ссылкой для входа локально не уходят на почту — они в Mailpit: http://127.0.0.1:54324.
 - Панель базы (Supabase Studio): http://127.0.0.1:54323.
 
 Облачный Supabase и Vercel — в [docs/SETUP.md](docs/SETUP.md).
@@ -64,6 +64,9 @@ src/lib/           логика (getUpcomingWeekend и др.) и её тесты
 src/app/admin/     админка (/admin, только русский)
 src/lib/places/    справочники и проверка полей объекта (форма и CSV)
 src/lib/supabase/  клиенты Supabase и типы базы
+src/lib/leads/     проверка заявки, статусы, текст для Telegram
+src/lib/go.ts      ссылки /api/go/... (учёт кликов WhatsApp, звонка, Instagram)
+src/app/api/       маршруты: счётчик вариантов, клики, просмотры
 src/proxy.ts       редирект на язык (/ → /ru), сессия админки
 supabase/          миграции SQL и настройки локального Supabase
 scripts/seed.ts    тестовые данные

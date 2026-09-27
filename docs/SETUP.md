@@ -71,6 +71,22 @@ npx supabase db push
 
 ---
 
+## 2а. Telegram: уведомления о заявках (Этап 4)
+
+О каждой новой заявке сайт пишет в Telegram админу. Нужны бот и номер твоего чата.
+
+1. В Telegram открой [@BotFather](https://t.me/BotFather) → `/newbot` → придумай имя и логин бота (должен кончаться на `bot`).
+2. BotFather пришлёт токен вида `123456789:AA...` — это `TELEGRAM_BOT_TOKEN`. Никому его не показывай.
+3. Найди своего бота по логину и нажми **Start** (бот не может писать тому, кто ему ни разу не писал).
+4. Открой в браузере `https://api.telegram.org/bot<ТОКЕН>/getUpdates` (вместо `<ТОКЕН>` — токен из п. 2). В ответе найди `"chat":{"id":123456789` — это число и есть `ADMIN_TELEGRAM_CHAT_ID`.
+   - Хочешь получать заявки в группу: добавь бота в группу, напиши там любое сообщение и снова открой ссылку — id группы начинается с минуса (`-100...`).
+5. Впиши оба значения в `.env.local` и в Vercel → Settings → Environment Variables, затем сделай Redeploy.
+6. Заполни и `NEXT_PUBLIC_SITE_URL` (адрес сайта) — тогда в сообщении будет ссылка на список заявок.
+
+Если переменные не заданы, заявки всё равно сохраняются и видны в админке (`/admin/leads`), просто без сообщения в Telegram.
+
+---
+
 ## 3. Локальный запуск на своём компьютере
 
 ```bash
@@ -90,15 +106,15 @@ npm run dev
 
 ## Куда какой ключ
 
-| Переменная                             | Где взять                                             | Этап |
-| -------------------------------------- | ----------------------------------------------------- | ---- |
-| `NEXT_PUBLIC_SITE_NAME`                | Название сайта, по умолчанию «Демалыс»                | 0    |
-| `NEXT_PUBLIC_SUPABASE_URL`             | Supabase → Project Settings → Data API → Project URL  | 1    |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase → Project Settings → API Keys → Publishable  | 1    |
-| `SUPABASE_SECRET_KEY`                  | Supabase → Project Settings → API Keys → Secret       | 1    |
-| `ADMIN_EMAILS`                         | Твои email через запятую                              | 1    |
-| `TELEGRAM_BOT_TOKEN`                   | @BotFather в Telegram (инструкция будет на Этапе 4–5) | 4–5  |
-| `TELEGRAM_WEBHOOK_SECRET`              | Любая длинная случайная строка                        | 5    |
-| `ADMIN_TELEGRAM_CHAT_ID`               | Инструкция будет на Этапе 4                           | 4    |
-| `NEXT_PUBLIC_SITE_URL`                 | Адрес сайта на Vercel или свой домен                  | 6    |
-| `NEXT_PUBLIC_YANDEX_METRIKA_ID`        | Яндекс Метрика (инструкция будет на Этапе 6)          | 6    |
+| Переменная                             | Где взять                                            | Этап |
+| -------------------------------------- | ---------------------------------------------------- | ---- |
+| `NEXT_PUBLIC_SITE_NAME`                | Название сайта, по умолчанию «Демалыс»               | 0    |
+| `NEXT_PUBLIC_SUPABASE_URL`             | Supabase → Project Settings → Data API → Project URL | 1    |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase → Project Settings → API Keys → Publishable | 1    |
+| `SUPABASE_SECRET_KEY`                  | Supabase → Project Settings → API Keys → Secret      | 1    |
+| `ADMIN_EMAILS`                         | Твои email через запятую                             | 1    |
+| `TELEGRAM_BOT_TOKEN`                   | @BotFather в Telegram, см. раздел 2а                 | 4–5  |
+| `TELEGRAM_WEBHOOK_SECRET`              | Любая длинная случайная строка                       | 5    |
+| `ADMIN_TELEGRAM_CHAT_ID`               | См. раздел 2а                                        | 4    |
+| `NEXT_PUBLIC_SITE_URL`                 | Адрес сайта на Vercel или свой домен                 | 4, 6 |
+| `NEXT_PUBLIC_YANDEX_METRIKA_ID`        | Яндекс Метрика (инструкция будет на Этапе 6)         | 6    |

@@ -24,6 +24,7 @@ const CLIENT_NAMESPACES = [
   "Place",
   "Status",
   "Calendar",
+  "LeadForm",
 ] as const;
 
 export function generateStaticParams() {

@@ -92,6 +92,21 @@ export type Database = {
           },
         ];
       };
+      lead_rate_limits: {
+        Row: {
+          created_at: string;
+          key: string;
+        };
+        Insert: {
+          created_at?: string;
+          key: string;
+        };
+        Update: {
+          created_at?: string;
+          key?: string;
+        };
+        Relationships: [];
+      };
       leads: {
         Row: {
           billable: boolean;
@@ -307,7 +322,22 @@ export type Database = {
       };
     };
     Functions: {
-      [_ in never]: never;
+      hit_lead_rate_limit: {
+        Args: { p_key: string; p_limit: number; p_window: unknown };
+        Returns: boolean;
+      };
+      place_stats: {
+        Args: { p_now?: string };
+        Returns: {
+          leads_30: number;
+          leads_7: number;
+          place_id: string;
+          views_30: number;
+          views_7: number;
+          whatsapp_30: number;
+          whatsapp_7: number;
+        }[];
+      };
     };
     Enums: {
       availability_status: "free" | "limited" | "full";

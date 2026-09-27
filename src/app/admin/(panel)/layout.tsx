@@ -16,12 +16,24 @@ export default async function PanelLayout({ children }: LayoutProps<"/admin">) {
           >
             {SITE_NAME} · админка
           </Link>
-          <nav className="flex flex-1 gap-1 text-sm">
+          <nav className="order-last flex w-full flex-wrap gap-x-1 text-sm sm:order-none sm:w-auto sm:flex-1">
             <Link
               href="/admin"
               className="flex h-11 items-center px-2 whitespace-nowrap"
             >
               Объекты
+            </Link>
+            <Link
+              href="/admin/leads"
+              className="flex h-11 items-center px-2 whitespace-nowrap"
+            >
+              Заявки
+            </Link>
+            <Link
+              href="/admin/stats"
+              className="flex h-11 items-center px-2 whitespace-nowrap"
+            >
+              Статистика
             </Link>
             <Link
               href="/admin/import"
@@ -32,7 +44,7 @@ export default async function PanelLayout({ children }: LayoutProps<"/admin">) {
           </nav>
           <form
             action={signOut}
-            className="flex items-center gap-2 text-sm text-text-muted"
+            className="ml-auto flex items-center gap-2 text-sm text-text-muted sm:ml-0"
           >
             <span className="hidden sm:inline">{email}</span>
             <button

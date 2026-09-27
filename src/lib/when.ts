@@ -32,7 +32,10 @@ export function resolveWhen(when: WhenOption, now: Date): Stay {
 }
 
 /** «2–4 окт.» — даты пребывания (заезд–выезд). */
-export function formatStay(stay: Stay, locale: string): string {
+export function formatStay(
+  stay: Pick<Stay, "checkIn" | "checkOut">,
+  locale: string,
+): string {
   const format = new Intl.DateTimeFormat(locale, {
     day: "numeric",
     month: "short",
