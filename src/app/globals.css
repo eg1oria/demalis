@@ -25,6 +25,16 @@
   --status-full-bg: #edece8;
   --status-full-text: #a0a5a1;
   --status-unknown-border: #d6d2c8;
+
+  /* Тёмный блок «Для владельцев» (раздел 7.4) */
+  --owners-bg: #17201c;
+  --owners-surface: #222c27;
+  --owners-text: #c7cec9;
+  --owners-eyebrow: #a9b3ac;
+  --owners-tile: rgba(255, 255, 255, 0.07);
+  --owners-free: #4fb37a;
+  --owners-limited: #e3a83f;
+  --owners-full: #6e766f;
 }
 
 @theme inline {
@@ -52,11 +62,38 @@
   --color-status-full-text: var(--status-full-text);
   --color-status-unknown-border: var(--status-unknown-border);
 
+  --color-owners-bg: var(--owners-bg);
+  --color-owners-surface: var(--owners-surface);
+  --color-owners-text: var(--owners-text);
+  --color-owners-eyebrow: var(--owners-eyebrow);
+  --color-owners-tile: var(--owners-tile);
+  --color-owners-free: var(--owners-free);
+  --color-owners-limited: var(--owners-limited);
+  --color-owners-full: var(--owners-full);
+
   --font-sans: var(--font-onest);
   --font-serif: var(--font-literata);
+}
+
+/* Тень — только у всплывающих элементов (раздел 7.7) */
+@theme {
+  --shadow-float: 0 10px 30px rgba(23, 32, 28, 0.06);
 }
 
 body {
   background: var(--bg);
   color: var(--text);
+}
+
+/* Горизонтальные ленты чипсов без полосы прокрутки */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Страница объекта: подвал не прячется под нижней панелью с WhatsApp */
+body:has([data-contact-bar]) footer {
+  padding-bottom: 7rem;
 }

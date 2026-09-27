@@ -61,7 +61,7 @@ npx supabase db push
 1. Зайди на https://vercel.com → **Sign Up** → **Continue with GitHub**. Тариф — **Hobby** (бесплатный).
 2. **Add New… → Project** → найди репозиторий `demalis` → **Import**. Если репозитория нет в списке, нажми **Adjust GitHub App Permissions** и дай доступ к нему.
 3. **Framework Preset** определится сам (Next.js). Root Directory оставь пустым: проект лежит в корне репозитория.
-4. Открой **Environment Variables** и добавь переменные из `.env.example`. Для Этапа 0 достаточно `NEXT_PUBLIC_SITE_NAME`. Ключи Supabase добавишь на Этапе 1.
+4. Открой **Environment Variables** и добавь переменные из `.env.example`. Нужны `NEXT_PUBLIC_SITE_NAME`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` и `ADMIN_EMAILS` — без ключей Supabase сборка не пройдёт.
 5. **Deploy**. Через 1–2 минуты появится адрес вида `https://demalis-xxx.vercel.app`. Он должен открывать `/ru`.
 6. **Settings → Functions → Function Region** → по возможности выбери **Frankfurt (fra1)**, рядом с базой Supabase.
 

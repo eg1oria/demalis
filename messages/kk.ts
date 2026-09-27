@@ -1,19 +1,176 @@
 import type { Messages } from "./ru";
 
+// Все строки ниже переведены не носителем языка.
+// TODO: проверить носителю — каждый блок помечен отдельно.
+
 const kk: Messages = {
+  // TODO: проверить носителю
   Metadata: {
-    // TODO: проверить носителю
     description: "Алматы маңындағы демалыс күндеріне қала сыртындағы демалыс",
+    catalogTitle: "Қала сыртындағы демалыс каталогы",
   },
+  // TODO: проверить носителю
   Header: {
-    // TODO: проверить носителю
     languageSwitcher: "Сайт тілі",
+    catalog: "Каталог",
+    owners: "Иелеріне",
+    addPlace: "Нысан қосу",
+    menu: "Мәзір",
   },
+  // TODO: проверить носителю
+  Footer: {
+    tagline: "Алматы маңындағы қала сыртындағы демалыс",
+  },
+  // TODO: проверить носителю
+  Types: {
+    glamping: "Глэмпинг",
+    aframe: "A-frame",
+    house: "Үй",
+    zona_otdyha: "Демалыс аймағы",
+    banya_complex: "Монша кешені",
+    guesthouse: "Қонақ үй",
+  },
+  // TODO: проверить носителю
+  Directions: {
+    gory_almaty: "Алматы таулары",
+    talgar: "Талғар",
+    issyk_turgen: "Есік / Түрген",
+    kaskelen: "Қаскелең",
+    kapshagay: "Қапшағай",
+    charyn_kolsai: "Шарын / Көлсай",
+    drugoe: "Басқа",
+  },
+  // TODO: проверить носителю
+  Amenities: {
+    has_chan: "Шан",
+    has_banya: "Монша",
+    has_pool: "Бассейн",
+    pets_allowed: "Жануарлармен болады",
+    has_kitchen: "Ас үй",
+    has_bbq: "Мангал",
+    winter_ok: "Қыста",
+    has_wifi: "Wi-Fi",
+  },
+  // TODO: проверить носителю
+  Format: {
+    minutes: "{m} мин",
+    hours: "{h} сағ",
+    hoursMinutes: "{h} сағ {m} мин",
+    priceFrom: "{price} бастап",
+    priceFromRich: "<b>{price}</b> <muted>бастап</muted>",
+    perNight: "/ түн",
+    perPerson: "/ адам",
+    unit_per_night_unit: "бір үй не бөлме үшін, бір түн",
+    unit_per_person: "бір адам үшін, бір түн",
+    upTo: "{n} дейін",
+    upToGuests: "{n} қонаққа дейін",
+    guests: "{n} қонақ",
+    variants: "{n} нұсқа",
+  },
+  // TODO: проверить носителю
   HomePage: {
-    // TODO: проверить носителю
-    tagline: "Алматы маңындағы демалыс күндеріне қала сыртындағы демалыс",
-    // TODO: проверить носителю
-    stub: "Сайт әзірленуде. Жақында мұнда глэмпингтер, үйшіктер және демалыс аймақтары пайда болады.",
+    eyebrow: "Қала сыртындағы демалыс · Алматы",
+    titleLine1: "Демалыс күндері",
+    titleLine2: "қайда барамыз?",
+    lead: "Алматы маңындағы глэмпингтер, үйшіктер мен демалыс аймақтары — қай жерде бос екені бірден көрінеді.",
+    when: "Қашан",
+    thisWeekend: "Осы демалыс",
+    nextWeekend: "Келесі",
+    ownDate: "Өз күнім",
+    pickDate: "Таңдау",
+    guests: "Қонақтар",
+    fewerGuests: "Қонақ азырақ",
+    moreGuests: "Қонақ көбірек",
+    show: "{variants} көрсету",
+    ownersUpdate: "Бос күндерді иелерінің өздері жаңартады",
+    quickFilters: "Жылдам сүзгілер",
+  },
+  // TODO: проверить носителю
+  Chips: {
+    chan: "Шаны бар",
+    banya: "Моншасы бар",
+    drive60: "1 сағатқа дейін",
+    pets: "Жануарлармен",
+    pool: "Бассейні бар",
+    kapshagay: "Қапшағай",
+    winter: "Қыста",
+    big: "10+ адамдық топқа",
+  },
+  // TODO: проверить носителю
+  Owners: {
+    eyebrow: "Иелеріне",
+    title: "Үй немесе глэмпинг жалға бересіз бе?",
+    text: "Бос күндерді Telegram-ботта бірнеше рет басып белгілеңіз — қонақтар өздері жазады.",
+    cta: "Тегін орналастыру",
+    stubTitle: "Иелеріне арналған бет жақында ашылады",
+    stubText:
+      "Мұнда глэмпингіңізді, үйшігіңізді немесе демалыс аймағыңызды тегін қоса аласыз.",
+  },
+  // TODO: проверить носителю
+  Catalog: {
+    back: "Артқа",
+    allFilters: "Барлық сүзгілер",
+    anyDates: "Кез келген күн",
+    anyGuests: "Қонақ саны кез келген",
+    anyDirection: "кез келген бағыт",
+    title: "{variants}",
+    sort: "Сұрыптау",
+    sort_recommended: "Ұсынылатындар",
+    sort_price: "Алдымен арзандары",
+    sort_near: "Алматыға жақындары",
+    showMore: "Тағы көрсету",
+    emptyTitle: "Ештеңе табылмады",
+    emptyText: "Сүзгілердің бір бөлігін алып тастап көріңіз.",
+    reset: "Сүзгілерді тазалау",
+    filtersTitle: "Сүзгілер",
+    drive: "Жол уақыты",
+    drive_any: "Кез келген",
+    drive_30: "30 минутқа дейін",
+    drive_60: "1 сағатқа дейін",
+    drive_120: "2 сағатқа дейін",
+    guests: "Қонақтар",
+    price: "Бір түннің бағасы",
+    price_any: "Кез келген",
+    price_30: "30 мыңға дейін",
+    price_60: "30–60 мың",
+    price_100: "60–100 мың",
+    price_100plus: "100 мыңнан жоғары",
+    amenities: "Жайлылықтар",
+    type: "Түрі",
+    type_any: "Кез келген",
+    direction: "Бағыты",
+    direction_any: "Кез келген",
+    apply: "Нұсқаларды көрсету",
+    close: "Жабу",
+    clear: "Тазалау",
+  },
+  // TODO: проверить носителю
+  Place: {
+    back: "Артқа",
+    photo: "{total} суреттің {current}-сі",
+    prevPhoto: "Алдыңғы сурет",
+    nextPhoto: "Келесі сурет",
+    noPhoto: "Суреттер жақында қосылады",
+    fromAlmaty: "Алматыдан {time}",
+    amenities: "Не бар",
+    about: "Орын туралы",
+    contacts: "Байланыс",
+    writeWhatsApp: "WhatsApp-қа жазу",
+    call: "Қоңырау шалу",
+    instagram: "Instagram",
+    video: "Бейнені көру",
+    location: "Қалай жетуге болады",
+    openMap: "Картадан ашу",
+    similar: "Жақын маңдағы ұқсастар",
+    whatsapp: "WhatsApp",
+    whatsappText:
+      "Сәлеметсіз бе! {site} сайтынан жазып отырмын. {name}{dates, select, none {} other { ({dates})}} қызықтырады{guests, select, none {} other {, бізде {guests} адам}}. Бос орын бар ма?",
+  },
+  // TODO: проверить носителю
+  NotFound: {
+    title: "Мұндай бет жоқ",
+    text: "Нысан жариялаудан алынған немесе сілтеме ескірген болуы мүмкін.",
+    toCatalog: "Каталогқа өту",
   },
 };
 
