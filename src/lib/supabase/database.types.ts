@@ -63,6 +63,48 @@ export type Database = {
           },
         ];
       };
+      collections: {
+        Row: {
+          created_at: string;
+          filters: string;
+          id: string;
+          intro_kk: string | null;
+          intro_ru: string | null;
+          published: boolean;
+          slug: string;
+          sort_order: number;
+          title_kk: string | null;
+          title_ru: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          filters?: string;
+          id?: string;
+          intro_kk?: string | null;
+          intro_ru?: string | null;
+          published?: boolean;
+          slug: string;
+          sort_order?: number;
+          title_kk?: string | null;
+          title_ru: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          filters?: string;
+          id?: string;
+          intro_kk?: string | null;
+          intro_ru?: string | null;
+          published?: boolean;
+          slug?: string;
+          sort_order?: number;
+          title_kk?: string | null;
+          title_ru?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       events: {
         Row: {
           created_at: string;

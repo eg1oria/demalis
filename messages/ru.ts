@@ -2,6 +2,14 @@ const ru = {
   Metadata: {
     description: "Загородный отдых на выходные вокруг Алматы",
     catalogTitle: "Каталог загородного отдыха",
+    homeTitle: "Загородный отдых на выходные вокруг Алматы",
+    catalogDescription:
+      "Глэмпинги, A-frame, дома с баней и чаном, зоны отдыха у Алматы: фильтры по дороге, цене и удобствам, свободные даты на выходные.",
+    ownersTitle: "Для владельцев мест отдыха",
+    placeDescription:
+      "{type} · {direction}, {drive} от Алматы. {price}Свободные даты и связь с владельцем в WhatsApp.",
+    region: "Алматинская область",
+    home: "Главная",
   },
   Header: {
     languageSwitcher: "Язык сайта",
@@ -12,6 +20,16 @@ const ru = {
   },
   Footer: {
     tagline: "Загородный отдых вокруг Алматы",
+    collections: "Подборки",
+  },
+  Collections: {
+    title: "Подборки",
+    places: "{n, plural, one {# место} few {# места} other {# мест}}",
+    openCatalog: "Выбрать даты и фильтры",
+    other: "Другие подборки",
+    emptyTitle: "Пока пусто",
+    emptyText: "В этой подборке ещё нет объектов — загляните в каталог.",
+    toCatalog: "Перейти в каталог",
   },
   Types: {
     glamping: "Глэмпинг",

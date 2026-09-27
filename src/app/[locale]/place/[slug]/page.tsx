@@ -20,7 +20,6 @@ import { LeadForm } from "@/components/place/LeadForm";
 import { StatusBlock } from "@/components/place/StatusBlock";
 import { TrackedPhoneLink } from "@/components/place/TrackedPhoneLink";
 import { ViewTracker } from "@/components/place/ViewTracker";
-import { SITE_NAME } from "@/config/site";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { parseFilters } from "@/lib/catalog/filters";
@@ -46,6 +45,13 @@ import {
   visiblePhotos,
 } from "@/lib/places/present";
 import { photoUrl } from "@/lib/supabase/env";
+import {
+  absoluteUrl,
+  breadcrumbJsonLd,
+  jsonLdString,
+  lodgingJsonLd,
+  pageMetadata,
+} from "@/lib/seo";
 import { formatStay, resolveWhen } from "@/lib/when";
 import { getUpcomingWeekend } from "@/lib/weekend";
 
@@ -55,10 +61,34 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   const place = await getPlaceBySlug(slug);
   if (!place) return {};
-  return {
-    title: `${placeName(place, locale)} — ${SITE_NAME}`,
-    description: placeDescription(place, locale)?.slice(0, 160),
+  const [tm, tTypes, tDir, tf] = await Promise.all([
+    getTranslations({ locale: locale as Locale, namespace: "Metadata" }),
+    getTranslations({ locale: locale as Locale, namespace: "Types" }),
+    getTranslations({ locale: locale as Locale, namespace: "Directions" }),
+    getTranslations({ locale: locale as Locale, namespace: "Format" }),
+  ]);
+  const formatDrive = (minutes: number) => {
+    const { h, m } = splitMinutes(minutes);
+    if (h === 0) return tf("minutes", { m });
+    return m === 0 ? tf("hours", { h }) : tf("hoursMinutes", { h, m });
   };
+  // Без описания — короткая сводка: тип, направление, дорога, цена.
+  const summary = tm("placeDescription", {
+    type: tTypes(place.type),
+    direction: tDir(place.direction),
+    drive: place.drive_minutes != null ? formatDrive(place.drive_minutes) : "—",
+    price:
+      place.price_from != null
+        ? `${tf("priceFrom", { price: formatTenge(place.price_from, locale) })} ${tf("perNight")}. `
+        : "",
+  });
+  return pageMetadata({
+    locale,
+    path: `/place/${place.slug}`,
+    title: placeName(place, locale),
+    description: placeDescription(place, locale) ?? summary,
+    images: visiblePhotos(place).map(photoUrl),
+  });
 }
 
 export default async function PlacePage({ params, searchParams }: Props) {
@@ -152,6 +182,39 @@ export default async function PlacePage({ params, searchParams }: Props) {
     locale: currentLocale,
   });
   const tLead = await getTranslations("LeadForm");
+  const tm = await getTranslations("Metadata");
+
+  const placeUrl = absoluteUrl(`/${currentLocale}/place/${place.slug}`);
+  const structuredData = [
+    lodgingJsonLd({
+      name,
+      description,
+      url: placeUrl,
+      images: photos,
+      address: place.address_text,
+      locality: place.direction === "drugoe" ? null : tDir(place.direction),
+      region: tm("region"),
+      lat: place.lat,
+      lng: place.lng,
+      phone: place.whatsapp_phone,
+      priceRange:
+        place.price_from != null
+          ? tf("priceFrom", {
+              price: formatTenge(place.price_from, currentLocale),
+            })
+          : null,
+      amenities: amenities.map((a) => tAmenities(a)),
+      petsAllowed: place.pets_allowed,
+    }),
+    breadcrumbJsonLd([
+      { name: tm("home"), url: absoluteUrl(`/${currentLocale}`) },
+      {
+        name: tm("catalogTitle"),
+        url: absoluteUrl(`/${currentLocale}/catalog`),
+      },
+      { name, url: placeUrl },
+    ]),
+  ];
   const mapHref =
     place.lat != null && place.lng != null
       ? `https://www.openstreetmap.org/?mlat=${place.lat}&mlon=${place.lng}#map=13/${place.lat}/${place.lng}`
@@ -406,6 +469,10 @@ export default async function PlacePage({ params, searchParams }: Props) {
       </main>
 
       <ViewTracker placeId={place.id} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdString(structuredData) }}
+      />
 
       {/* Нижняя панель: цена, заявка и главная кнопка — WhatsApp. */}
       <div

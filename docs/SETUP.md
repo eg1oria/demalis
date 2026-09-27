@@ -143,4 +143,6 @@ npm run dev
 | `CRON_SECRET`                          | Любая длинная случайная строка, см. раздел 2б        | 5    |
 | `ADMIN_TELEGRAM_CHAT_ID`               | См. раздел 2а                                        | 4    |
 | `NEXT_PUBLIC_SITE_URL`                 | Адрес сайта на Vercel или свой домен                 | 4, 6 |
-| `NEXT_PUBLIC_YANDEX_METRIKA_ID`        | Яндекс Метрика (инструкция будет на Этапе 6)         | 6    |
+| `NEXT_PUBLIC_YANDEX_METRIKA_ID`        | Яндекс Метрика, см. `docs/SEO.md`                    | 6    |
+| `YANDEX_VERIFICATION`                  | Яндекс Вебмастер, см. `docs/SEO.md`                  | 6    |
+| `GOOGLE_SITE_VERIFICATION`             | Google Search Console, см. `docs/SEO.md`             | 6    |

@@ -18,6 +18,7 @@ import {
   parseFilters,
 } from "@/lib/catalog/filters";
 import { findPlaces } from "@/lib/catalog/query";
+import { pageMetadata } from "@/lib/seo";
 import { formatStay, resolveWhen } from "@/lib/when";
 
 export async function generateMetadata({
@@ -28,7 +29,13 @@ export async function generateMetadata({
     locale: locale as Locale,
     namespace: "Metadata",
   });
-  return { title: t("catalogTitle") };
+  // Canonical — каталог без фильтров: страницы под поиск — это подборки.
+  return pageMetadata({
+    locale,
+    path: "/catalog",
+    title: t("catalogTitle"),
+    description: t("catalogDescription"),
+  });
 }
 
 export default async function CatalogPage({

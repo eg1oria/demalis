@@ -19,6 +19,12 @@ export function Footer() {
           {h("catalog")}
         </Link>
         <Link
+          href="/#collections"
+          className="flex min-h-8 items-center text-text-secondary"
+        >
+          {t("collections")}
+        </Link>
+        <Link
           href="/owners"
           className="flex min-h-8 items-center text-text-secondary"
         >

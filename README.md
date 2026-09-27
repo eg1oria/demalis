@@ -32,7 +32,7 @@ npm run dev
 - Админка: http://localhost:3000/admin (объекты, заявки, статистика, импорт). Письма со ссылкой для входа локально не уходят на почту — они в Mailpit: http://127.0.0.1:54324.
 - Панель базы (Supabase Studio): http://127.0.0.1:54323.
 
-Облачный Supabase и Vercel — в [docs/SETUP.md](docs/SETUP.md).
+Облачный Supabase и Vercel — в [docs/SETUP.md](docs/SETUP.md). Метрика, Search Console, Яндекс Вебмастер — в [docs/SEO.md](docs/SEO.md).
 
 ## Команды
 
@@ -67,6 +67,9 @@ src/lib/places/    справочники и проверка полей объ�
 src/lib/supabase/  клиенты Supabase и типы базы
 src/lib/leads/     проверка заявки, статусы, текст для Telegram
 src/lib/bot/       Telegram-бот владельцев (grammY): меню, кнопки, тексты ru/kk
+src/lib/seo.ts     метаданные, hreflang, JSON-LD
+src/lib/collections.ts  подборки (фильтры, перевод)
+src/app/sitemap.ts, robots.ts  sitemap.xml и robots.txt
 src/lib/go.ts      ссылки /api/go/... (учёт кликов WhatsApp, звонка, Instagram)
 src/app/api/       маршруты: счётчик вариантов, клики, просмотры, webhook бота, cron
 vercel.json        расписание напоминаний (Vercel Cron)
