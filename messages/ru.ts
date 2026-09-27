@@ -2,6 +2,14 @@ const ru = {
   Metadata: {
     description: "Загородный отдых на выходные вокруг Алматы",
     catalogTitle: "Каталог загородного отдыха",
+    homeTitle: "Загородный отдых на выходные вокруг Алматы",
+    catalogDescription:
+      "Глэмпинги, A-frame, дома с баней и чаном, зоны отдыха у Алматы: фильтры по дороге, цене и удобствам, свободные даты на выходные.",
+    ownersTitle: "Для владельцев мест отдыха",
+    placeDescription:
+      "{type} · {direction}, {drive} от Алматы. {price}Свободные даты и связь с владельцем в WhatsApp.",
+    region: "Алматинская область",
+    home: "Главная",
   },
   Header: {
     languageSwitcher: "Язык сайта",
@@ -12,6 +20,16 @@ const ru = {
   },
   Footer: {
     tagline: "Загородный отдых вокруг Алматы",
+    collections: "Подборки",
+  },
+  Collections: {
+    title: "Подборки",
+    places: "{n, plural, one {# место} few {# места} other {# мест}}",
+    openCatalog: "Выбрать даты и фильтры",
+    other: "Другие подборки",
+    emptyTitle: "Пока пусто",
+    emptyText: "В этой подборке ещё нет объектов — загляните в каталог.",
+    toCatalog: "Перейти в каталог",
   },
   Types: {
     glamping: "Глэмпинг",
@@ -189,6 +207,46 @@ const ru = {
     whatsapp: "WhatsApp",
     whatsappText:
       "Здравствуйте! Пишу с сайта {site}. Интересует {name}{dates, select, none {} other { на {dates}}}{guests, select, none {} other {, нас {guests} человек}}. Есть свободные места?",
+  },
+  LeadForm: {
+    title: "Заявка на бронь",
+    lead: "Оставьте контакты — владелец перезвонит или напишет.",
+    button: "Заявка",
+    name: "Ваше имя",
+    phone: "Телефон",
+    phonePlaceholder: "+7 7XX XXX XX XX",
+    dateFrom: "Заезд",
+    dateTo: "Выезд",
+    guests: "Гостей",
+    comment: "Комментарий",
+    commentPlaceholder: "Например: будем с собакой, нужна баня",
+    optional: "необязательно",
+    honeypot: "Не заполняйте это поле",
+    submit: "Отправить заявку",
+    sending: "Отправляем…",
+    sentTitle: "Заявка отправлена",
+    sentText:
+      "Владелец свяжется с вами. Если хотите быстрее — напишите в WhatsApp.",
+    error_name_required: "Укажите имя",
+    error_name_tooLong: "Слишком длинное имя",
+    error_phone_required: "Укажите телефон",
+    error_phone_invalid: "Нужен казахстанский номер, например +7 701 123 45 67",
+    error_dateFrom_required: "Выберите дату заезда",
+    error_dateFrom_invalid: "Неверная дата",
+    error_dateFrom_past: "Дата заезда уже прошла",
+    error_dateFrom_tooFar: "Не дальше чем через год",
+    error_dateTo_required: "Выберите дату выезда",
+    error_dateTo_invalid: "Неверная дата",
+    error_dateTo_beforeFrom: "Выезд должен быть позже заезда",
+    error_dateTo_tooManyNights: "Не больше 30 ночей",
+    error_guests_invalid: "От 1 до 30 гостей",
+    error_comment_tooLong: "Комментарий длиннее 1000 символов",
+    error_rateLimit:
+      "С вашего устройства уже отправлено 3 заявки за последний час. Попробуйте позже или напишите владельцу в WhatsApp.",
+    error_unavailable: "Объект сейчас не принимает заявки.",
+    error_server:
+      "Не получилось отправить заявку. Попробуйте ещё раз или напишите в WhatsApp.",
+    fixErrors: "Проверьте поля формы",
   },
   NotFound: {
     title: "Такой страницы нет",

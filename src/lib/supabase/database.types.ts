@@ -63,6 +63,48 @@ export type Database = {
           },
         ];
       };
+      collections: {
+        Row: {
+          created_at: string;
+          filters: string;
+          id: string;
+          intro_kk: string | null;
+          intro_ru: string | null;
+          published: boolean;
+          slug: string;
+          sort_order: number;
+          title_kk: string | null;
+          title_ru: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          filters?: string;
+          id?: string;
+          intro_kk?: string | null;
+          intro_ru?: string | null;
+          published?: boolean;
+          slug: string;
+          sort_order?: number;
+          title_kk?: string | null;
+          title_ru: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          filters?: string;
+          id?: string;
+          intro_kk?: string | null;
+          intro_ru?: string | null;
+          published?: boolean;
+          slug?: string;
+          sort_order?: number;
+          title_kk?: string | null;
+          title_ru?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       events: {
         Row: {
           created_at: string;
@@ -91,6 +133,21 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      lead_rate_limits: {
+        Row: {
+          created_at: string;
+          key: string;
+        };
+        Insert: {
+          created_at?: string;
+          key: string;
+        };
+        Update: {
+          created_at?: string;
+          key?: string;
+        };
+        Relationships: [];
       };
       leads: {
         Row: {
@@ -146,6 +203,7 @@ export type Database = {
         Row: {
           created_at: string;
           id: string;
+          language: string | null;
           link_code: string | null;
           name: string;
           phone: string | null;
@@ -154,6 +212,7 @@ export type Database = {
         Insert: {
           created_at?: string;
           id?: string;
+          language?: string | null;
           link_code?: string | null;
           name: string;
           phone?: string | null;
@@ -162,6 +221,7 @@ export type Database = {
         Update: {
           created_at?: string;
           id?: string;
+          language?: string | null;
           link_code?: string | null;
           name?: string;
           phone?: string | null;
@@ -307,7 +367,22 @@ export type Database = {
       };
     };
     Functions: {
-      [_ in never]: never;
+      hit_lead_rate_limit: {
+        Args: { p_key: string; p_limit: number; p_window: unknown };
+        Returns: boolean;
+      };
+      place_stats: {
+        Args: { p_now?: string };
+        Returns: {
+          leads_30: number;
+          leads_7: number;
+          place_id: string;
+          views_30: number;
+          views_7: number;
+          whatsapp_30: number;
+          whatsapp_7: number;
+        }[];
+      };
     };
     Enums: {
       availability_status: "free" | "limited" | "full";

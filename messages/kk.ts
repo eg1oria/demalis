@@ -8,6 +8,14 @@ const kk: Messages = {
   Metadata: {
     description: "Алматы маңындағы демалыс күндеріне қала сыртындағы демалыс",
     catalogTitle: "Қала сыртындағы демалыс каталогы",
+    homeTitle: "Алматы маңындағы демалыс күндеріне арналған демалыс",
+    catalogDescription:
+      "Алматы маңындағы глэмпингтер, A-frame, моншасы мен шаны бар үйлер, демалыс аймақтары: жол, баға және жағдайлар бойынша сүзгілер, демалыс күндеріндегі бос күндер.",
+    ownersTitle: "Демалыс орындарының иелеріне",
+    placeDescription:
+      "{type} · {direction}, Алматыдан {drive}. {price}Бос күндер және иесімен WhatsApp арқылы байланыс.",
+    region: "Алматы облысы",
+    home: "Басты бет",
   },
   // TODO: проверить носителю
   Header: {
@@ -20,6 +28,17 @@ const kk: Messages = {
   // TODO: проверить носителю
   Footer: {
     tagline: "Алматы маңындағы қала сыртындағы демалыс",
+    collections: "Іріктемелер",
+  },
+  // TODO: проверить носителю
+  Collections: {
+    title: "Іріктемелер",
+    places: "{n} орын",
+    openCatalog: "Күндер мен сүзгілерді таңдау",
+    other: "Басқа іріктемелер",
+    emptyTitle: "Әзірге бос",
+    emptyText: "Бұл іріктемеде әлі нысан жоқ — каталогты қараңыз.",
+    toCatalog: "Каталогқа өту",
   },
   // TODO: проверить носителю
   Types: {
@@ -206,6 +225,47 @@ const kk: Messages = {
     whatsapp: "WhatsApp",
     whatsappText:
       "Сәлеметсіз бе! {site} сайтынан жазып отырмын. {name}{dates, select, none {} other { ({dates})}} қызықтырады{guests, select, none {} other {, бізде {guests} адам}}. Бос орын бар ма?",
+  },
+  // TODO: проверить носителю
+  LeadForm: {
+    title: "Брондауға өтінім",
+    lead: "Байланыс деректеріңізді қалдырыңыз — иесі қоңырау шалады немесе жазады.",
+    button: "Өтінім",
+    name: "Атыңыз",
+    phone: "Телефон",
+    phonePlaceholder: "+7 7XX XXX XX XX",
+    dateFrom: "Келу",
+    dateTo: "Кету",
+    guests: "Қонақтар",
+    comment: "Пікір",
+    commentPlaceholder: "Мысалы: итпен келеміз, монша керек",
+    optional: "міндетті емес",
+    honeypot: "Бұл өрісті толтырмаңыз",
+    submit: "Өтінім жіберу",
+    sending: "Жіберілуде…",
+    sentTitle: "Өтінім жіберілді",
+    sentText:
+      "Иесі сізбен хабарласады. Тезірек керек болса — WhatsApp-қа жазыңыз.",
+    error_name_required: "Атыңызды жазыңыз",
+    error_name_tooLong: "Аты тым ұзын",
+    error_phone_required: "Телефонды жазыңыз",
+    error_phone_invalid: "Қазақстандық нөмір керек, мысалы +7 701 123 45 67",
+    error_dateFrom_required: "Келу күнін таңдаңыз",
+    error_dateFrom_invalid: "Күн қате",
+    error_dateFrom_past: "Келу күні өтіп кетті",
+    error_dateFrom_tooFar: "Бір жылдан артық емес",
+    error_dateTo_required: "Кету күнін таңдаңыз",
+    error_dateTo_invalid: "Күн қате",
+    error_dateTo_beforeFrom: "Кету күні келу күнінен кейін болуы керек",
+    error_dateTo_tooManyNights: "30 түннен артық емес",
+    error_guests_invalid: "1-ден 30-ға дейін қонақ",
+    error_comment_tooLong: "Пікір 1000 таңбадан ұзын",
+    error_rateLimit:
+      "Соңғы бір сағатта құрылғыңыздан 3 өтінім жіберілді. Кейінірек қайталаңыз немесе иесіне WhatsApp-қа жазыңыз.",
+    error_unavailable: "Нысан қазір өтінім қабылдамайды.",
+    error_server:
+      "Өтінім жіберілмеді. Қайталап көріңіз немесе WhatsApp-қа жазыңыз.",
+    fixErrors: "Өрістерді тексеріңіз",
   },
   // TODO: проверить носителю
   NotFound: {

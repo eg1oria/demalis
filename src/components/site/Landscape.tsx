@@ -13,11 +13,19 @@ const PALETTES = [
 export function Landscape({
   seed,
   hut = true,
+  variant,
 }: {
   seed: string;
   hut?: boolean;
+  /** Номер палитры, если нужны гарантированно разные пейзажи подряд. */
+  variant?: number;
 }) {
-  const p = PALETTES[landscapeVariant(seed, PALETTES.length)];
+  const p =
+    PALETTES[
+      variant !== undefined
+        ? variant % PALETTES.length
+        : landscapeVariant(seed, PALETTES.length)
+    ];
   return (
     <svg
       viewBox="0 0 400 300"

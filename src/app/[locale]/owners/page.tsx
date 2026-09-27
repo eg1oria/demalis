@@ -1,6 +1,24 @@
+import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Header } from "@/components/Header";
 import type { Locale } from "@/i18n/routing";
+import { pageMetadata } from "@/lib/seo";
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[locale]/owners">): Promise<Metadata> {
+  const { locale } = await params;
+  const [tm, t] = await Promise.all([
+    getTranslations({ locale: locale as Locale, namespace: "Metadata" }),
+    getTranslations({ locale: locale as Locale, namespace: "Owners" }),
+  ]);
+  return pageMetadata({
+    locale,
+    path: "/owners",
+    title: tm("ownersTitle"),
+    description: t("text"),
+  });
+}
 
 // Заглушка: полноценный лендинг для владельцев — Этап 7.
 export default async function OwnersPage({

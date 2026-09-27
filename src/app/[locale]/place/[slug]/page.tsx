@@ -16,11 +16,13 @@ import { PlacePhoto } from "@/components/site/PlacePhoto";
 import { StatusBadge } from "@/components/site/StatusBadge";
 import { AvailabilityCalendar } from "@/components/place/AvailabilityCalendar";
 import { Gallery } from "@/components/place/Gallery";
+import { LeadForm } from "@/components/place/LeadForm";
 import { StatusBlock } from "@/components/place/StatusBlock";
-import { SITE_NAME } from "@/config/site";
+import { TrackedPhoneLink } from "@/components/place/TrackedPhoneLink";
+import { ViewTracker } from "@/components/place/ViewTracker";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { MAX_GUESTS, parseFilters } from "@/lib/catalog/filters";
+import { parseFilters } from "@/lib/catalog/filters";
 import {
   daysSince,
   type DisplayStatus,
@@ -34,15 +36,22 @@ import {
   statusesForNight,
 } from "@/lib/catalog/query";
 import { nextDays } from "@/lib/dates";
+import { goHref } from "@/lib/go";
 import { formatTenge, splitMinutes } from "@/lib/format";
 import {
   placeAmenities,
   placeDescription,
   placeName,
   visiblePhotos,
-  whatsappUrl,
 } from "@/lib/places/present";
 import { photoUrl } from "@/lib/supabase/env";
+import {
+  absoluteUrl,
+  breadcrumbJsonLd,
+  jsonLdString,
+  lodgingJsonLd,
+  pageMetadata,
+} from "@/lib/seo";
 import { formatStay, resolveWhen } from "@/lib/when";
 import { getUpcomingWeekend } from "@/lib/weekend";
 
@@ -52,10 +61,34 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   const place = await getPlaceBySlug(slug);
   if (!place) return {};
-  return {
-    title: `${placeName(place, locale)} — ${SITE_NAME}`,
-    description: placeDescription(place, locale)?.slice(0, 160),
+  const [tm, tTypes, tDir, tf] = await Promise.all([
+    getTranslations({ locale: locale as Locale, namespace: "Metadata" }),
+    getTranslations({ locale: locale as Locale, namespace: "Types" }),
+    getTranslations({ locale: locale as Locale, namespace: "Directions" }),
+    getTranslations({ locale: locale as Locale, namespace: "Format" }),
+  ]);
+  const formatDrive = (minutes: number) => {
+    const { h, m } = splitMinutes(minutes);
+    if (h === 0) return tf("minutes", { m });
+    return m === 0 ? tf("hours", { h }) : tf("hoursMinutes", { h, m });
   };
+  // Без описания — короткая сводка: тип, направление, дорога, цена.
+  const summary = tm("placeDescription", {
+    type: tTypes(place.type),
+    direction: tDir(place.direction),
+    drive: place.drive_minutes != null ? formatDrive(place.drive_minutes) : "—",
+    price:
+      place.price_from != null
+        ? `${tf("priceFrom", { price: formatTenge(place.price_from, locale) })} ${tf("perNight")}. `
+        : "",
+  });
+  return pageMetadata({
+    locale,
+    path: `/place/${place.slug}`,
+    title: placeName(place, locale),
+    description: placeDescription(place, locale) ?? summary,
+    images: visiblePhotos(place).map(photoUrl),
+  });
 }
 
 export default async function PlacePage({ params, searchParams }: Props) {
@@ -142,13 +175,46 @@ export default async function PlacePage({ params, searchParams }: Props) {
           date: nightDate,
           ago: t("ago", { days: updatedDays ?? 0 }),
         });
-  const waText = t("whatsappText", {
-    site: SITE_NAME,
-    name,
-    dates: stayLabel ?? "none",
-    guests: guests && guests <= MAX_GUESTS ? String(guests) : "none",
+  // Клики идут через /api/go/...: маршрут записывает событие и перенаправляет.
+  const waHref = goHref("whatsapp", place.id, {
+    dates: stay,
+    guests,
+    locale: currentLocale,
   });
-  const waHref = whatsappUrl(place.whatsapp_phone, waText);
+  const tLead = await getTranslations("LeadForm");
+  const tm = await getTranslations("Metadata");
+
+  const placeUrl = absoluteUrl(`/${currentLocale}/place/${place.slug}`);
+  const structuredData = [
+    lodgingJsonLd({
+      name,
+      description,
+      url: placeUrl,
+      images: photos,
+      address: place.address_text,
+      locality: place.direction === "drugoe" ? null : tDir(place.direction),
+      region: tm("region"),
+      lat: place.lat,
+      lng: place.lng,
+      phone: place.whatsapp_phone,
+      priceRange:
+        place.price_from != null
+          ? tf("priceFrom", {
+              price: formatTenge(place.price_from, currentLocale),
+            })
+          : null,
+      amenities: amenities.map((a) => tAmenities(a)),
+      petsAllowed: place.pets_allowed,
+    }),
+    breadcrumbJsonLd([
+      { name: tm("home"), url: absoluteUrl(`/${currentLocale}`) },
+      {
+        name: tm("catalogTitle"),
+        url: absoluteUrl(`/${currentLocale}/catalog`),
+      },
+      { name, url: placeUrl },
+    ]),
+  ];
   const mapHref =
     place.lat != null && place.lng != null
       ? `https://www.openstreetmap.org/?mlat=${place.lat}&mlon=${place.lng}#map=13/${place.lat}/${place.lng}`
@@ -266,27 +332,45 @@ export default async function PlacePage({ params, searchParams }: Props) {
             </div>
           </section>
 
+          <section id="lead" className="mt-8 scroll-mt-4">
+            <h2 className={h2}>{tLead("title")}</h2>
+            <p className="mt-2 text-sm text-text-secondary">{tLead("lead")}</p>
+            <div className="mt-3.5">
+              <LeadForm
+                placeId={place.id}
+                today={calendarDays[0]}
+                checkIn={stay?.checkIn}
+                checkOut={stay?.checkOut}
+                guests={guests}
+              />
+            </div>
+          </section>
+
           <section className="mt-8">
             <h2 className={h2}>{t("contacts")}</h2>
             <div className="mt-3.5 grid gap-2.5 sm:grid-cols-2">
               <a
                 href={waHref}
                 target="_blank"
-                rel="noopener"
+                rel="noopener nofollow"
                 className={contactClass}
               >
                 <WhatsAppIcon size={22} className="text-accent" />
                 {t("writeWhatsApp")}
               </a>
-              <a href={`tel:${place.whatsapp_phone}`} className={contactClass}>
+              <TrackedPhoneLink
+                placeId={place.id}
+                phone={place.whatsapp_phone}
+                className={contactClass}
+              >
                 <PhoneIcon size={22} className="text-accent" />
                 {t("call")}
-              </a>
+              </TrackedPhoneLink>
               {place.instagram_url && (
                 <a
-                  href={place.instagram_url}
+                  href={goHref("instagram", place.id)}
                   target="_blank"
-                  rel="noopener"
+                  rel="noopener nofollow"
                   className={contactClass}
                 >
                   <InstagramIcon size={22} className="text-accent" />
@@ -384,7 +468,13 @@ export default async function PlacePage({ params, searchParams }: Props) {
         </article>
       </main>
 
-      {/* Нижняя панель: цена и главная кнопка — WhatsApp (заявка появится на Этапе 4). */}
+      <ViewTracker placeId={place.id} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdString(structuredData) }}
+      />
+
+      {/* Нижняя панель: цена, заявка и главная кнопка — WhatsApp. */}
       <div
         data-contact-bar
         className="fixed inset-x-0 bottom-0 z-30 border-t border-line-soft bg-surface shadow-float"
@@ -403,9 +493,15 @@ export default async function PlacePage({ params, searchParams }: Props) {
             </span>
           </div>
           <a
+            href="#lead"
+            className="flex h-13 flex-none items-center rounded-2xl border border-line-strong bg-surface px-4 text-[15px] font-semibold"
+          >
+            {tLead("button")}
+          </a>
+          <a
             href={waHref}
             target="_blank"
-            rel="noopener"
+            rel="noopener nofollow"
             className="flex h-13 flex-none items-center gap-2 rounded-2xl bg-accent px-4.5 text-[15px] font-semibold text-white"
           >
             <WhatsAppIcon size={19} />
