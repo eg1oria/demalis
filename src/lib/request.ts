@@ -9,9 +9,16 @@ export function clientIp(headers: Headers): string {
   return forwarded || headers.get("x-real-ip")?.trim() || "unknown";
 }
 
-/** Ключ для лимита заявок: IP не храним, только его HMAC-хэш с секретом сервера. */
-export function rateLimitKey(ip: string, secret: string): string {
-  return createHmac("sha256", secret).update(`lead:${ip}`).digest("hex");
+/**
+ * Ключ для лимита форм: IP не храним, только его HMAC-хэш с секретом сервера.
+ * scope — у каждой формы свой счётчик (заявки гостей, заявки владельцев).
+ */
+export function rateLimitKey(
+  ip: string,
+  secret: string,
+  scope: "lead" | "owner" = "lead",
+): string {
+  return createHmac("sha256", secret).update(`${scope}:${ip}`).digest("hex");
 }
 
 /** Поисковые роботы и превью ссылок в мессенджерах — не считаем их кликами и просмотрами. */

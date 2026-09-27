@@ -22,6 +22,8 @@ describe("rateLimitKey", () => {
     expect(rateLimitKey("1.2.3.4", "secret")).toBe(key);
     expect(rateLimitKey("1.2.3.4", "other")).not.toBe(key);
     expect(rateLimitKey("1.2.3.5", "secret")).not.toBe(key);
+    expect(rateLimitKey("1.2.3.4", "secret", "lead")).toBe(key);
+    expect(rateLimitKey("1.2.3.4", "secret", "owner")).not.toBe(key);
   });
 });
 

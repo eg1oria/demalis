@@ -60,6 +60,7 @@ messages/          переводы (ru.ts — основной, kk.ts — ка�
 src/app/[locale]/  страницы сайта
 src/components/    компоненты
 src/config/site.ts SITE_NAME и часовой пояс
+src/config/pricing.ts  тарифы для владельцев (цены)
 src/i18n/          настройки next-intl
 src/lib/           логика (getUpcomingWeekend и др.) и её тесты
 src/app/admin/     админка (/admin, только русский)
