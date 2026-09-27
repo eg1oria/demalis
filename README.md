@@ -32,26 +32,41 @@ npm run dev
 - Админка: http://localhost:3000/admin (объекты, заявки, статистика, импорт). Письма со ссылкой для входа локально не уходят на почту — они в Mailpit: http://127.0.0.1:54324.
 - Панель базы (Supabase Studio): http://127.0.0.1:54323.
 
+## После обновления кода (`git pull`)
+
+Новые этапы добавляют библиотеки и таблицы в базе. После каждого `git pull`:
+
+```bash
+npm install           # новые библиотеки (иначе ошибки вида «Can't resolve 'grammy'»)
+npm run db:migrate    # новые таблицы в локальной базе, данные не стираются
+npm run dev
+```
+
+`npm run dev` перед запуском сам проверяет библиотеки, ключи в `.env.local` и локальную базу (новые миграции применяет автоматически) и пишет, что сделать, если что-то не так. Для облачной базы Supabase новые миграции применяются командой `npx supabase db push` (docs/SETUP.md).
+
+Если база «сломалась» и не жалко данных: `npm run db:reset`, затем `npm run seed`.
+
 Облачный Supabase и Vercel — в [docs/SETUP.md](docs/SETUP.md). Метрика, Search Console, Яндекс Вебмастер — в [docs/SEO.md](docs/SEO.md).
 
 ## Команды
 
-| Команда                | Что делает                             |
-| ---------------------- | -------------------------------------- |
-| `npm run dev`          | Сервер разработки                      |
-| `npm run build`        | Продакшн-сборка                        |
-| `npm start`            | Запуск собранного проекта              |
-| `npm run lint`         | ESLint                                 |
-| `npm run format`       | Отформатировать код Prettier           |
-| `npm run format:check` | Проверить форматирование               |
-| `npm test`             | Тесты Vitest (один прогон)             |
-| `npm run test:watch`   | Тесты в режиме наблюдения              |
-| `npm run db:start`     | Запустить локальный Supabase           |
-| `npm run db:stop`      | Остановить локальный Supabase          |
-| `npm run db:reset`     | Пересоздать локальную базу из миграций |
-| `npm run db:types`     | Обновить TypeScript-типы базы          |
-| `npm run seed`         | Залить 12 тестовых объектов            |
-| `npm run bot:webhook`  | Подключить Telegram-бота к сайту       |
+| Команда                | Что делает                                                    |
+| ---------------------- | ------------------------------------------------------------- |
+| `npm run dev`          | Сервер разработки                                             |
+| `npm run build`        | Продакшн-сборка                                               |
+| `npm start`            | Запуск собранного проекта                                     |
+| `npm run lint`         | ESLint                                                        |
+| `npm run format`       | Отформатировать код Prettier                                  |
+| `npm run format:check` | Проверить форматирование                                      |
+| `npm test`             | Тесты Vitest (один прогон)                                    |
+| `npm run test:watch`   | Тесты в режиме наблюдения                                     |
+| `npm run db:start`     | Запустить локальный Supabase                                  |
+| `npm run db:stop`      | Остановить локальный Supabase                                 |
+| `npm run db:reset`     | Пересоздать локальную базу из миграций                        |
+| `npm run db:migrate`   | Применить новые миграции к локальной базе (без потери данных) |
+| `npm run db:types`     | Обновить TypeScript-типы базы                                 |
+| `npm run seed`         | Залить 12 тестовых объектов                                   |
+| `npm run bot:webhook`  | Подключить Telegram-бота к сайту                              |
 
 ## Структура
 
