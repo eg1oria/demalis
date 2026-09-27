@@ -61,9 +61,21 @@ describe("сообщения бота", () => {
 
   it("статистика", () => {
     expect(
-      statsMessage([{ place, views: 12, clicks: 3, leads: 1 }], "ru"),
+      statsMessage(
+        [
+          { place, views: 12, clicks: 3, leads: 1, available: true },
+          {
+            place: { name_ru: "Юрта", name_kk: null },
+            views: 5,
+            clicks: 0,
+            leads: 0,
+            available: false,
+          },
+        ],
+        "ru",
+      ),
     ).toBe(
-      "Статистика за 7 дней:\n\nДом у реки\nпросмотры: 12 · WhatsApp: 3 · заявки: 1",
+      "Статистика за 7 дней:\n\nДом у реки\nпросмотры: 12 · WhatsApp: 3 · заявки: 1\n\nЮрта\nстатистика доступна в тарифе Pro — спросите администратора",
     );
     expect(statsMessage([], "ru")).toContain("не привязан");
   });

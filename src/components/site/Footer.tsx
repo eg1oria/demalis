@@ -30,6 +30,12 @@ export function Footer() {
         >
           {h("owners")}
         </Link>
+        <Link
+          href="/privacy"
+          className="flex min-h-8 items-center text-text-secondary"
+        >
+          {t("privacy")}
+        </Link>
       </nav>
       <p className="text-[13px] text-text-faint lowercase">
         © {new Date().getFullYear()} {SITE_NAME}

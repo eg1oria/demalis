@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { LeadBillableToggle } from "@/components/admin/LeadBillableToggle";
 import { LeadStatusSelect } from "@/components/admin/LeadStatusSelect";
 import { inputClass, secondaryButtonClass } from "@/components/admin/ui";
 import { TIME_ZONE } from "@/config/site";
@@ -41,7 +42,7 @@ export default async function LeadsPage({
   let query = createAdminClient()
     .from("leads")
     .select(
-      "id, name, phone, date_from, date_to, guests, comment, status, created_at, place:places (id, name_ru)",
+      "id, name, phone, date_from, date_to, guests, comment, status, billable, created_at, place:places (id, name_ru)",
     )
     .order("created_at", { ascending: false })
     .limit(LIMIT);
@@ -114,7 +115,10 @@ export default async function LeadsPage({
                 </p>
               )}
             </div>
-            <LeadStatusSelect id={lead.id} status={lead.status} />
+            <div className="flex flex-col gap-1">
+              <LeadStatusSelect id={lead.id} status={lead.status} />
+              <LeadBillableToggle id={lead.id} billable={lead.billable} />
+            </div>
           </li>
         ))}
       </ul>

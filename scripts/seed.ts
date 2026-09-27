@@ -69,7 +69,28 @@ const DEFAULTS = {
   photos_permission: false,
   lat: null,
   lng: null,
+  plan: "free",
+  pro_until: null,
+  featured_until: null,
 } as const;
+
+// Этап 8: у Free гости видят только «Уточняйте наличие», поэтому часть
+// тестовых объектов — Pro (календарь и «Проверено»), три — с продвижением
+// (наверху «рекомендуемых» максимум два, с пометкой «Реклама»).
+const PRO = new Set([
+  "Глэмпинг «Горный воздух»",
+  "A-frame у реки",
+  "Банный комплекс «Каскелен»",
+  "Шале в горах",
+  "Юрта-глэмпинг «Талгар»",
+]);
+const FEATURED = new Set([
+  "Юрта-глэмпинг «Талгар»",
+  "Гостевой дом «Кольсай»",
+  "Дом у озера «Капшагай»",
+]);
+const inDays = (days: number) =>
+  new Date(Date.now() + days * 864e5).toISOString().slice(0, 10);
 
 function randomStatus(): AvailabilityStatus | null {
   const r = Math.random();
@@ -95,6 +116,11 @@ async function main() {
       // Все поля явно: при вставке массива PostgREST не подставляет default.
       ...DEFAULTS,
       ...p,
+      ...(PRO.has(p.name_ru) && {
+        plan: "pro" as const,
+        pro_until: inDays(60),
+      }),
+      ...(FEATURED.has(p.name_ru) && { featured_until: inDays(30) }),
       name_ru,
       slug: slugify(name_ru),
       whatsapp_phone: `+7701000${String(i + 1).padStart(4, "0")}`,

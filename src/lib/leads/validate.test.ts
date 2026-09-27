@@ -9,6 +9,7 @@ const valid = {
   dateTo: "2026-10-04",
   guests: "4",
   comment: "  С собакой  ",
+  consent: "on",
 };
 
 describe("validateLead", () => {
@@ -44,8 +45,16 @@ describe("validateLead", () => {
         dateFrom: "required",
         dateTo: "required",
         guests: "invalid",
+        consent: "required",
       },
     });
+  });
+
+  it("без согласия заявку не принимаем", () => {
+    for (const consent of [undefined, "", "off", "true"]) {
+      const r = validateLead({ ...valid, consent }, TODAY);
+      expect(!r.ok && r.errors).toEqual({ consent: "required" });
+    }
   });
 
   it("неверный телефон", () => {

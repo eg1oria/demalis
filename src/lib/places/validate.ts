@@ -39,6 +39,7 @@ export type PlaceInput = {
   video_url: string | null;
   status: PlaceStatus;
   plan: Plan;
+  pro_until: string | null;
   featured_until: string | null;
   owner_id: string | null;
   photos_permission: boolean;
@@ -69,6 +70,7 @@ export const FIELD_LABELS: Record<string, string> = {
   video_url: "Видео",
   status: "Статус",
   plan: "Тариф",
+  pro_until: "Pro до",
   featured_until: "Продвижение до",
   owner_id: "Владелец",
   photos_permission: "Разрешение на фото",
@@ -215,6 +217,7 @@ export function validatePlaceInput(raw: RawPlaceInput): ValidationResult {
     video_url: url("video_url"),
     status: oneOf("status", PLACE_STATUSES, "draft"),
     plan: oneOf("plan", PLANS, "free"),
+    pro_until: date("pro_until"),
     featured_until: date("featured_until"),
     owner_id: uuid("owner_id"),
     photos_permission: bool("photos_permission"),

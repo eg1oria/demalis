@@ -14,6 +14,7 @@ import {
 } from "@/components/site/Icons";
 import { PlacePhoto } from "@/components/site/PlacePhoto";
 import { StatusBadge } from "@/components/site/StatusBadge";
+import { VerifiedBadge } from "@/components/site/VerifiedBadge";
 import { AvailabilityCalendar } from "@/components/place/AvailabilityCalendar";
 import { Gallery } from "@/components/place/Gallery";
 import { LeadForm } from "@/components/place/LeadForm";
@@ -33,10 +34,12 @@ import {
   findSimilar,
   getPlaceAvailability,
   getPlaceBySlug,
+  placeStatus,
   statusesForNight,
 } from "@/lib/catalog/query";
-import { nextDays } from "@/lib/dates";
+import { almatyToday, nextDays, toIsoDate } from "@/lib/dates";
 import { goHref } from "@/lib/go";
+import { planFeatures } from "@/lib/plans";
 import { formatTenge, splitMinutes } from "@/lib/format";
 import {
   placeAmenities,
@@ -87,7 +90,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     path: `/place/${place.slug}`,
     title: placeName(place, locale),
     description: placeDescription(place, locale) ?? summary,
-    images: visiblePhotos(place).map(photoUrl),
+    images: visiblePhotos(
+      place,
+      planFeatures(place, toIsoDate(almatyToday(new Date()))).photos,
+    ).map(photoUrl),
   });
 }
 
@@ -100,6 +106,9 @@ export default async function PlacePage({ params, searchParams }: Props) {
 
   const now = new Date();
   const calendarDays = nextDays(now, 30);
+  const today = calendarDays[0];
+  // Что даёт тариф: фото, видео, календарь, «Проверено» (Этап 8).
+  const features = planFeatures(place, today);
   // Гости и даты приходят из фильтров каталога: календарь, блок статуса, текст WhatsApp.
   const { guests, when } = parseFilters(await searchParams);
   const stay = when ? resolveWhen(when, now) : null;
@@ -133,8 +142,11 @@ export default async function PlacePage({ params, searchParams }: Props) {
   ]);
   const similarStatuses = await statusesForNight(night, now);
 
+  // Без календаря в тарифе гость видит только «Уточняйте наличие».
   const dayStatus = (date: string): DisplayStatus =>
-    displayStatus(availability.days[date], availability.lastUpdatedAt, now);
+    features.availability
+      ? displayStatus(availability.days[date], availability.lastUpdatedAt, now)
+      : "unknown";
   const calendarStatuses = Object.fromEntries(
     calendarDays.map((d) => [d, dayStatus(d)]),
   );
@@ -146,7 +158,7 @@ export default async function PlacePage({ params, searchParams }: Props) {
 
   const name = placeName(place, currentLocale);
   const description = placeDescription(place, currentLocale);
-  const photos = visiblePhotos(place).map(photoUrl);
+  const photos = visiblePhotos(place, features.photos).map(photoUrl);
   const amenities = placeAmenities(place);
 
   const drive = (minutes: number) => {
@@ -237,6 +249,11 @@ export default async function PlacePage({ params, searchParams }: Props) {
           <h1 className="mt-2 font-serif text-[32px] leading-[1.1] font-medium tracking-[-0.02em]">
             {name}
           </h1>
+          {features.verified && (
+            <div className="mt-2.5 flex">
+              <VerifiedBadge onPhoto={false} />
+            </div>
+          )}
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm text-text-secondary">
             {place.drive_minutes != null && (
               <span className="flex items-center gap-1.5">
@@ -309,28 +326,30 @@ export default async function PlacePage({ params, searchParams }: Props) {
             </section>
           )}
 
-          <section className="mt-8">
-            <div className="flex items-baseline justify-between gap-3">
-              <h2 className={h2}>{tCalendar("title")}</h2>
-              <span className="text-[13px] text-text-muted">
-                {updatedDays === null
-                  ? tCalendar("never")
-                  : tCalendar("updated", { days: updatedDays })}
-              </span>
-            </div>
-            {stale && updatedDays !== null && (
-              <p className="mt-2 text-sm text-text-secondary">
-                {tCalendar("staleNote")}
-              </p>
-            )}
-            <div className="mt-3.5">
-              <AvailabilityCalendar
-                days={calendarDays}
-                statuses={calendarStatuses}
-                selected={stay?.nights ?? []}
-              />
-            </div>
-          </section>
+          {features.availability && (
+            <section className="mt-8">
+              <div className="flex items-baseline justify-between gap-3">
+                <h2 className={h2}>{tCalendar("title")}</h2>
+                <span className="text-[13px] text-text-muted">
+                  {updatedDays === null
+                    ? tCalendar("never")
+                    : tCalendar("updated", { days: updatedDays })}
+                </span>
+              </div>
+              {stale && updatedDays !== null && (
+                <p className="mt-2 text-sm text-text-secondary">
+                  {tCalendar("staleNote")}
+                </p>
+              )}
+              <div className="mt-3.5">
+                <AvailabilityCalendar
+                  days={calendarDays}
+                  statuses={calendarStatuses}
+                  selected={stay?.nights ?? []}
+                />
+              </div>
+            </section>
+          )}
 
           <section id="lead" className="mt-8 scroll-mt-4">
             <h2 className={h2}>{tLead("title")}</h2>
@@ -377,7 +396,7 @@ export default async function PlacePage({ params, searchParams }: Props) {
                   {t("instagram")}
                 </a>
               )}
-              {place.video_url && (
+              {features.video && place.video_url && (
                 <a
                   href={place.video_url}
                   target="_blank"
@@ -434,9 +453,11 @@ export default async function PlacePage({ params, searchParams }: Props) {
                           />
                           <span className="absolute top-2 left-2">
                             <StatusBadge
-                              status={
-                                similarStatuses.get(other.id) ?? "unknown"
-                              }
+                              status={placeStatus(
+                                other,
+                                similarStatuses,
+                                today,
+                              )}
                             />
                           </span>
                         </div>

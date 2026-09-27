@@ -60,6 +60,9 @@ messages/          переводы (ru.ts — основной, kk.ts — ка�
 src/app/[locale]/  страницы сайта
 src/components/    компоненты
 src/config/site.ts SITE_NAME и часовой пояс
+src/config/pricing.ts  тарифы для владельцев (цены)
+src/config/legal.ts    реквизиты для политики конфиденциальности (заполнить!)
+src/content/privacy.ts текст политики конфиденциальности (шаблон)
 src/i18n/          настройки next-intl
 src/lib/           логика (getUpcomingWeekend и др.) и её тесты
 src/app/admin/     админка (/admin, только русский)
@@ -71,7 +74,8 @@ src/lib/seo.ts     метаданные, hreflang, JSON-LD
 src/lib/collections.ts  подборки (фильтры, перевод)
 src/app/sitemap.ts, robots.ts  sitemap.xml и robots.txt
 src/lib/go.ts      ссылки /api/go/... (учёт кликов WhatsApp, звонка, Instagram)
-src/app/api/       маршруты: счётчик вариантов, клики, просмотры, webhook бота, cron
+src/app/api/       маршруты: счётчик вариантов, клики, просмотры, webhook бота, ежедневный cron
+src/lib/plans.ts   тарифы: Pro на дату, продвижение, напоминание о конце Pro
 vercel.json        расписание напоминаний (Vercel Cron)
 src/proxy.ts       редирект на язык (/ → /ru), сессия админки
 supabase/          миграции SQL и настройки локального Supabase

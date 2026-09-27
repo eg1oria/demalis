@@ -50,7 +50,7 @@ export function OwnersBlock() {
           })}
         </div>
         <Link
-          href="/owners"
+          href="/owners#add"
           className="mt-1.5 flex h-13 items-center justify-center rounded-[14px] bg-white text-base font-semibold text-text"
         >
           {t("cta")}

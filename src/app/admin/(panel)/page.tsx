@@ -12,6 +12,8 @@ import {
   PLACE_TYPES,
   type PlaceStatus,
 } from "@/lib/places/constants";
+import { almatyToday, toIsoDate } from "@/lib/dates";
+import { effectivePlan, isFeatured } from "@/lib/plans";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const metadata: Metadata = { title: "Объекты" };
@@ -34,10 +36,11 @@ export default async function PlacesPage({
       : null;
 
   const supabase = createAdminClient();
+  const today = toIsoDate(almatyToday(new Date()));
   let query = supabase
     .from("places")
     .select(
-      "id, slug, name_ru, type, direction, status, price_from, updated_at",
+      "id, slug, name_ru, type, direction, status, price_from, updated_at, plan, pro_until, featured_until",
     )
     .order("updated_at", { ascending: false });
 
@@ -103,7 +106,17 @@ export default async function PlacesPage({
                   ` · от ${place.price_from.toLocaleString("ru-RU")} ₸`}
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              {effectivePlan(place, today) === "pro" && (
+                <span className="rounded-full bg-surface-muted px-3 py-1 text-xs font-medium">
+                  Pro
+                </span>
+              )}
+              {isFeatured(place, today) && (
+                <span className="rounded-full bg-surface-muted px-3 py-1 text-xs font-medium">
+                  Реклама
+                </span>
+              )}
               <span
                 className={`rounded-full px-3 py-1 text-xs font-medium ${STATUS_BADGE[place.status]}`}
               >

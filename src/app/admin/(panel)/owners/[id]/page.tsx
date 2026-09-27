@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { OwnerForm } from "@/components/admin/OwnerForm";
 import {
   cardClass,
+  inputClass,
   primaryButtonClass,
   secondaryButtonClass,
 } from "@/components/admin/ui";
@@ -11,11 +12,20 @@ import { requireAdminPage } from "@/lib/admin/auth";
 import { PLACE_STATUSES } from "@/lib/places/constants";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getBotUsername } from "@/lib/telegram/api";
-import { createLinkCode, unlinkTelegram } from "../actions";
+import { ownerReport } from "@/lib/bot/monthly";
+import { parseMonth, shiftMonth } from "@/lib/dates";
+import { createLinkCode, sendReportNow, unlinkTelegram } from "../actions";
 
 export const metadata: Metadata = { title: "Владелец" };
 
 const UUID = /^[0-9a-f-]{36}$/i;
+
+const REPORT_RESULTS = {
+  sent: "Отчёт отправлен владельцу в Telegram",
+  "no-chat": "Бот у владельца не подключён — отправить некуда",
+  "no-places": "У владельца нет объектов",
+  "no-bot": "Не задан TELEGRAM_BOT_TOKEN",
+} as const;
 
 export default async function OwnerPage({
   params,
@@ -23,7 +33,7 @@ export default async function OwnerPage({
 }: PageProps<"/admin/owners/[id]">) {
   await requireAdminPage();
   const { id } = await params;
-  const { saved } = await searchParams;
+  const { saved, month, report: sentResult } = await searchParams;
   if (!UUID.test(id)) notFound();
 
   const { data: owner, error } = await createAdminClient()
@@ -37,6 +47,17 @@ export default async function OwnerPage({
   if (!owner) notFound();
 
   const username = owner.link_code ? await getBotUsername() : null;
+  // Предпросмотр отчёта: по умолчанию — за прошлый месяц.
+  const now = new Date();
+  const reportMonth =
+    typeof month === "string"
+      ? parseMonth(month, now)
+      : shiftMonth(parseMonth(undefined, now), -1);
+  const { report } = await ownerReport(owner.id, reportMonth);
+  const reportResult =
+    typeof sentResult === "string" && sentResult in REPORT_RESULTS
+      ? (sentResult as keyof typeof REPORT_RESULTS)
+      : null;
   const deepLink =
     username && owner.link_code
       ? `https://t.me/${username}?start=${owner.link_code}`
@@ -115,6 +136,64 @@ export default async function OwnerPage({
             </form>
           )}
         </div>
+      </section>
+
+      <section className={`${cardClass} flex flex-col gap-3`}>
+        <h2 className="font-serif text-xl font-medium">Ежемесячный отчёт</h2>
+        <p className="text-sm text-text-secondary">
+          Бот сам присылает его 1-го числа за прошлый месяц. Цифры те же, что в{" "}
+          <Link
+            href={`/admin/stats?month=${reportMonth}`}
+            className="text-accent"
+          >
+            статистике за этот месяц
+          </Link>
+          .
+        </p>
+        {reportResult && (
+          <p
+            role="status"
+            className={`rounded-[14px] p-3 ${
+              reportResult === "sent"
+                ? "bg-status-free-bg text-status-free-text"
+                : "bg-status-limited-bg text-status-limited-text"
+            }`}
+          >
+            {REPORT_RESULTS[reportResult]}
+          </p>
+        )}
+        <div className="flex flex-wrap items-center gap-2">
+          <form className="flex flex-wrap items-center gap-2">
+            <input
+              type="month"
+              name="month"
+              defaultValue={reportMonth}
+              className={`${inputClass} w-44`}
+            />
+            <button type="submit" className={secondaryButtonClass}>
+              Показать
+            </button>
+          </form>
+          <form action={sendReportNow.bind(null, owner.id)}>
+            <input type="hidden" name="month" value={reportMonth} />
+            <button
+              type="submit"
+              disabled={!owner.telegram_chat_id || !report}
+              className={primaryButtonClass}
+            >
+              Отправить владельцу
+            </button>
+          </form>
+        </div>
+        {report ? (
+          <pre className="rounded-[14px] bg-surface-muted p-3 font-sans text-sm whitespace-pre-wrap">
+            {report.text}
+          </pre>
+        ) : (
+          <p className="text-sm text-text-muted">
+            У владельца нет объектов — отчёт не отправляется.
+          </p>
+        )}
       </section>
 
       <section className="flex flex-col gap-2">

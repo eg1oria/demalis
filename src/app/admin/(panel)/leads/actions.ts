@@ -17,3 +17,16 @@ export async function setLeadStatus(
     .eq("id", id);
   return error ? { error: error.message } : {};
 }
+
+/** Платная заявка (Этап 8): считается в отчёте «Оплаты» за месяц. */
+export async function setLeadBillable(
+  id: string,
+  billable: boolean,
+): Promise<{ error?: string }> {
+  await requireAdmin();
+  const { error } = await createAdminClient()
+    .from("leads")
+    .update({ billable })
+    .eq("id", id);
+  return error ? { error: error.message } : {};
+}

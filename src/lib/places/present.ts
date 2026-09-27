@@ -19,11 +19,15 @@ export function placeDescription(
   );
 }
 
-/** Без разрешения владельца фото не показываем. */
+/**
+ * Без разрешения владельца фото не показываем.
+ * limit — сколько фото даёт тариф (free — 5, Pro — 20).
+ */
 export function visiblePhotos(
   place: Pick<Tables<"places">, "photos" | "photos_permission">,
+  limit?: number,
 ): string[] {
-  return place.photos_permission ? place.photos : [];
+  return place.photos_permission ? place.photos.slice(0, limit) : [];
 }
 
 /** Порядок важности удобств — для «3 главных» на карточке. */

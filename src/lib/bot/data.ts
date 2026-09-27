@@ -1,7 +1,8 @@
 import "server-only";
-import type { IsoDate } from "@/lib/dates";
+import { almatyToday, type IsoDate, toIsoDate } from "@/lib/dates";
 import type { LeadStatus } from "@/lib/leads/constants";
 import type { AvailabilityStatus } from "@/lib/places/constants";
+import { planFeatures } from "@/lib/plans";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { DraftStatus } from "./callbacks";
 import { type BotLang, isBotLang } from "./texts";
@@ -193,18 +194,27 @@ export async function setLeadStatus(leadId: string, status: LeadStatus) {
 
 export async function ownerStats(ownerId: string) {
   const [places, stats] = await Promise.all([
-    ownerPlaces(ownerId),
+    db()
+      .from("places")
+      .select("id, name_ru, name_kk, plan, pro_until")
+      .eq("owner_id", ownerId)
+      .neq("status", "hidden")
+      .order("name_ru"),
     db().rpc("place_stats"),
   ]);
+  if (places.error) throw places.error;
   if (stats.error) throw stats.error;
+  const today = toIsoDate(almatyToday(new Date()));
   const byId = new Map(stats.data.map((s) => [s.place_id, s]));
-  return places.map((place) => {
+  return places.data.map((place) => {
     const s = byId.get(place.id);
     return {
       place,
       views: s?.views_7 ?? 0,
       clicks: s?.whatsapp_7 ?? 0,
       leads: s?.leads_7 ?? 0,
+      // Статистика в боте — возможность тарифа Pro (Этап 8).
+      available: planFeatures(place, today).botStats,
     };
   });
 }

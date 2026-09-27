@@ -26,7 +26,7 @@ export function Header({ hideOnMobile = false }: { hideOnMobile?: boolean }) {
             <LanguageSwitcher />
           </Suspense>
           <Link
-            href="/owners"
+            href="/owners#add"
             className="hidden h-11 items-center rounded-full bg-text px-5 text-sm font-semibold text-white md:flex"
           >
             {t("addPlace")}
