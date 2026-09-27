@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Демалыс
 
-## Getting Started
+Подборщик загородного отдыха на выходные вокруг Алматы. Полное техническое задание — [TZ.md](TZ.md), макеты — [design/](design/README.md).
 
-First, run the development server:
+Стек: Next.js (App Router) + TypeScript + Tailwind CSS + next-intl (`/ru`, `/kk`). Тесты — Vitest.
+
+## Запуск локально
+
+Нужен Node.js 24 (или 22+).
 
 ```bash
+npm install
+cp .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Открой http://localhost:3000 — откроется `/ru`. Переключатель «Рус / Қаз» в шапке.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Команды
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Команда                | Что делает                   |
+| ---------------------- | ---------------------------- |
+| `npm run dev`          | Сервер разработки            |
+| `npm run build`        | Продакшн-сборка              |
+| `npm start`            | Запуск собранного проекта    |
+| `npm run lint`         | ESLint                       |
+| `npm run format`       | Отформатировать код Prettier |
+| `npm run format:check` | Проверить форматирование     |
+| `npm test`             | Тесты Vitest (один прогон)   |
+| `npm run test:watch`   | Тесты в режиме наблюдения    |
 
-## Learn More
+## Структура
 
-To learn more about Next.js, take a look at the following resources:
+```
+messages/          переводы (ru.ts — основной, kk.ts — казахский)
+src/app/[locale]/  страницы сайта
+src/components/    компоненты
+src/config/site.ts SITE_NAME и часовой пояс
+src/i18n/          настройки next-intl
+src/lib/           логика (getUpcomingWeekend и др.) и её тесты
+src/proxy.ts       редирект на язык (/ → /ru)
+docs/SETUP.md      как создать Supabase и Vercel и куда вставить ключи
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Переводы
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Тексты лежат в `messages/ru.ts` и `messages/kk.ts`. Казахские строки, переведённые не носителем, помечены комментарием `// TODO: проверить носителю`.
 
-## Deploy on Vercel
+## Прогресс
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Что сделано и что дальше — в [PROGRESS.md](PROGRESS.md). Идеи вне ТЗ — в [IDEAS.md](IDEAS.md).

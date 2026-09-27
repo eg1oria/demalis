@@ -55,3 +55,6 @@ yarn-error.log*
 # ОС
 .DS_Store
 Thumbs.db
+
+# Локальные настройки Claude Code
+.claude/
