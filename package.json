@@ -15,11 +15,13 @@
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
     "db:types": "supabase gen types typescript --local > src/lib/supabase/database.types.ts && prettier --write src/lib/supabase/database.types.ts",
-    "seed": "tsx --env-file=.env.local scripts/seed.ts"
+    "seed": "tsx --env-file=.env.local scripts/seed.ts",
+    "bot:webhook": "tsx --env-file=.env.local scripts/set-webhook.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.2",
+    "grammy": "^1.46.0",
     "leaflet": "^1.9.4",
     "next": "16.3.6",
     "next-intl": "^4.14.7",

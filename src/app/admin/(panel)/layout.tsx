@@ -24,6 +24,12 @@ export default async function PanelLayout({ children }: LayoutProps<"/admin">) {
               Объекты
             </Link>
             <Link
+              href="/admin/owners"
+              className="flex h-11 items-center px-2 whitespace-nowrap"
+            >
+              Владельцы
+            </Link>
+            <Link
               href="/admin/leads"
               className="flex h-11 items-center px-2 whitespace-nowrap"
             >

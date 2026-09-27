@@ -161,6 +161,7 @@ export type Database = {
         Row: {
           created_at: string;
           id: string;
+          language: string | null;
           link_code: string | null;
           name: string;
           phone: string | null;
@@ -169,6 +170,7 @@ export type Database = {
         Insert: {
           created_at?: string;
           id?: string;
+          language?: string | null;
           link_code?: string | null;
           name: string;
           phone?: string | null;
@@ -177,6 +179,7 @@ export type Database = {
         Update: {
           created_at?: string;
           id?: string;
+          language?: string | null;
           link_code?: string | null;
           name?: string;
           phone?: string | null;

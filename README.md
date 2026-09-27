@@ -51,6 +51,7 @@ npm run dev
 | `npm run db:reset`     | Пересоздать локальную базу из миграций |
 | `npm run db:types`     | Обновить TypeScript-типы базы          |
 | `npm run seed`         | Залить 12 тестовых объектов            |
+| `npm run bot:webhook`  | Подключить Telegram-бота к сайту       |
 
 ## Структура
 
@@ -65,8 +66,10 @@ src/app/admin/     админка (/admin, только русский)
 src/lib/places/    справочники и проверка полей объекта (форма и CSV)
 src/lib/supabase/  клиенты Supabase и типы базы
 src/lib/leads/     проверка заявки, статусы, текст для Telegram
+src/lib/bot/       Telegram-бот владельцев (grammY): меню, кнопки, тексты ru/kk
 src/lib/go.ts      ссылки /api/go/... (учёт кликов WhatsApp, звонка, Instagram)
-src/app/api/       маршруты: счётчик вариантов, клики, просмотры
+src/app/api/       маршруты: счётчик вариантов, клики, просмотры, webhook бота, cron
+vercel.json        расписание напоминаний (Vercel Cron)
 src/proxy.ts       редирект на язык (/ → /ru), сессия админки
 supabase/          миграции SQL и настройки локального Supabase
 scripts/seed.ts    тестовые данные

@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { after } from "next/server";
 import { almatyToday, toIsoDate } from "@/lib/dates";
+import { notifyOwnerAboutLead } from "@/lib/bot/notify";
 import { getPublishedPlace } from "@/lib/events/record";
 import { HONEYPOT_FIELD, LEAD_RATE_LIMIT } from "@/lib/leads/constants";
 import { leadTelegramMessage } from "@/lib/leads/message";
@@ -80,15 +81,24 @@ export async function submitLead(
   }
   if (!allowed) return { status: "error", form: "rateLimit" };
 
-  const { error } = await supabase
+  const { data: saved, error } = await supabase
     .from("leads")
-    .insert({ ...lead, place_id: place.id });
+    .insert({ ...lead, place_id: place.id })
+    .select("id")
+    .single();
   if (error) {
     console.error("submitLead insert", error);
     return { status: "error", form: "server" };
   }
 
-  // Уведомление админу — после ответа посетителю, чтобы не ждать Telegram.
+  // Уведомления — после ответа посетителю, чтобы не ждать Telegram.
+  after(async () => {
+    try {
+      await notifyOwnerAboutLead({ ...lead, id: saved.id }, place);
+    } catch (e) {
+      console.error("submitLead owner bot", e);
+    }
+  });
   after(async () => {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
     try {
