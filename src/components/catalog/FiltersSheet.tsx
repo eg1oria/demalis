@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { type ReactNode, useEffect, useState } from "react";
 import { chipClass } from "@/components/site/Chip";
 import { GuestStepper } from "@/components/site/GuestStepper";
@@ -16,7 +16,9 @@ import {
   PRICE_OPTIONS,
   SORT_OPTIONS,
   toggleAmenity,
+  type WhenOption,
 } from "@/lib/catalog/filters";
+import { almatyToday, toIsoDate } from "@/lib/dates";
 import { DIRECTIONS, PLACE_TYPES } from "@/lib/places/constants";
 
 /** Все фильтры каталога. Изменения применяются кнопкой «Показать варианты». */
@@ -50,6 +52,12 @@ export function FiltersSheet({
   }, [onClose]);
 
   const guests = draft.guests ?? 1;
+  const locale = useLocale();
+  const today = toIsoDate(almatyToday(new Date()));
+  const customDate =
+    draft.when && draft.when !== "this" && draft.when !== "next"
+      ? draft.when
+      : null;
 
   return (
     <div
@@ -78,6 +86,52 @@ export function FiltersSheet({
         </div>
 
         <div className="flex flex-col gap-6 overflow-y-auto px-5 py-5">
+          <Group title={t("when")}>
+            <Choice
+              selected={!draft.when}
+              onClick={() => set({ when: undefined })}
+            >
+              {t("when_any")}
+            </Choice>
+            <Choice
+              selected={draft.when === "this"}
+              onClick={() => set({ when: "this" })}
+            >
+              {t("when_this")}
+            </Choice>
+            <Choice
+              selected={draft.when === "next"}
+              onClick={() => set({ when: "next" })}
+            >
+              {t("when_next")}
+            </Choice>
+            <label
+              className={`relative cursor-pointer ${chipClass(customDate !== null)}`}
+            >
+              {customDate
+                ? new Date(`${customDate}T00:00:00Z`).toLocaleDateString(
+                    locale,
+                    {
+                      day: "numeric",
+                      month: "short",
+                      timeZone: "UTC",
+                    },
+                  )
+                : t("when_date")}
+              <input
+                type="date"
+                min={today}
+                value={customDate ?? ""}
+                aria-label={t("when_date")}
+                onClick={(e) => e.currentTarget.showPicker?.()}
+                onChange={(e) =>
+                  e.target.value && set({ when: e.target.value as WhenOption })
+                }
+                className="absolute inset-0 cursor-pointer opacity-0"
+              />
+            </label>
+          </Group>
+
           <Group title={t("drive")}>
             <Choice
               selected={!draft.drive}

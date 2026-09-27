@@ -290,7 +290,21 @@ export type Database = {
       };
     };
     Views: {
-      [_ in never]: never;
+      place_availability_updates: {
+        Row: {
+          last_updated_at: string | null;
+          place_id: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "availability_place_id_fkey";
+            columns: ["place_id"];
+            isOneToOne: false;
+            referencedRelation: "places";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Functions: {
       [_ in never]: never;

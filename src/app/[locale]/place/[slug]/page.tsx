@@ -13,12 +13,27 @@ import {
   WhatsAppIcon,
 } from "@/components/site/Icons";
 import { PlacePhoto } from "@/components/site/PlacePhoto";
+import { StatusBadge } from "@/components/site/StatusBadge";
+import { AvailabilityCalendar } from "@/components/place/AvailabilityCalendar";
 import { Gallery } from "@/components/place/Gallery";
+import { StatusBlock } from "@/components/place/StatusBlock";
 import { SITE_NAME } from "@/config/site";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { MAX_GUESTS, parseFilters } from "@/lib/catalog/filters";
-import { findSimilar, getPlaceBySlug } from "@/lib/catalog/query";
+import {
+  daysSince,
+  type DisplayStatus,
+  displayStatus,
+  keyNight,
+} from "@/lib/availability";
+import {
+  findSimilar,
+  getPlaceAvailability,
+  getPlaceBySlug,
+  statusesForNight,
+} from "@/lib/catalog/query";
+import { nextDays } from "@/lib/dates";
 import { formatTenge, splitMinutes } from "@/lib/format";
 import {
   placeAmenities,
@@ -29,6 +44,7 @@ import {
 } from "@/lib/places/present";
 import { photoUrl } from "@/lib/supabase/env";
 import { formatStay, resolveWhen } from "@/lib/when";
+import { getUpcomingWeekend } from "@/lib/weekend";
 
 type Props = PageProps<"/[locale]/place/[slug]">;
 
@@ -49,16 +65,51 @@ export default async function PlacePage({ params, searchParams }: Props) {
   const place = await getPlaceBySlug(slug);
   if (!place) notFound();
 
-  const [t, tf, tTypes, tDir, tAmenities, currentLocale, similar] =
-    await Promise.all([
-      getTranslations("Place"),
-      getTranslations("Format"),
-      getTranslations("Types"),
-      getTranslations("Directions"),
-      getTranslations("Amenities"),
-      getLocale(),
-      findSimilar(place),
-    ]);
+  const now = new Date();
+  const calendarDays = nextDays(now, 30);
+  // Гости и даты приходят из фильтров каталога: календарь, блок статуса, текст WhatsApp.
+  const { guests, when } = parseFilters(await searchParams);
+  const stay = when ? resolveWhen(when, now) : null;
+  // Без выбранных дат отвечаем про эту субботу (раздел 4 ТЗ).
+  const night = stay ? keyNight(stay.nights) : getUpcomingWeekend(now).saturday;
+
+  const [
+    t,
+    tf,
+    tTypes,
+    tDir,
+    tAmenities,
+    currentLocale,
+    similar,
+    availability,
+  ] = await Promise.all([
+    getTranslations("Place"),
+    getTranslations("Format"),
+    getTranslations("Types"),
+    getTranslations("Directions"),
+    getTranslations("Amenities"),
+    getLocale(),
+    findSimilar(place),
+    getPlaceAvailability(
+      place.id,
+      calendarDays[0] < night ? calendarDays[0] : night,
+      calendarDays[calendarDays.length - 1] > night
+        ? calendarDays[calendarDays.length - 1]
+        : night,
+    ),
+  ]);
+  const similarStatuses = await statusesForNight(night, now);
+
+  const dayStatus = (date: string): DisplayStatus =>
+    displayStatus(availability.days[date], availability.lastUpdatedAt, now);
+  const calendarStatuses = Object.fromEntries(
+    calendarDays.map((d) => [d, dayStatus(d)]),
+  );
+  const nightStatus = dayStatus(night);
+  const updatedDays = availability.lastUpdatedAt
+    ? daysSince(availability.lastUpdatedAt, now)
+    : null;
+  const stale = nightStatus === "stale" || (updatedDays ?? 0) > 7;
 
   const name = placeName(place, currentLocale);
   const description = placeDescription(place, currentLocale);
@@ -71,11 +122,26 @@ export default async function PlacePage({ params, searchParams }: Props) {
     return m === 0 ? tf("hours", { h }) : tf("hoursMinutes", { h, m });
   };
 
-  // Гости и даты приходят из фильтров каталога и подставляются в текст WhatsApp.
-  const { guests, when } = parseFilters(await searchParams);
-  const stayLabel = when
-    ? formatStay(resolveWhen(when, new Date()), currentLocale)
-    : null;
+  const stayLabel = stay ? formatStay(stay, currentLocale) : null;
+  const nightDate = new Date(`${night}T00:00:00Z`).toLocaleDateString(
+    currentLocale,
+    { day: "numeric", month: "long", timeZone: "UTC" },
+  );
+  const tStatus = await getTranslations("Status");
+  const tCalendar = await getTranslations("Calendar");
+  const statusTitle =
+    nightStatus === "stale" || nightStatus === "unknown"
+      ? tStatus(nightStatus)
+      : !when || when === "this" || when === "next"
+        ? t("statusThisSaturday", { status: tStatus(nightStatus) })
+        : t("statusOnNight", { status: tStatus(nightStatus), date: nightDate });
+  const statusSubtitle =
+    nightStatus === "stale" || nightStatus === "unknown"
+      ? t("statusAsk")
+      : t("statusUpdated", {
+          date: nightDate,
+          ago: t("ago", { days: updatedDays ?? 0 }),
+        });
   const waText = t("whatsappText", {
     site: SITE_NAME,
     name,
@@ -118,6 +184,14 @@ export default async function PlacePage({ params, searchParams }: Props) {
                 {tf("upToGuests", { n: place.capacity_max })}
               </span>
             )}
+          </div>
+
+          <div className="mt-5">
+            <StatusBlock
+              status={nightStatus}
+              title={statusTitle}
+              subtitle={statusSubtitle}
+            />
           </div>
 
           {place.price_from != null && (
@@ -168,6 +242,29 @@ export default async function PlacePage({ params, searchParams }: Props) {
               </p>
             </section>
           )}
+
+          <section className="mt-8">
+            <div className="flex items-baseline justify-between gap-3">
+              <h2 className={h2}>{tCalendar("title")}</h2>
+              <span className="text-[13px] text-text-muted">
+                {updatedDays === null
+                  ? tCalendar("never")
+                  : tCalendar("updated", { days: updatedDays })}
+              </span>
+            </div>
+            {stale && updatedDays !== null && (
+              <p className="mt-2 text-sm text-text-secondary">
+                {tCalendar("staleNote")}
+              </p>
+            )}
+            <div className="mt-3.5">
+              <AvailabilityCalendar
+                days={calendarDays}
+                statuses={calendarStatuses}
+                selected={stay?.nights ?? []}
+              />
+            </div>
+          </section>
 
           <section className="mt-8">
             <h2 className={h2}>{t("contacts")}</h2>
@@ -251,6 +348,13 @@ export default async function PlacePage({ params, searchParams }: Props) {
                             alt={otherName}
                             sizes="(min-width: 768px) 25vw, 50vw"
                           />
+                          <span className="absolute top-2 left-2">
+                            <StatusBadge
+                              status={
+                                similarStatuses.get(other.id) ?? "unknown"
+                              }
+                            />
+                          </span>
                         </div>
                         <span className="text-[15px] leading-snug font-semibold">
                           {otherName}

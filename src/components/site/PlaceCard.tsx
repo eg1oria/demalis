@@ -4,6 +4,7 @@ import type { PlaceCardData } from "@/lib/catalog/query";
 import { placeAmenities, placeName, visiblePhotos } from "@/lib/places/present";
 import { AmenityIcon, ClockIcon, UserIcon } from "./Icons";
 import { PlacePhoto } from "./PlacePhoto";
+import { StatusBadge } from "./StatusBadge";
 import { useFormat } from "./useFormat";
 
 /** Карточка объекта в каталоге. */
@@ -24,7 +25,10 @@ export function PlaceCard({
   const href = { pathname: `/place/${place.slug}`, query };
 
   return (
-    <Link href={href} className="group flex flex-col gap-3 text-text">
+    <Link
+      href={href}
+      className={`group flex flex-col gap-3 text-text ${place.status === "full" ? "opacity-60" : ""}`}
+    >
       <div className="relative aspect-[35/24] overflow-hidden rounded-[20px] bg-surface-muted">
         <PlacePhoto
           path={visiblePhotos(place)[0]}
@@ -33,6 +37,11 @@ export function PlaceCard({
           priority={priority}
           sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
         />
+        {place.status && (
+          <span className="absolute top-3 left-3">
+            <StatusBadge status={place.status} />
+          </span>
+        )}
       </div>
       <div className="flex flex-col gap-1.5 px-0.5">
         <div className="flex items-baseline justify-between gap-3">

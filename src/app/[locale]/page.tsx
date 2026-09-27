@@ -5,7 +5,8 @@ import { OwnersBlock } from "@/components/site/OwnersBlock";
 import { QuickChips } from "@/components/site/QuickChips";
 import { SearchCard } from "@/components/site/SearchCard";
 import type { Locale } from "@/i18n/routing";
-import { createPublicClient } from "@/lib/supabase/public";
+import { EMPTY_FILTERS } from "@/lib/catalog/filters";
+import { findPlaces } from "@/lib/catalog/query";
 import { almatyToday, toIsoDate } from "@/lib/dates";
 import { formatStay, resolveWhen } from "@/lib/when";
 
@@ -21,11 +22,11 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
   const currentLocale = await getLocale();
   const now = new Date();
 
-  const { count } = await createPublicClient()
-    .from("places")
-    .select("id", { count: "exact", head: true })
-    .eq("status", "published")
-    .gte("capacity_max", DEFAULT_GUESTS);
+  // Столько свободных вариантов на эти выходные для 2 гостей.
+  const { total: count } = await findPlaces(
+    { ...EMPTY_FILTERS, when: "this", guests: DEFAULT_GUESTS },
+    now,
+  );
 
   return (
     <>

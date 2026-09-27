@@ -25,6 +25,13 @@
   --status-full-bg: #edece8;
   --status-full-text: #a0a5a1;
   --status-unknown-border: #d6d2c8;
+  --toggle-off: #cfcbc1;
+
+  /* Блок «Свободно в эту субботу» на странице объекта (раздел 7.3) */
+  --status-block-title: #174a30;
+  --status-block-text: #2f6b4a;
+  --status-block-icon: #1e6b40;
+  --map-bg: #e9e6dd;
 
   /* Тёмный блок «Для владельцев» (раздел 7.4) */
   --owners-bg: #17201c;
@@ -61,6 +68,11 @@
   --color-status-full-bg: var(--status-full-bg);
   --color-status-full-text: var(--status-full-text);
   --color-status-unknown-border: var(--status-unknown-border);
+  --color-toggle-off: var(--toggle-off);
+  --color-status-block-title: var(--status-block-title);
+  --color-status-block-text: var(--status-block-text);
+  --color-status-block-icon: var(--status-block-icon);
+  --color-map-bg: var(--map-bg);
 
   --color-owners-bg: var(--owners-bg);
   --color-owners-surface: var(--owners-surface);
@@ -96,4 +108,51 @@ body {
 /* Страница объекта: подвал не прячется под нижней панелью с WhatsApp */
 body:has([data-contact-bar]) footer {
   padding-bottom: 7rem;
+}
+
+/* Маркеры карты (Leaflet): белые с рамкой line, выбранный — accent (раздел 7.5) */
+.map-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.map-pin span {
+  display: flex;
+  height: 32px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 11px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font:
+    700 13px/1 var(--font-onest),
+    system-ui,
+    sans-serif;
+  white-space: nowrap;
+  box-shadow: var(--shadow-float);
+}
+.map-pin span::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--dot, transparent);
+  border: var(--dot-border, none);
+}
+.map-pin.is-selected span {
+  height: 38px;
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+.map-pin.is-selected span::before {
+  background: #fff;
+  border: none;
+}
+
+/* Кнопки масштаба — под плашкой «N свободно», чтобы не спорить с мини-карточкой */
+.leaflet-top.leaflet-right {
+  top: 3.5rem;
 }

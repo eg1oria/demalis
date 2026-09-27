@@ -56,6 +56,10 @@ export type CatalogFilters = {
   sort: SortOption;
   /** Сколько карточек показать («Показать ещё» увеличивает). */
   limit: number;
+  /** Показывать и занятые (по умолчанию при выбранных датах — только свободные). */
+  all?: boolean;
+  /** Режим «Карта» вместо списка. */
+  view?: "map";
 };
 
 export const EMPTY_FILTERS: CatalogFilters = {
@@ -114,6 +118,8 @@ export function parseFilters(params: SearchParamsInput): CatalogFilters {
       Number.isInteger(limit) && limit > PAGE_SIZE && limit <= 240
         ? limit
         : PAGE_SIZE,
+    all: get("all") === "1" || undefined,
+    view: get("view") === "map" ? "map" : undefined,
   };
 }
 
@@ -129,12 +135,19 @@ export function toSearchParams(filters: CatalogFilters): URLSearchParams {
   if (filters.dir) params.set("dir", filters.dir);
   if (filters.sort !== "recommended") params.set("sort", filters.sort);
   if (filters.limit !== PAGE_SIZE) params.set("n", String(filters.limit));
+  if (filters.all) params.set("all", "1");
+  if (filters.view) params.set("view", filters.view);
   return params;
 }
 
 export function catalogHref(filters: Partial<CatalogFilters>): string {
   const query = toSearchParams({ ...EMPTY_FILTERS, ...filters }).toString();
   return query ? `/catalog?${query}` : "/catalog";
+}
+
+/** «Только свободные» включён по умолчанию, когда выбраны даты. */
+export function onlyFree(filters: CatalogFilters): boolean {
+  return Boolean(filters.when) && !filters.all;
 }
 
 /** Сколько фильтров включено (для счётчика на кнопке «Все фильтры»). */

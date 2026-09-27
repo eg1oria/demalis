@@ -3,6 +3,7 @@ import {
   catalogHref,
   countActiveFilters,
   EMPTY_FILTERS,
+  onlyFree,
   PAGE_SIZE,
   parseFilters,
   toggleAmenity,
@@ -63,7 +64,7 @@ describe("parseFilters", () => {
 describe("toSearchParams", () => {
   it("туда и обратно — без потерь", () => {
     const query =
-      "when=next&chan=1&pets=1&drive=30&guests=10&price=100plus&type=house&dir=kapshagay&sort=near&n=36";
+      "when=next&chan=1&pets=1&drive=30&guests=10&price=100plus&type=house&dir=kapshagay&sort=near&n=36&all=1&view=map";
     const filters = parseFilters(new URLSearchParams(query));
     expect(parseFilters(toSearchParams(filters))).toEqual(filters);
   });
@@ -76,6 +77,14 @@ describe("toSearchParams", () => {
     expect(catalogHref({ amenities: ["chan"], drive: 60, guests: 6 })).toBe(
       "/catalog?chan=1&drive=60&guests=6",
     );
+  });
+});
+
+describe("onlyFree", () => {
+  it("включён по умолчанию, когда выбраны даты", () => {
+    expect(onlyFree(parseFilters({ when: "this" }))).toBe(true);
+    expect(onlyFree(parseFilters({ when: "this", all: "1" }))).toBe(false);
+    expect(onlyFree(parseFilters({}))).toBe(false);
   });
 });
 

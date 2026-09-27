@@ -8,7 +8,6 @@ import {
   MAX_GUESTS,
   type WhenOption,
 } from "@/lib/catalog/filters";
-import { createClient } from "@/lib/supabase/browser";
 import { GuestStepper } from "./GuestStepper";
 import { SearchIcon } from "./Icons";
 import { SegmentedControl } from "./SegmentedControl";
@@ -32,31 +31,27 @@ export function SearchCard({
   const locale = useLocale();
   const [when, setWhen] = useState<WhenOption>("this");
   const [guests, setGuests] = useState(initialGuests);
-  // Кэш «гостей → сколько вариантов», чтобы не спрашивать базу повторно.
-  const [counts, setCounts] = useState<Record<number, number>>({
-    [initialGuests]: initialCount,
+  // Кэш «даты + гости → сколько вариантов», чтобы не спрашивать сервер повторно.
+  const key = `${when}|${guests}`;
+  const [counts, setCounts] = useState<Record<string, number>>({
+    [`this|${initialGuests}`]: initialCount,
   });
   const [lastCount, setLastCount] = useState(initialCount);
-  const count = counts[guests] ?? lastCount;
+  const count = counts[key] ?? lastCount;
 
-  // Число вариантов под выбранное число гостей (даты учитываются с Этапа 3).
   useEffect(() => {
-    if (counts[guests] !== undefined) return;
-    let cancelled = false;
-    createClient()
-      .from("places")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "published")
-      .gte("capacity_max", guests)
-      .then(({ count: next }) => {
-        if (cancelled || next == null) return;
-        setCounts((c) => ({ ...c, [guests]: next }));
+    if (counts[key] !== undefined) return;
+    const controller = new AbortController();
+    const query = new URLSearchParams({ when, guests: String(guests) });
+    fetch(`/api/catalog/count?${query}`, { signal: controller.signal })
+      .then((r) => r.json())
+      .then(({ count: next }: { count: number }) => {
+        setCounts((c) => ({ ...c, [key]: next }));
         setLastCount(next);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [guests, counts]);
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [key, counts, when, guests]);
 
   const customDate = when !== "this" && when !== "next" ? when : null;
 
