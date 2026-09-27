@@ -6,28 +6,51 @@
 
 ## Запуск локально
 
-Нужен Node.js 24 (или 22+).
+Нужны Node.js 24 (или 22+) и Docker Desktop (для локальной базы Supabase).
 
 ```bash
 npm install
+npm run db:start      # локальный Supabase в Docker (первый раз качает образы ~10 мин)
 cp .env.example .env.local
+```
+
+`db:start` в конце печатает ключи. Впиши в `.env.local`:
+
+- `NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — значение **Publishable**
+- `SUPABASE_SECRET_KEY` — значение **Secret**
+- `ADMIN_EMAILS` — свой email
+
+Дальше:
+
+```bash
+npm run seed          # 12 тестовых объектов [ТЕСТ]
 npm run dev
 ```
 
-Открой http://localhost:3000 — откроется `/ru`. Переключатель «Рус / Қаз» в шапке.
+- Сайт: http://localhost:3000 (откроется `/ru`).
+- Админка: http://localhost:3000/admin. Письма со ссылкой для входа локально не уходят на почту — они в Mailpit: http://127.0.0.1:54324.
+- Панель базы (Supabase Studio): http://127.0.0.1:54323.
+
+Облачный Supabase и Vercel — в [docs/SETUP.md](docs/SETUP.md).
 
 ## Команды
 
-| Команда                | Что делает                   |
-| ---------------------- | ---------------------------- |
-| `npm run dev`          | Сервер разработки            |
-| `npm run build`        | Продакшн-сборка              |
-| `npm start`            | Запуск собранного проекта    |
-| `npm run lint`         | ESLint                       |
-| `npm run format`       | Отформатировать код Prettier |
-| `npm run format:check` | Проверить форматирование     |
-| `npm test`             | Тесты Vitest (один прогон)   |
-| `npm run test:watch`   | Тесты в режиме наблюдения    |
+| Команда                | Что делает                             |
+| ---------------------- | -------------------------------------- |
+| `npm run dev`          | Сервер разработки                      |
+| `npm run build`        | Продакшн-сборка                        |
+| `npm start`            | Запуск собранного проекта              |
+| `npm run lint`         | ESLint                                 |
+| `npm run format`       | Отформатировать код Prettier           |
+| `npm run format:check` | Проверить форматирование               |
+| `npm test`             | Тесты Vitest (один прогон)             |
+| `npm run test:watch`   | Тесты в режиме наблюдения              |
+| `npm run db:start`     | Запустить локальный Supabase           |
+| `npm run db:stop`      | Остановить локальный Supabase          |
+| `npm run db:reset`     | Пересоздать локальную базу из миграций |
+| `npm run db:types`     | Обновить TypeScript-типы базы          |
+| `npm run seed`         | Залить 12 тестовых объектов            |
 
 ## Структура
 
@@ -38,7 +61,13 @@ src/components/    компоненты
 src/config/site.ts SITE_NAME и часовой пояс
 src/i18n/          настройки next-intl
 src/lib/           логика (getUpcomingWeekend и др.) и её тесты
-src/proxy.ts       редирект на язык (/ → /ru)
+src/app/admin/     админка (/admin, только русский)
+src/lib/places/    справочники и проверка полей объекта (форма и CSV)
+src/lib/supabase/  клиенты Supabase и типы базы
+src/proxy.ts       редирект на язык (/ → /ru), сессия админки
+supabase/          миграции SQL и настройки локального Supabase
+scripts/seed.ts    тестовые данные
+public/places_template.csv  шаблон для импорта объектов
 docs/SETUP.md      как создать Supabase и Vercel и куда вставить ключи
 ```
 

@@ -1,24 +1,12 @@
 import type { Metadata } from "next";
-import { Literata, Onest } from "next/font/google";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Header } from "@/components/Header";
 import { SITE_NAME } from "@/config/site";
 import { routing } from "@/i18n/routing";
+import { literata, onest } from "../fonts";
 import "../globals.css";
-
-const onest = Onest({
-  variable: "--font-onest",
-  subsets: ["cyrillic", "cyrillic-ext", "latin"],
-  weight: ["400", "500", "600"],
-});
-
-const literata = Literata({
-  variable: "--font-literata",
-  subsets: ["cyrillic", "cyrillic-ext", "latin"],
-  weight: ["500", "600"],
-});
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
