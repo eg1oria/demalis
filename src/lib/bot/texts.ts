@@ -34,6 +34,8 @@ type Texts = {
   guests: (n: number) => string;
   statsTitle: string;
   statsLine: (views: number, clicks: number, leads: number) => string;
+  statsProOnly: string;
+  proEnding: (place: string, date: string) => string;
   newLead: string;
   leadName: string;
   leadPhone: string;
@@ -92,6 +94,9 @@ const ru: Texts = {
   statsTitle: "Статистика за 7 дней:",
   statsLine: (views, clicks, leads) =>
     `просмотры: ${views} · WhatsApp: ${clicks} · заявки: ${leads}`,
+  statsProOnly: "статистика доступна в тарифе Pro — спросите администратора",
+  proEnding: (place, date) =>
+    `Тариф Pro для «${place}» заканчивается ${date}. После этого на сайте пропадут календарь занятости и плашка «Проверено». Чтобы продлить — напишите администратору сайта.`,
   newLead: "Новая заявка",
   leadName: "Имя",
   leadPhone: "Телефон",
@@ -148,6 +153,9 @@ const kk: Texts = {
   statsTitle: "7 күндегі статистика:",
   statsLine: (views, clicks, leads) =>
     `қаралым: ${views} · WhatsApp: ${clicks} · өтінім: ${leads}`,
+  statsProOnly: "статистика Pro тарифінде қолжетімді — әкімшіден сұраңыз",
+  proEnding: (place, date) =>
+    `«${place}» үшін Pro тарифі ${date} аяқталады. Одан кейін сайтта бос күндер күнтізбесі мен «Тексерілген» белгісі жоғалады. Ұзарту үшін сайт әкімшісіне жазыңыз.`,
   newLead: "Жаңа өтінім",
   leadName: "Аты",
   leadPhone: "Телефон",

@@ -74,7 +74,8 @@ src/lib/seo.ts     метаданные, hreflang, JSON-LD
 src/lib/collections.ts  подборки (фильтры, перевод)
 src/app/sitemap.ts, robots.ts  sitemap.xml и robots.txt
 src/lib/go.ts      ссылки /api/go/... (учёт кликов WhatsApp, звонка, Instagram)
-src/app/api/       маршруты: счётчик вариантов, клики, просмотры, webhook бота, cron
+src/app/api/       маршруты: счётчик вариантов, клики, просмотры, webhook бота, ежедневный cron
+src/lib/plans.ts   тарифы: Pro на дату, продвижение, напоминание о конце Pro
 vercel.json        расписание напоминаний (Vercel Cron)
 src/proxy.ts       редирект на язык (/ → /ru), сессия админки
 supabase/          миграции SQL и настройки локального Supabase

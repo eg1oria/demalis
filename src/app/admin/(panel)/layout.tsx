@@ -48,6 +48,12 @@ export default async function PanelLayout({ children }: LayoutProps<"/admin">) {
               Статистика
             </Link>
             <Link
+              href="/admin/billing"
+              className="flex h-11 items-center px-2 whitespace-nowrap"
+            >
+              Оплаты
+            </Link>
+            <Link
               href="/admin/import"
               className="flex h-11 items-center px-2 whitespace-nowrap"
             >

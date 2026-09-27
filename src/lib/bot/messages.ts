@@ -79,6 +79,8 @@ export function statsMessage(
     views: number;
     clicks: number;
     leads: number;
+    /** Статистика в боте — возможность тарифа Pro (Этап 8). */
+    available: boolean;
   }[],
   lang: BotLang,
 ): string {
@@ -88,7 +90,7 @@ export function statsMessage(
     t.statsTitle,
     ...rows.map(
       (r) =>
-        `${placeName(r.place, lang)}\n${t.statsLine(r.views, r.clicks, r.leads)}`,
+        `${placeName(r.place, lang)}\n${r.available ? t.statsLine(r.views, r.clicks, r.leads) : t.statsProOnly}`,
     ),
   ].join("\n\n");
 }

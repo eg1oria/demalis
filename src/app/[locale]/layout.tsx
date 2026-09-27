@@ -30,6 +30,7 @@ const CLIENT_NAMESPACES = [
   "LeadForm",
   "Collections",
   "OwnerForm",
+  "Plans",
 ] as const;
 
 const METRIKA_ID = process.env.NEXT_PUBLIC_YANDEX_METRIKA_ID;

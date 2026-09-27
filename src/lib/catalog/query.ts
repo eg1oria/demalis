@@ -5,8 +5,9 @@ import {
   isAvailable,
   keyNight,
 } from "@/lib/availability";
-import type { IsoDate } from "@/lib/dates";
+import { almatyToday, type IsoDate, toIsoDate } from "@/lib/dates";
 import type { AvailabilityStatus } from "@/lib/places/constants";
+import { planFeatures, promote } from "@/lib/plans";
 import type { Tables } from "@/lib/supabase/database.types";
 import { createPublicClient } from "@/lib/supabase/public";
 import { resolveWhen } from "@/lib/when";
@@ -19,7 +20,7 @@ import {
 
 /** Поля для карточки в списке и маркера на карте. */
 export const CARD_FIELDS =
-  "id, slug, name_ru, name_kk, type, direction, drive_minutes, price_from, price_unit, capacity_max, photos, photos_permission, has_banya, has_chan, has_pool, pets_allowed, has_kitchen, has_bbq, winter_ok, has_wifi, lat, lng" as const;
+  "id, slug, name_ru, name_kk, type, direction, drive_minutes, price_from, price_unit, capacity_max, photos, photos_permission, has_banya, has_chan, has_pool, pets_allowed, has_kitchen, has_bbq, winter_ok, has_wifi, lat, lng, plan, pro_until, featured_until" as const;
 
 export type PlaceCardData = Pick<
   Tables<"places">,
@@ -45,9 +46,16 @@ export type PlaceCardData = Pick<
   | "has_wifi"
   | "lat"
   | "lng"
+  | "plan"
+  | "pro_until"
+  | "featured_until"
 > & {
   /** Статус на выбранную ночь; нет — даты не выбраны. */
   status?: DisplayStatus;
+  /** Плашка «Проверено» (тариф Pro). */
+  verified?: boolean;
+  /** Продвижение в первом экране «рекомендуемых» — пометка «Реклама». */
+  promoted?: true;
 };
 
 /** Больше объектов в каталоге пока не ожидаем; при росте — перенести фильтр дат в SQL. */
@@ -91,13 +99,17 @@ export async function findPlaces(
       ascending: true,
       nullsFirst: false,
     });
-  // «Рекомендуемые»: пока новые сверху; продвижение добавится на Этапе 8.
+  // «Рекомендуемые»: новые сверху, продвижение — ниже, после фильтра дат.
   query = query.order("created_at", { ascending: false }).order("id");
 
   const { data, error } = await query.limit(MAX_PLACES);
   if (error) throw error;
 
-  let all: PlaceCardData[] = data;
+  const today = toIsoDate(almatyToday(now));
+  let all: PlaceCardData[] = data.map((place) => ({
+    ...place,
+    verified: planFeatures(place, today).verified,
+  }));
   let night: IsoDate | null = null;
 
   if (filters.when) {
@@ -105,12 +117,26 @@ export async function findPlaces(
     const statuses = await statusesForNight(night, now);
     all = all.map((place) => ({
       ...place,
-      status: statuses.get(place.id) ?? "unknown",
+      status: placeStatus(place, statuses, today),
     }));
     if (onlyFree(filters)) all = all.filter((p) => isAvailable(p.status!));
   }
+  if (filters.sort === "recommended") all = promote(all, today);
 
   return { places: all.slice(0, filters.limit), all, total: all.length, night };
+}
+
+/**
+ * Статус, который видит гость. У тарифа без календаря (free) — всегда
+ * «Уточняйте наличие», даже если владелец отмечает даты.
+ */
+export function placeStatus(
+  place: Pick<Tables<"places">, "id" | "plan" | "pro_until">,
+  statuses: Map<string, DisplayStatus>,
+  today: IsoDate,
+): DisplayStatus {
+  if (!planFeatures(place, today).availability) return "unknown";
+  return statuses.get(place.id) ?? "unknown";
 }
 
 /** Статусы всех опубликованных объектов на одну ночь (RLS не отдаст черновики). */

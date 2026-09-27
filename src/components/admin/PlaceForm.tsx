@@ -13,6 +13,7 @@ import {
   PLANS,
   PRICE_UNITS,
 } from "@/lib/places/constants";
+import { PLAN_FEATURES } from "@/config/pricing";
 import { slugify } from "@/lib/slug";
 import type { Tables } from "@/lib/supabase/database.types";
 import { PhotoManager } from "./PhotoManager";
@@ -226,10 +227,19 @@ export function PlaceForm({
       </Section>
 
       <Section title="Тариф и владелец">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid gap-3 sm:grid-cols-3">
           {select("plan", "Тариф", PLANS, "free")}
-          {text("featured_until", "Продвижение до", { type: "date" })}
+          {text("pro_until", "Pro до (включительно)", { type: "date" })}
+          {text("featured_until", "Продвижение до (включительно)", {
+            type: "date",
+          })}
         </div>
+        <p className="text-xs text-text-muted">
+          Free: {PLAN_FEATURES.free.photos} фото, без видео и календаря (гости
+          видят «Уточняйте наличие»). Pro: до {PLAN_FEATURES.pro.photos} фото,
+          видео, календарь, плашка «Проверено», статистика в боте. Пустая дата
+          «Pro до» — без срока; после даты объект сам вернётся на Free.
+        </p>
         <label className={labelClass}>
           Владелец
           <select

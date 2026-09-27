@@ -2,8 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { PLAN_FEATURES } from "@/config/pricing";
 import { requireAdmin } from "@/lib/admin/auth";
-import { nextDays } from "@/lib/dates";
+import { almatyToday, nextDays, toIsoDate } from "@/lib/dates";
 import {
   AVAILABILITY_DAYS,
   AVAILABILITY_STATUSES,
@@ -64,6 +65,20 @@ export async function savePlace(
 
   const result = validatePlaceInput(raw);
   if (!result.ok) return { errors: result.errors };
+  const today = toIsoDate(almatyToday(new Date()));
+  if (
+    result.data.plan === "pro" &&
+    result.data.pro_until &&
+    result.data.pro_until < today
+  )
+    return {
+      errors: [
+        {
+          field: "pro_until",
+          message: "Pro до: дата уже прошла — продлите срок или выберите Free",
+        },
+      ],
+    };
 
   let photos: string[];
   try {
@@ -74,6 +89,15 @@ export async function savePlace(
   if (!Array.isArray(photos) || !photos.every((p) => PHOTO_PATH.test(p)))
     return {
       errors: [{ field: "photos", message: "Фото: неверный список файлов" }],
+    };
+  if (photos.length > PLAN_FEATURES.pro.photos)
+    return {
+      errors: [
+        {
+          field: "photos",
+          message: `Фото: не больше ${PLAN_FEATURES.pro.photos} (на Free на сайте видны первые ${PLAN_FEATURES.free.photos})`,
+        },
+      ],
     };
 
   const slug = resolveSlug(

@@ -229,6 +229,44 @@ export type Database = {
         };
         Relationships: [];
       };
+      payments: {
+        Row: {
+          amount: number;
+          comment: string | null;
+          created_at: string;
+          id: string;
+          kind: Database["public"]["Enums"]["payment_kind"];
+          paid_at: string;
+          place_id: string;
+        };
+        Insert: {
+          amount: number;
+          comment?: string | null;
+          created_at?: string;
+          id?: string;
+          kind: Database["public"]["Enums"]["payment_kind"];
+          paid_at?: string;
+          place_id: string;
+        };
+        Update: {
+          amount?: number;
+          comment?: string | null;
+          created_at?: string;
+          id?: string;
+          kind?: Database["public"]["Enums"]["payment_kind"];
+          paid_at?: string;
+          place_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payments_place_id_fkey";
+            columns: ["place_id"];
+            isOneToOne: false;
+            referencedRelation: "places";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       places: {
         Row: {
           address_text: string | null;
@@ -258,6 +296,8 @@ export type Database = {
           plan: Database["public"]["Enums"]["place_plan"];
           price_from: number | null;
           price_unit: Database["public"]["Enums"]["price_unit"];
+          pro_reminded_for: string | null;
+          pro_until: string | null;
           slug: string;
           status: Database["public"]["Enums"]["place_status"];
           type: Database["public"]["Enums"]["place_type"];
@@ -294,6 +334,8 @@ export type Database = {
           plan?: Database["public"]["Enums"]["place_plan"];
           price_from?: number | null;
           price_unit?: Database["public"]["Enums"]["price_unit"];
+          pro_reminded_for?: string | null;
+          pro_until?: string | null;
           slug: string;
           status?: Database["public"]["Enums"]["place_status"];
           type: Database["public"]["Enums"]["place_type"];
@@ -330,6 +372,8 @@ export type Database = {
           plan?: Database["public"]["Enums"]["place_plan"];
           price_from?: number | null;
           price_unit?: Database["public"]["Enums"]["price_unit"];
+          pro_reminded_for?: string | null;
+          pro_until?: string | null;
           slug?: string;
           status?: Database["public"]["Enums"]["place_status"];
           type?: Database["public"]["Enums"]["place_type"];
@@ -393,6 +437,7 @@ export type Database = {
       event_type: "view" | "whatsapp_click" | "phone_click" | "instagram_click";
       lead_status:
         "new" | "sent_to_owner" | "confirmed" | "cancelled" | "no_answer";
+      payment_kind: "pro" | "promotion" | "video" | "leads" | "other";
       place_direction:
         | "gory_almaty"
         | "talgar"
@@ -550,6 +595,7 @@ export const Constants = {
         "cancelled",
         "no_answer",
       ],
+      payment_kind: ["pro", "promotion", "video", "leads", "other"],
       place_direction: [
         "gory_almaty",
         "talgar",

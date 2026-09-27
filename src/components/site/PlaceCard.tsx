@@ -5,6 +5,7 @@ import { placeAmenities, placeName, visiblePhotos } from "@/lib/places/present";
 import { AmenityIcon, ClockIcon, UserIcon } from "./Icons";
 import { PlacePhoto } from "./PlacePhoto";
 import { StatusBadge } from "./StatusBadge";
+import { VerifiedBadge } from "./VerifiedBadge";
 import { useFormat } from "./useFormat";
 
 /** Карточка объекта в каталоге. */
@@ -20,6 +21,7 @@ export function PlaceCard({
   const locale = useLocale();
   const tTypes = useTranslations("Types");
   const tAmenities = useTranslations("Amenities");
+  const tPlans = useTranslations("Plans");
   const f = useFormat();
   const name = placeName(place, locale);
   const href = { pathname: `/place/${place.slug}`, query };
@@ -42,8 +44,16 @@ export function PlaceCard({
             <StatusBadge status={place.status} />
           </span>
         )}
+        {place.verified && (
+          <span className="absolute top-3 right-3">
+            <VerifiedBadge />
+          </span>
+        )}
       </div>
       <div className="flex flex-col gap-1.5 px-0.5">
+        {place.promoted && (
+          <span className="-mb-1 text-xs text-text-faint">{tPlans("ad")}</span>
+        )}
         <div className="flex items-baseline justify-between gap-3">
           <h3 className="text-lg font-semibold tracking-[-0.01em] group-hover:text-accent">
             {name}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { PaymentsSection } from "@/components/admin/PaymentsSection";
 import { PlaceForm } from "@/components/admin/PlaceForm";
 import { requireAdminPage } from "@/lib/admin/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -50,6 +51,7 @@ export default async function EditPlacePage({
       )}
       {/* key: после сохранения форма перечитывает свежие данные */}
       <PlaceForm key={place.updated_at} place={place} owners={owners} />
+      <PaymentsSection placeId={place.id} />
     </div>
   );
 }
