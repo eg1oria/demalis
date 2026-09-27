@@ -65,9 +65,11 @@ export default async function StatsPage() {
                 </span>
               )}
             </div>
-            <div className="grid grid-cols-3 gap-2 text-sm sm:w-96">
+            <div className="grid grid-cols-3 gap-2 text-sm sm:w-[34rem] sm:grid-cols-5">
               {metric("Просмотры", row.views_7, row.views_30)}
               {metric("WhatsApp", row.whatsapp_7, row.whatsapp_30)}
+              {metric("Звонки", row.phone_7, row.phone_30)}
+              {metric("Instagram", row.instagram_7, row.instagram_30)}
               {metric("Заявки", row.leads_7, row.leads_30)}
             </div>
           </li>

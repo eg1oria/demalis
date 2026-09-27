@@ -39,6 +39,7 @@ const FIELDS: LeadField[] = [
   "dateTo",
   "guests",
   "comment",
+  "consent",
 ];
 
 export async function submitLead(

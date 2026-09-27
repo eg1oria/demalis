@@ -13,6 +13,7 @@ import {
 } from "@/app/[locale]/place/[slug]/actions";
 import { GuestStepper } from "@/components/site/GuestStepper";
 import { WhatsAppIcon } from "@/components/site/Icons";
+import { Link } from "@/i18n/navigation";
 import { MAX_GUESTS } from "@/lib/catalog/filters";
 import { addDays, type IsoDate, toIsoDate } from "@/lib/dates";
 import { goHref } from "@/lib/go";
@@ -230,6 +231,31 @@ export function LeadForm({
         />
         {error("comment")}
       </label>
+
+      <div className="flex flex-col gap-1.5">
+        <label className="flex min-h-11 items-start gap-3 text-sm text-text-secondary">
+          <input
+            type="checkbox"
+            {...fieldProps("consent")}
+            required
+            className="mt-0.5 size-5 flex-none accent-accent"
+          />
+          <span>
+            {t.rich("consent", {
+              link: (chunks) => (
+                <Link
+                  href="/privacy"
+                  target="_blank"
+                  className="text-accent underline"
+                >
+                  {chunks}
+                </Link>
+              ),
+            })}
+          </span>
+        </label>
+        {error("consent")}
+      </div>
 
       {(formError || Object.keys(errors).length > 0) && (
         <p

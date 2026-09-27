@@ -54,5 +54,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }),
     ),
     ...entries("/owners", { changeFrequency: "monthly", priority: 0.4 }),
+    ...entries("/privacy", { changeFrequency: "yearly", priority: 0.1 }),
   ];
 }

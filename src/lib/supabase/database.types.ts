@@ -374,8 +374,12 @@ export type Database = {
       place_stats: {
         Args: { p_now?: string };
         Returns: {
+          instagram_30: number;
+          instagram_7: number;
           leads_30: number;
           leads_7: number;
+          phone_30: number;
+          phone_7: number;
           place_id: string;
           views_30: number;
           views_7: number;

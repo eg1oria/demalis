@@ -4,7 +4,7 @@ import { normalizeKzPhone } from "@/lib/phone";
 
 /** Поля формы заявки. Ошибка — код, текст подставляет форма на нужном языке. */
 export type LeadField =
-  "name" | "phone" | "dateFrom" | "dateTo" | "guests" | "comment";
+  "name" | "phone" | "dateFrom" | "dateTo" | "guests" | "comment" | "consent";
 
 export type LeadErrorCode =
   | "required"
@@ -91,6 +91,9 @@ export function validateLead(
 
   const comment = raw.comment?.trim() ?? "";
   if (comment.length > LEAD_LIMITS.comment) errors.comment = "tooLong";
+
+  // Согласие на обработку персональных данных (политика — /privacy).
+  if (raw.consent !== "on") errors.consent = "required";
 
   if (Object.keys(errors).length > 0) return { ok: false, errors };
   return {

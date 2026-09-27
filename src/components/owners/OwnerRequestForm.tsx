@@ -7,6 +7,7 @@ import {
   submitOwnerRequest,
 } from "@/app/[locale]/owners/actions";
 import { SITE_NAME } from "@/config/site";
+import { Link } from "@/i18n/navigation";
 import { HONEYPOT_FIELD } from "@/lib/leads/constants";
 import {
   OWNER_REQUEST_NAME_MAX,
@@ -206,7 +207,20 @@ export function OwnerRequestForm() {
             required
             className="mt-0.5 size-5 flex-none accent-accent"
           />
-          {t("consent", { site: SITE_NAME })}
+          <span>
+            {t.rich("consent", {
+              site: SITE_NAME,
+              link: (chunks) => (
+                <Link
+                  href="/privacy"
+                  target="_blank"
+                  className="text-accent underline"
+                >
+                  {chunks}
+                </Link>
+              ),
+            })}
+          </span>
         </label>
         {error("consent")}
       </div>
