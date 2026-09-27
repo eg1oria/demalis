@@ -35,6 +35,13 @@ type Texts = {
   statsTitle: string;
   statsLine: (views: number, clicks: number, leads: number) => string;
   statsProOnly: string;
+  months: string[];
+  reportTitle: (month: string, year: number) => string;
+  reportViews: string;
+  reportClicks: string;
+  reportLeads: string;
+  reportNoChange: string;
+  reportProLine: string;
   proEnding: (place: string, date: string) => string;
   newLead: string;
   leadName: string;
@@ -95,6 +102,27 @@ const ru: Texts = {
   statsLine: (views, clicks, leads) =>
     `просмотры: ${views} · WhatsApp: ${clicks} · заявки: ${leads}`,
   statsProOnly: "статистика доступна в тарифе Pro — спросите администратора",
+  months: [
+    "январь",
+    "февраль",
+    "март",
+    "апрель",
+    "май",
+    "июнь",
+    "июль",
+    "август",
+    "сентябрь",
+    "октябрь",
+    "ноябрь",
+    "декабрь",
+  ],
+  reportTitle: (month, year) => `📊 Отчёт за ${month} ${year}`,
+  reportViews: "Просмотры",
+  reportClicks: "Клики WhatsApp",
+  reportLeads: "Заявки",
+  reportNoChange: "без изменений",
+  reportProLine:
+    "💡 С Pro гости видят ваш календарь «Свободно», плашку «Проверено» и до 20 фото — напишите администратору сайта.",
   proEnding: (place, date) =>
     `Тариф Pro для «${place}» заканчивается ${date}. После этого на сайте пропадут календарь занятости и плашка «Проверено». Чтобы продлить — напишите администратору сайта.`,
   newLead: "Новая заявка",
@@ -154,6 +182,27 @@ const kk: Texts = {
   statsLine: (views, clicks, leads) =>
     `қаралым: ${views} · WhatsApp: ${clicks} · өтінім: ${leads}`,
   statsProOnly: "статистика Pro тарифінде қолжетімді — әкімшіден сұраңыз",
+  months: [
+    "қаңтар",
+    "ақпан",
+    "наурыз",
+    "сәуір",
+    "мамыр",
+    "маусым",
+    "шілде",
+    "тамыз",
+    "қыркүйек",
+    "қазан",
+    "қараша",
+    "желтоқсан",
+  ],
+  reportTitle: (month, year) => `📊 ${year} ж. ${month} айының есебі`,
+  reportViews: "Қаралым",
+  reportClicks: "WhatsApp басулары",
+  reportLeads: "Өтінімдер",
+  reportNoChange: "өзгеріссіз",
+  reportProLine:
+    "💡 Pro тарифінде қонақтар «Бос» күнтізбеңізді, «Тексерілген» белгісін және 20 фотоға дейін көреді — сайт әкімшісіне жазыңыз.",
   proEnding: (place, date) =>
     `«${place}» үшін Pro тарифі ${date} аяқталады. Одан кейін сайтта бос күндер күнтізбесі мен «Тексерілген» белгісі жоғалады. Ұзарту үшін сайт әкімшісіне жазыңыз.`,
   newLead: "Жаңа өтінім",

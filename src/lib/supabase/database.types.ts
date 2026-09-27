@@ -204,6 +204,7 @@ export type Database = {
           created_at: string;
           id: string;
           language: string | null;
+          last_report_month: string | null;
           link_code: string | null;
           name: string;
           phone: string | null;
@@ -213,6 +214,7 @@ export type Database = {
           created_at?: string;
           id?: string;
           language?: string | null;
+          last_report_month?: string | null;
           link_code?: string | null;
           name: string;
           phone?: string | null;
@@ -222,6 +224,7 @@ export type Database = {
           created_at?: string;
           id?: string;
           language?: string | null;
+          last_report_month?: string | null;
           link_code?: string | null;
           name?: string;
           phone?: string | null;
@@ -414,6 +417,17 @@ export type Database = {
       hit_lead_rate_limit: {
         Args: { p_key: string; p_limit: number; p_window: unknown };
         Returns: boolean;
+      };
+      place_stats_between: {
+        Args: { p_from: string; p_to: string };
+        Returns: {
+          instagram: number;
+          leads: number;
+          phone: number;
+          place_id: string;
+          views: number;
+          whatsapp: number;
+        }[];
       };
       place_stats: {
         Args: { p_now?: string };

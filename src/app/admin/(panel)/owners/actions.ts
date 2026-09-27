@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/admin/auth";
 import { generateLinkCode } from "@/lib/bot/linkCode";
+import { sendOwnerReport } from "@/lib/bot/monthly";
+import { parseMonth } from "@/lib/dates";
 import { normalizeKzPhone } from "@/lib/phone";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -70,4 +72,15 @@ export async function unlinkTelegram(ownerId: string): Promise<void> {
   if (error) throw error;
   revalidatePath("/admin/owners");
   redirect(`/admin/owners/${ownerId}`);
+}
+
+/** Отправить владельцу отчёт за месяц вручную (Этап 9: проверка перед рассылкой). */
+export async function sendReportNow(
+  ownerId: string,
+  formData: FormData,
+): Promise<void> {
+  await requireAdmin();
+  const month = parseMonth(formData.get("month"), new Date());
+  const result = await sendOwnerReport(ownerId, month);
+  redirect(`/admin/owners/${ownerId}?month=${month}&report=${result}`);
 }

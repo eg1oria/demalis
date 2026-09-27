@@ -1,14 +1,17 @@
 import "server-only";
-import { addDays, almatyToday, toIsoDate } from "@/lib/dates";
+import { addDays, almatyToday, shiftMonth, toIsoDate } from "@/lib/dates";
 import { placeName } from "@/lib/places/present";
 import { proReminderDue } from "@/lib/plans";
 import { PRO_REMINDER_DAYS } from "@/config/pricing";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createBotApi } from "@/lib/telegram/api";
+import { sendMonthlyReports } from "./monthly";
 import { sendWeeklyReminders } from "./notify";
 import { BOT_TEXTS, isBotLang } from "./texts";
 
 const THURSDAY = 4;
+/** Отчёт за прошлый месяц — 1-го числа (2-го и 3-го — досылка, если cron не сработал). */
+const MONTHLY_REPORT_LAST_DAY = 3;
 
 const ruDate = (iso: string) =>
   `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}`;
@@ -76,7 +79,9 @@ export async function remindProEnding(
 
 /**
  * Ежедневные задачи (Vercel Cron, 12:00 по Алматы):
- * истёкший Pro → free, напоминание о конце Pro, по четвергам — «обновите занятость».
+ * истёкший Pro → free, напоминание о конце Pro, по четвергам — «обновите занятость»,
+ * 1-го числа — отчёт владельцам за прошлый месяц (если запуск 1-го сорвался,
+ * досылаем 2-го и 3-го: кому уже отправлено, повторно не придёт).
  */
 export async function runDailyJobs(now: Date = new Date()) {
   const todayDate = almatyToday(now);
@@ -87,5 +92,9 @@ export async function runDailyJobs(now: Date = new Date()) {
     todayDate.getUTCDay() === THURSDAY && createBotApi()
       ? await sendWeeklyReminders()
       : null;
-  return { today, expired, proReminders, weekly };
+  const monthly =
+    todayDate.getUTCDate() <= MONTHLY_REPORT_LAST_DAY
+      ? await sendMonthlyReports(shiftMonth(today.slice(0, 7), -1))
+      : null;
+  return { today, expired, proReminders, weekly, monthly };
 }
