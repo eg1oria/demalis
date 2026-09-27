@@ -119,6 +119,8 @@ for (const note of notes) console.log(`✓ ${note}`);
 if (problems.length > 0) {
   console.error("\n⚠️  Проект не готов к запуску:\n");
   for (const p of problems) console.error(` • ${p}\n`);
-  console.error("   (Запустить без проверки: SKIP_SETUP_CHECK=1 npm run dev)\n");
+  console.error(
+    "   (Запустить без проверки: SKIP_SETUP_CHECK=1 npm run dev)\n",
+  );
   process.exit(1);
 }
