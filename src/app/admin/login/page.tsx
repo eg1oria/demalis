@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { cardClass } from "@/components/admin/ui";
 import { SITE_NAME } from "@/config/site";
 import { checkAdmin } from "@/lib/admin/auth";
+import { isDevLoginAllowed } from "@/lib/admin/devLogin";
 import { LoginForm } from "./LoginForm";
 
 export const metadata: Metadata = { title: "Вход" };
@@ -22,7 +23,10 @@ export default async function LoginPage({
         <p className="mb-6 text-text-muted">
           Вход в админку по ссылке на email
         </p>
-        <LoginForm linkError={error === "link"} />
+        <LoginForm
+          linkError={error === "link"}
+          devLogin={isDevLoginAllowed()}
+        />
       </div>
     </main>
   );
