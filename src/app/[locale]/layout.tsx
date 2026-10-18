@@ -7,7 +7,9 @@ import {
   setRequestLocale,
 } from "next-intl/server";
 import { Suspense } from "react";
+import { CookieBanner } from "@/components/site/CookieBanner";
 import { Footer } from "@/components/site/Footer";
+import { GoogleTag } from "@/components/site/GoogleTag";
 import { YandexMetrika } from "@/components/site/YandexMetrika";
 import { SITE_NAME } from "@/config/site";
 import { routing } from "@/i18n/routing";
@@ -32,9 +34,15 @@ const CLIENT_NAMESPACES = [
   "OwnerForm",
   "Plans",
   "Favorites",
+  "Consent",
 ] as const;
 
 const METRIKA_ID = process.env.NEXT_PUBLIC_YANDEX_METRIKA_ID;
+// Google Analytics 4 и Google Ads (docs/SEO.md, «Google Ads»). Пусто — тега нет.
+const GOOGLE_TAG_IDS = [
+  process.env.NEXT_PUBLIC_GA4_ID,
+  process.env.NEXT_PUBLIC_GOOGLE_ADS_ID,
+].filter((id): id is string => Boolean(id));
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -82,9 +90,11 @@ export default async function LocaleLayout({
       className={`${geologica.variable} ${unbounded.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col font-sans">
+        {GOOGLE_TAG_IDS.length > 0 && <GoogleTag ids={GOOGLE_TAG_IDS} />}
         <NextIntlClientProvider messages={clientMessages}>
           <div className="flex flex-1 flex-col">{children}</div>
           <Footer />
+          <CookieBanner />
         </NextIntlClientProvider>
         {METRIKA_ID && (
           <Suspense>

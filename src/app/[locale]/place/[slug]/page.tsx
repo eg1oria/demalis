@@ -16,6 +16,7 @@ import { FavoriteButton } from "@/components/site/FavoriteButton";
 import { PlaceCard } from "@/components/site/PlaceCard";
 import { SectionTitle } from "@/components/site/SectionTitle";
 import { StatusDot } from "@/components/site/StatusBadge";
+import { TrackedLink } from "@/components/site/TrackedLink";
 import { VerifiedBadge } from "@/components/site/VerifiedBadge";
 import { AvailabilityCalendar } from "@/components/place/AvailabilityCalendar";
 import { Description } from "@/components/place/Description";
@@ -257,6 +258,7 @@ export default async function PlacePage({ params, searchParams }: Props) {
       <p className="mt-0.5 text-[13px] text-text-muted">
         {tf(`unit_${place.price_unit}`)}
       </p>
+      <p className="mt-1 text-[13px] text-text-muted">{t("priceNote")}</p>
     </div>
   );
 
@@ -284,7 +286,7 @@ export default async function PlacePage({ params, searchParams }: Props) {
               {name}
             </h1>
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-text-secondary">
-              {features.verified && <VerifiedBadge onPhoto={false} />}
+              {features.verified && <VerifiedBadge onPhoto={false} link />}
               {place.drive_minutes != null && (
                 <span className="flex items-center gap-1.5">
                   <ClockIcon size={16} className="text-text-muted" />
@@ -387,7 +389,9 @@ export default async function PlacePage({ params, searchParams }: Props) {
             <section className={section}>
               <h2 className={h2}>{t("contacts")}</h2>
               <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
-                <a
+                <TrackedLink
+                  event="click_whatsapp"
+                  params={{ place_id: place.id }}
                   href={waHref}
                   target="_blank"
                   rel="noopener nofollow"
@@ -395,7 +399,7 @@ export default async function PlacePage({ params, searchParams }: Props) {
                 >
                   <WhatsAppIcon size={20} className="text-text-muted" />
                   {t("writeWhatsApp")}
-                </a>
+                </TrackedLink>
                 <TrackedPhoneLink
                   placeId={place.id}
                   phone={place.whatsapp_phone}
@@ -405,7 +409,9 @@ export default async function PlacePage({ params, searchParams }: Props) {
                   {t("call")}
                 </TrackedPhoneLink>
                 {place.instagram_url && (
-                  <a
+                  <TrackedLink
+                    event="click_instagram"
+                    params={{ place_id: place.id }}
                     href={goHref("instagram", place.id)}
                     target="_blank"
                     rel="noopener nofollow"
@@ -413,7 +419,7 @@ export default async function PlacePage({ params, searchParams }: Props) {
                   >
                     <InstagramIcon size={20} className="text-text-muted" />
                     {t("instagram")}
-                  </a>
+                  </TrackedLink>
                 )}
                 {features.video && place.video_url && (
                   <a
@@ -475,7 +481,9 @@ export default async function PlacePage({ params, searchParams }: Props) {
                 </p>
               )}
               <div className="flex flex-col gap-2.5">
-                <a
+                <TrackedLink
+                  event="click_whatsapp"
+                  params={{ place_id: place.id }}
                   href={waHref}
                   target="_blank"
                   rel="noopener nofollow"
@@ -483,7 +491,7 @@ export default async function PlacePage({ params, searchParams }: Props) {
                 >
                   <WhatsAppIcon size={18} />
                   {t("writeWhatsApp")}
-                </a>
+                </TrackedLink>
                 <a
                   href="#lead"
                   className="flex h-12 items-center justify-center rounded-[10px] border border-text text-[15px] transition-colors hover:bg-text hover:text-white"
@@ -559,7 +567,9 @@ export default async function PlacePage({ params, searchParams }: Props) {
           >
             {tLead("button")}
           </a>
-          <a
+          <TrackedLink
+            event="click_whatsapp"
+            params={{ place_id: place.id }}
             href={waHref}
             target="_blank"
             rel="noopener nofollow"
@@ -567,7 +577,7 @@ export default async function PlacePage({ params, searchParams }: Props) {
           >
             <WhatsAppIcon size={18} />
             {t("whatsapp")}
-          </a>
+          </TrackedLink>
         </div>
       </div>
     </>

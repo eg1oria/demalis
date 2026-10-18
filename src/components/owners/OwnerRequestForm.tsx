@@ -1,7 +1,13 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { type FormEvent, startTransition, useActionState } from "react";
+import {
+  type FormEvent,
+  startTransition,
+  useActionState,
+  useEffect,
+} from "react";
+import { trackEvent } from "@/lib/analytics";
 import {
   type OwnerRequestState,
   submitOwnerRequest,
@@ -28,6 +34,11 @@ export function OwnerRequestForm() {
     submitOwnerRequest,
     { status: "idle" },
   );
+
+  const sent = state.status === "sent";
+  useEffect(() => {
+    if (sent) trackEvent("owner_request");
+  }, [sent]);
 
   // Отправка без автосброса формы: при ошибке введённое не теряется.
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {

@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { routing } from "@/i18n/routing";
+import { collectionsWithCounts } from "@/lib/catalog/collections";
 import { absoluteUrl, languageAlternates } from "@/lib/seo";
 import { createPublicClient } from "@/lib/supabase/public";
 
@@ -31,16 +32,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .from("places")
       .select("slug, updated_at")
       .eq("status", "published"),
-    supabase.from("collections").select("slug, updated_at"),
+    collectionsWithCounts(),
   ]);
   if (places.error) throw places.error;
-  if (collections.error) throw collections.error;
 
   return [
     ...entries("", { changeFrequency: "daily", priority: 1 }),
     ...entries("/catalog", { changeFrequency: "daily", priority: 0.9 }),
     ...entries("/collections", { changeFrequency: "weekly", priority: 0.6 }),
-    ...collections.data.flatMap((c) =>
+    ...collections.flatMap((c) =>
       entries(`/collections/${c.slug}`, {
         lastModified: c.updated_at,
         changeFrequency: "daily",
@@ -55,6 +55,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }),
     ),
     ...entries("/owners", { changeFrequency: "monthly", priority: 0.4 }),
+    ...entries("/about", { changeFrequency: "monthly", priority: 0.3 }),
+    ...entries("/contacts", { changeFrequency: "monthly", priority: 0.3 }),
+    ...entries("/verified", { changeFrequency: "yearly", priority: 0.2 }),
+    ...entries("/terms", { changeFrequency: "yearly", priority: 0.1 }),
+    ...entries("/offer", { changeFrequency: "yearly", priority: 0.1 }),
     ...entries("/privacy", { changeFrequency: "yearly", priority: 0.1 }),
   ];
 }

@@ -123,6 +123,10 @@ body {
   body:has([data-contact-bar]) footer {
     padding-bottom: 7rem;
   }
+  /* Баннер cookie — над нижней панелью, кнопки WhatsApp не закрывает */
+  body:has([data-contact-bar]) [data-cookie-banner] {
+    bottom: 5.25rem;
+  }
 }
 
 /* Цифры одинаковой ширины: цены, даты, счётчики */

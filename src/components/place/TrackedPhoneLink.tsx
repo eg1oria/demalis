@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { trackEvent } from "@/lib/analytics";
 import { goHref } from "@/lib/go";
 
 /**
@@ -22,7 +23,10 @@ export function TrackedPhoneLink({
     <a
       href={`tel:${phone}`}
       className={className}
-      onClick={() => navigator.sendBeacon?.(goHref("phone", placeId))}
+      onClick={() => {
+        navigator.sendBeacon?.(goHref("phone", placeId));
+        trackEvent("click_call", { place_id: placeId });
+      }}
     >
       {children}
     </a>

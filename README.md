@@ -46,7 +46,7 @@ npm run dev
 
 Если база «сломалась» и не жалко данных: `npm run db:reset`, затем `npm run seed`.
 
-Облачный Supabase и Vercel — в [docs/SETUP.md](docs/SETUP.md). Метрика, Search Console, Яндекс Вебмастер — в [docs/SEO.md](docs/SEO.md).
+Облачный Supabase и Vercel — в [docs/SETUP.md](docs/SETUP.md). Метрика, Search Console, Яндекс Вебмастер, Google Ads — в [docs/SEO.md](docs/SEO.md).
 
 ## Команды
 
@@ -76,8 +76,10 @@ src/app/[locale]/  страницы сайта
 src/components/    компоненты
 src/config/site.ts SITE_NAME и часовой пояс
 src/config/pricing.ts  тарифы для владельцев (цены)
-src/config/legal.ts    реквизиты для политики конфиденциальности (заполнить!)
-src/content/privacy.ts текст политики конфиденциальности (шаблон)
+src/config/legal.ts    реквизиты и контакты: подвал, «О нас», «Контакты», юр. страницы (заполнить!)
+src/content/           тексты политики, соглашения, оферты, «О нас», «Проверено» (шаблоны)
+src/lib/consent.ts     cookie-согласие (баннер, Consent Mode v2)
+src/lib/analytics.ts   события GA4 и конверсии Google Ads
 src/i18n/          настройки next-intl
 src/lib/           логика (getUpcomingWeekend и др.) и её тесты
 src/app/admin/     админка (/admin, только русский)

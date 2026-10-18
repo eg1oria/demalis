@@ -36,15 +36,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   const collection = await getCollectionBySlug(slug);
   if (!collection) return {};
-  const { all } = await findPlaces(collectionFilters(collection.filters));
+  const { all, total } = await findPlaces(
+    collectionFilters(collection.filters),
+  );
   const cover = all.map((p) => visiblePhotos(p)[0]).find(Boolean);
-  return pageMetadata({
-    locale,
-    path: `/collections/${slug}`,
-    title: collectionTitle(collection, locale),
-    description: collectionIntro(collection, locale),
-    images: cover ? [photoUrl(cover)] : [],
-  });
+  return {
+    ...pageMetadata({
+      locale,
+      path: `/collections/${slug}`,
+      title: collectionTitle(collection, locale),
+      description: collectionIntro(collection, locale),
+      images: cover ? [photoUrl(cover)] : [],
+    }),
+    // Пустая подборка — не для поиска (и её нет в sitemap и плитках).
+    ...(total === 0 && { robots: { index: false, follow: true } }),
+  };
 }
 
 export default async function CollectionPage({ params }: Props) {

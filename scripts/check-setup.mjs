@@ -115,6 +115,17 @@ if (isLocal && outdated.length === 0 && missing.length === 0) {
   }
 }
 
+// ── 4. Реквизиты для подвала и юридических страниц (не мешает запуску) ──
+if (existsSync("src/config/legal.ts")) {
+  const unfilled = readFileSync("src/config/legal.ts", "utf8").match(
+    /^\s*(\w+):\s*\n?\s*"\[ЗАПОЛНИТЬ/gm,
+  );
+  if (unfilled)
+    console.log(
+      `ℹ️  В src/config/legal.ts не заполнено полей: ${unfilled.length}. Перед запуском рекламы впиши реквизиты (docs/SEO.md, раздел 6).`,
+    );
+}
+
 for (const note of notes) console.log(`✓ ${note}`);
 if (problems.length > 0) {
   console.error("\n⚠️  Проект не готов к запуску:\n");

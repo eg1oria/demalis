@@ -28,6 +28,8 @@ export function MobileMenu() {
               ["/collections", t("collections")],
               ["/favorites", t("favorites")],
               ["/owners", t("owners")],
+              ["/about", t("about")],
+              ["/contacts", t("contacts")],
             ] as const
           ).map(([href, label]) => (
             <Link

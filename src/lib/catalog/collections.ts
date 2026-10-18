@@ -27,16 +27,23 @@ export async function getCollectionBySlug(
   return data;
 }
 
-/** Подборки с числом объектов и обложкой (первое фото из подборки) — для плиток. */
+/**
+ * Подборки с числом объектов и обложкой (первое фото из подборки) — для плиток
+ * и sitemap. Пустые подборки не показываем: «Пока пусто» выглядит как
+ * недоделанный сайт (в том числе для проверки рекламы Google).
+ */
 export async function collectionsWithCounts(limit?: number) {
-  const collections = (await listCollections()).slice(0, limit);
+  const collections = await listCollections();
   const results = await Promise.all(
     collections.map((c) => findPlaces(collectionFilters(c.filters))),
   );
-  return collections.map((c, i) => {
-    const cover = results[i].all
-      .map((p) => visiblePhotos(p, 1)[0])
-      .find(Boolean);
-    return { ...c, count: results[i].total, cover };
-  });
+  return collections
+    .map((c, i) => {
+      const cover = results[i].all
+        .map((p) => visiblePhotos(p, 1)[0])
+        .find(Boolean);
+      return { ...c, count: results[i].total, cover };
+    })
+    .filter((c) => c.count > 0)
+    .slice(0, limit);
 }

@@ -5,6 +5,7 @@ import {
   type FormEvent,
   startTransition,
   useActionState,
+  useEffect,
   useState,
 } from "react";
 import {
@@ -12,6 +13,8 @@ import {
   submitLead,
 } from "@/app/[locale]/place/[slug]/actions";
 import { GuestStepper } from "@/components/site/GuestStepper";
+import { TrackedLink } from "@/components/site/TrackedLink";
+import { trackEvent } from "@/lib/analytics";
 import { WhatsAppIcon } from "@/components/site/Icons";
 import { Link } from "@/i18n/navigation";
 import { MAX_GUESTS } from "@/lib/catalog/filters";
@@ -55,6 +58,13 @@ export function LeadForm({
   const [guests, setGuests] = useState(initialGuests ?? 2);
   const [dateFrom, setDateFrom] = useState(checkIn ?? "");
 
+  // Конверсия Google Ads «Заявка» — только после успешной отправки.
+  // В событие идёт лишь id объекта: имя и телефон гостя в Google не уходят.
+  const sent = state.status === "sent";
+  useEffect(() => {
+    if (sent) trackEvent("generate_lead", { place_id: placeId });
+  }, [sent, placeId]);
+
   // Отправка без автосброса формы: при ошибке введённое не теряется.
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -89,7 +99,9 @@ export function LeadForm({
           </span>
         </div>
         <p className="text-[15px] text-status-block-text">{t("sentText")}</p>
-        <a
+        <TrackedLink
+          event="click_whatsapp"
+          params={{ place_id: placeId }}
           href={goHref("whatsapp", placeId, {
             dates: state.dates,
             guests: state.guests,
@@ -101,7 +113,7 @@ export function LeadForm({
         >
           <WhatsAppIcon size={19} />
           {tPlace("writeWhatsApp")}
-        </a>
+        </TrackedLink>
       </div>
     );
   }
