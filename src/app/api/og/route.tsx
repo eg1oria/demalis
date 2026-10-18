@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { BRAND_COLORS, MARK_PATH, MARK_SUN } from "@/config/brand";
 import { SITE_NAME } from "@/config/site";
 
 // Заставка для соцсетей у страниц без своих фото (главная, каталог, подборки).
@@ -40,15 +41,15 @@ export async function GET() {
         flexDirection: "column",
         justifyContent: "space-between",
         padding: 80,
-        background: "#fafaf8",
-        color: "#111111",
+        background: BRAND_COLORS.paper,
+        color: BRAND_COLORS.ink,
         fontFamily: "Unbounded",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-        <svg width="72" height="72" viewBox="0 0 28 28">
-          <path d="M2 23L10 9l4.5 7.6L17.5 12 26 23z" fill="#1f4d3a" />
-          <circle cx="20.5" cy="6.5" r="2.4" fill="#d9a441" />
+        <svg width="72" height="72" viewBox="0 0 32 32">
+          <path d={MARK_PATH} fill={BRAND_COLORS.ink} fillRule="evenodd" />
+          <circle {...MARK_SUN} fill={BRAND_COLORS.sun} />
         </svg>
         {font && (
           <span style={{ fontSize: 56, letterSpacing: -2 }}>{name}</span>
@@ -67,7 +68,9 @@ export async function GET() {
           {TAGLINE}
         </div>
       )}
-      <div style={{ display: "flex", height: 2, background: "#111111" }} />
+      <div
+        style={{ display: "flex", height: 2, background: BRAND_COLORS.ink }}
+      />
     </div>,
     {
       ...SIZE,

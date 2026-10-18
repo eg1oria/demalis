@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LogoMark } from "@/components/site/Icons";
 import { SITE_NAME } from "@/config/site";
 import { requireAdminPage } from "@/lib/admin/auth";
 import { signOut } from "../actions";
@@ -12,8 +13,9 @@ export default async function PanelLayout({ children }: LayoutProps<"/admin">) {
         <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2">
           <Link
             href="/admin"
-            className="font-display text-base font-medium tracking-[-0.03em]"
+            className="flex items-center gap-2 font-display text-base font-medium tracking-[-0.03em]"
           >
+            <LogoMark size={22} />
             {SITE_NAME} · админка
           </Link>
           <nav className="order-last flex w-full flex-wrap gap-x-1 text-sm sm:order-none sm:w-auto sm:flex-1">

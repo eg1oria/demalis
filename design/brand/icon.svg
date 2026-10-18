@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Знак «демалыс» на тёмной плитке — виден и в светлых, и в тёмных вкладках. Фигуры — src/config/brand.ts -->
+  <rect width="32" height="32" rx="7" fill="#111111"/>
+  <g transform="translate(16 16) scale(0.72) translate(-16 -15.25)">
+    <path fill="#fafaf8" fill-rule="evenodd" d="M16 3 28 20.5H4ZM16 12.5 12.8 20.5H19.2ZM2.5 20.5h27v3h-27ZM2.5 23.5h3v4h-3ZM26.5 23.5h3v4h-3Z"/>
+    <circle cx="26" cy="6" r="3" fill="#d9a441"/>
+  </g>
+</svg>

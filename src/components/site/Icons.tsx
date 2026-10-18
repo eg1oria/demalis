@@ -1,4 +1,5 @@
 import type { SVGProps } from "react";
+import { MARK_PATH, MARK_SUN } from "@/config/brand";
 import type { Amenity } from "@/lib/places/constants";
 
 // Линейные иконки из макета (design/html), толщина 1.6–1.8.
@@ -224,17 +225,18 @@ export function AmenityIcon({
   );
 }
 
+/** Знак «демалыс»: домик-«д» и солнце (src/config/brand.ts). Цвет домика — currentColor. */
 export function LogoMark({ size = 28 }: { size?: number }) {
   return (
     <svg
       width={size}
       height={size}
-      viewBox="0 0 28 28"
+      viewBox="0 0 32 32"
       fill="none"
       aria-hidden="true"
     >
-      <path d="M2 23L10 9l4.5 7.6L17.5 12 26 23z" fill="var(--accent)" />
-      <circle cx="20.5" cy="6.5" r="2.4" fill="var(--logo-sun)" />
+      <path d={MARK_PATH} fill="currentColor" fillRule="evenodd" />
+      <circle {...MARK_SUN} fill="var(--logo-sun)" />
     </svg>
   );
 }
