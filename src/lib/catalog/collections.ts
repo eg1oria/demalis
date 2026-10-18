@@ -1,5 +1,6 @@
 import "server-only";
 import { type Collection, collectionFilters } from "@/lib/collections";
+import { visiblePhotos } from "@/lib/places/present";
 import { createPublicClient } from "@/lib/supabase/public";
 import { findPlaces } from "./query";
 
@@ -26,11 +27,16 @@ export async function getCollectionBySlug(
   return data;
 }
 
-/** Подборки с числом подходящих объектов — для плиток «24 места». */
+/** Подборки с числом объектов и обложкой (первое фото из подборки) — для плиток. */
 export async function collectionsWithCounts(limit?: number) {
   const collections = (await listCollections()).slice(0, limit);
-  const counts = await Promise.all(
+  const results = await Promise.all(
     collections.map((c) => findPlaces(collectionFilters(c.filters))),
   );
-  return collections.map((c, i) => ({ ...c, count: counts[i].total }));
+  return collections.map((c, i) => {
+    const cover = results[i].all
+      .map((p) => visiblePhotos(p, 1)[0])
+      .find(Boolean);
+    return { ...c, count: results[i].total, cover };
+  });
 }

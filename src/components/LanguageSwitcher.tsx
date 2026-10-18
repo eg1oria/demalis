@@ -20,7 +20,7 @@ export function LanguageSwitcher() {
       href={{ pathname, query }}
       locale={other}
       aria-label={`${t("languageSwitcher")}: ${LABELS[other]}`}
-      className="flex h-11 items-center gap-1.5 rounded-full border border-line bg-surface px-3.5 text-[13px] font-semibold"
+      className="flex h-11 items-center gap-1.5 px-2 text-xs font-medium tracking-[0.04em]"
     >
       {(["ru", "kk"] as const).map((l, i) => (
         <span key={l} className="flex items-center gap-1.5">

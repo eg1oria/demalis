@@ -2,13 +2,16 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type { PlaceCardData } from "@/lib/catalog/query";
 import { placeAmenities, placeName, visiblePhotos } from "@/lib/places/present";
-import { AmenityIcon, ClockIcon, UserIcon } from "./Icons";
-import { PlacePhoto } from "./PlacePhoto";
+import { CardPhotos } from "./CardPhotos";
+import { FavoriteButton } from "./FavoriteButton";
 import { StatusBadge } from "./StatusBadge";
 import { VerifiedBadge } from "./VerifiedBadge";
 import { useFormat } from "./useFormat";
 
-/** Карточка объекта в каталоге. */
+/** Сколько фото листается в карточке (лимит бесплатного тарифа). */
+const CARD_PHOTOS = 5;
+
+/** Карточка объекта в каталоге: фото, название и цена, одна строка деталей. */
 export function PlaceCard({
   place,
   query,
@@ -26,80 +29,61 @@ export function PlaceCard({
   const name = placeName(place, locale);
   const href = { pathname: `/place/${place.slug}`, query };
 
+  const details = [
+    tTypes(place.type),
+    place.drive_minutes != null && f.drive(place.drive_minutes),
+    place.capacity_max != null && f.t("upTo", { n: place.capacity_max }),
+  ].filter(Boolean);
+  const amenities = placeAmenities(place, 3).map((a) => tAmenities(a));
+
   return (
     <Link
       href={href}
       className={`group flex flex-col gap-3 text-text ${place.status === "full" ? "opacity-60" : ""}`}
     >
-      <div className="relative aspect-[35/24] overflow-hidden rounded-[20px] bg-surface-muted">
-        <PlacePhoto
-          path={visiblePhotos(place)[0]}
-          seed={place.id}
+      <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-surface-muted">
+        <CardPhotos
+          paths={visiblePhotos(place, CARD_PHOTOS)}
           alt={name}
           priority={priority}
-          sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
         />
-        {place.status && (
-          <span className="absolute top-3 left-3">
-            <StatusBadge status={place.status} />
-          </span>
-        )}
-        {place.verified && (
-          <span className="absolute top-3 right-3">
-            <VerifiedBadge />
-          </span>
-        )}
+        <span className="absolute top-2.5 left-2.5 flex gap-1.5">
+          {place.status && <StatusBadge status={place.status} />}
+          {place.verified && <VerifiedBadge />}
+        </span>
+        <span className="absolute top-2 right-2">
+          <FavoriteButton placeId={place.id} />
+        </span>
       </div>
-      <div className="flex flex-col gap-1.5 px-0.5">
-        {place.promoted && (
-          <span className="-mb-1 text-xs text-text-faint">{tPlans("ad")}</span>
-        )}
+      <div className="flex flex-col gap-1">
         <div className="flex items-baseline justify-between gap-3">
-          <h3 className="text-lg font-semibold tracking-[-0.01em] group-hover:text-accent">
+          <h3 className="text-base leading-snug font-medium group-hover:underline group-hover:underline-offset-4">
             {name}
           </h3>
           {place.price_from != null && (
-            <span className="flex-none text-base whitespace-nowrap">
+            <span className="tabular flex-none text-[15px] whitespace-nowrap">
               {f.t.rich("priceFromRich", {
                 price: f.tenge(place.price_from),
                 muted: (chunks) => (
                   <span className="text-[13px] text-text-muted">{chunks}</span>
                 ),
-                b: (chunks) => <span className="font-semibold">{chunks}</span>,
+                b: (chunks) => <span className="font-medium">{chunks}</span>,
               })}
             </span>
           )}
         </div>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-text-secondary">
-          <span>{tTypes(place.type)}</span>
-          {place.drive_minutes != null && (
-            <span className="flex items-center gap-1.5">
-              <ClockIcon size={15} />
-              {f.drive(place.drive_minutes)}
+        <p className="text-sm text-text-muted">
+          {details.join(" · ")}
+          {amenities.length > 0 && (
+            <span className="text-text-secondary">
+              {" · "}
+              {amenities.join(", ")}
             </span>
           )}
-          {place.capacity_max != null && (
-            <span className="flex items-center gap-1.5">
-              <UserIcon size={15} />
-              {f.t("upTo", { n: place.capacity_max })}
-            </span>
-          )}
-        </div>
-        <ul className="mt-0.5 flex flex-wrap gap-1.5">
-          {placeAmenities(place, 3).map((amenity) => (
-            <li
-              key={amenity}
-              className="flex h-7 items-center gap-1.5 rounded-lg bg-surface-muted px-2.5 text-xs font-medium text-text-secondary"
-            >
-              <AmenityIcon
-                amenity={amenity}
-                size={14}
-                className="text-accent"
-              />
-              {tAmenities(amenity)}
-            </li>
-          ))}
-        </ul>
+        </p>
+        {place.promoted && (
+          <span className="text-xs text-text-faint">{tPlans("ad")}</span>
+        )}
       </div>
     </Link>
   );

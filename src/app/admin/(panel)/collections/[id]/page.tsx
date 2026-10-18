@@ -37,7 +37,9 @@ export default async function EditCollectionPage({
       <Link href="/admin/collections" className="text-sm text-text-muted">
         ← Все подборки
       </Link>
-      <h1 className="font-serif text-2xl font-medium">{collection.title_ru}</h1>
+      <h1 className="font-display text-xl font-medium tracking-[-0.03em]">
+        {collection.title_ru}
+      </h1>
       {saved && (
         <p
           role="status"

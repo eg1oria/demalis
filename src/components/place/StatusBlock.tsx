@@ -43,11 +43,9 @@ export function StatusBlock({
 }) {
   const style = STYLES[status];
   return (
-    <div
-      className={`flex items-center gap-3.5 rounded-[18px] p-4 ${style.box}`}
-    >
+    <div className={`flex items-center gap-3.5 rounded-xl p-3.5 ${style.box}`}>
       <span
-        className={`flex size-10 flex-none items-center justify-center rounded-full bg-white ${
+        className={`flex size-9 flex-none items-center justify-center rounded-full bg-white ${
           status === "free" ? "text-status-block-icon" : "text-text-muted"
         }`}
       >
@@ -75,7 +73,7 @@ export function StatusBlock({
         </svg>
       </span>
       <div className="flex flex-col gap-0.5">
-        <span className={`text-base font-semibold ${style.title}`}>
+        <span className={`text-[15px] font-medium ${style.title}`}>
           {title}
         </span>
         <span className={`text-[13px] ${style.text}`}>{subtitle}</span>

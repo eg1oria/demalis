@@ -10,15 +10,16 @@ export const PRICING = [
 export type PricingPlan = (typeof PRICING)[number];
 
 /**
- * Что даёт тариф (Этап 8). По ТЗ у free статус занятости не показывается —
- * только «Уточняйте наличие». Если на старте, пока все на free, это
- * оставляет каталог без «Свободно» — поставь free.availability = true.
+ * Что даёт тариф (Этап 8). По ТЗ у free статус занятости не показывается,
+ * но на старте все владельцы на free — без календаря каталог и главная
+ * оставались бы без «Свободно» (Этап 10, решение владельца). Когда появятся
+ * платные владельцы, можно вернуть free.availability = false.
  */
 export const PLAN_FEATURES = {
   free: {
     photos: 5,
     video: false,
-    availability: false,
+    availability: true,
     verified: false,
     botStats: false,
   },

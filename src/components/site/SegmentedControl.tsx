@@ -21,7 +21,7 @@ export function SegmentedControl({
 }) {
   return (
     <div
-      className="grid gap-1.5"
+      className="grid gap-px overflow-hidden rounded-[10px] border border-line bg-line"
       style={{
         gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))`,
       }}
@@ -31,10 +31,8 @@ export function SegmentedControl({
         return (
           <label
             key={option.value}
-            className={`relative flex min-h-15 cursor-pointer flex-col justify-center gap-0.5 rounded-[14px] border px-3 py-2 ${
-              selected
-                ? "border-text bg-text text-white"
-                : "border-line bg-bg text-text"
+            className={`relative flex min-h-14 cursor-pointer flex-col justify-center gap-0.5 px-3 py-2 transition-colors ${
+              selected ? "bg-text text-white" : "bg-surface text-text"
             }`}
           >
             {option.input ?? (
@@ -45,12 +43,12 @@ export function SegmentedControl({
                 onChange={() => onChange(option.value)}
               />
             )}
-            <span className="text-sm leading-tight font-semibold">
+            <span className="text-sm leading-tight font-medium">
               {option.label}
             </span>
             {option.hint && (
               <span
-                className={`text-xs leading-tight ${selected ? "text-white/70" : "text-text-muted"}`}
+                className={`tabular text-xs leading-tight ${selected ? "text-white/65" : "text-text-muted"}`}
               >
                 {option.hint}
               </span>

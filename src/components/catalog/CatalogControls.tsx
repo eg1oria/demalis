@@ -38,7 +38,7 @@ const ListIcon = () => (
   </svg>
 );
 
-/** Переключатель «Список / Карта» (фон surface-muted, выбранный — белый). */
+/** Переключатель «Список / Карта»: контур, выбранный — фон text. */
 export function ViewToggle({ filters }: { filters: CatalogFilters }) {
   const t = useTranslations("Catalog");
   const { apply } = useCatalogNavigation();
@@ -51,7 +51,7 @@ export function ViewToggle({ filters }: { filters: CatalogFilters }) {
     <div
       role="group"
       aria-label={t("view")}
-      className="flex flex-none rounded-full bg-surface-muted p-[3px]"
+      className="flex flex-none rounded-full border border-line p-[3px]"
     >
       {options.map((o) => {
         const selected = filters.view === o.view;
@@ -63,8 +63,10 @@ export function ViewToggle({ filters }: { filters: CatalogFilters }) {
             onClick={() =>
               !selected && apply({ ...filters, view: o.view, limit: PAGE_SIZE })
             }
-            className={`flex h-11 items-center gap-1.5 rounded-full px-3.5 text-[13px] font-semibold ${
-              selected ? "bg-surface text-text" : "text-text-secondary"
+            className={`flex h-9 items-center gap-1.5 rounded-full px-3.5 text-[13px] transition-colors ${
+              selected
+                ? "bg-text text-white"
+                : "text-text-secondary hover:text-text"
             }`}
           >
             {o.icon}
@@ -76,7 +78,7 @@ export function ViewToggle({ filters }: { filters: CatalogFilters }) {
   );
 }
 
-/** «Только свободные»: включён — трек accent, выключен — #CFCBC1 (design/README, п. 7). */
+/** «Только свободные»: включён — трек text, выключен — toggle-off. */
 export function OnlyFreeToggle({ filters }: { filters: CatalogFilters }) {
   const t = useTranslations("Catalog");
   const { apply } = useCatalogNavigation();
@@ -90,13 +92,13 @@ export function OnlyFreeToggle({ filters }: { filters: CatalogFilters }) {
       onClick={() =>
         apply({ ...filters, all: on ? true : undefined, limit: PAGE_SIZE })
       }
-      className="flex h-11 items-center gap-2.5 text-left text-sm font-medium whitespace-nowrap"
+      className="flex h-11 items-center gap-2.5 text-left text-sm whitespace-nowrap"
     >
       <span
-        className={`relative block h-6.5 w-11 rounded-full ${on ? "bg-accent" : "bg-toggle-off"}`}
+        className={`relative block h-6 w-10 rounded-full transition-colors ${on ? "bg-text" : "bg-toggle-off"}`}
       >
         <span
-          className={`absolute top-[3px] size-5 rounded-full bg-white transition-[left] ${on ? "left-[21px]" : "left-[3px]"}`}
+          className={`absolute top-[3px] size-[18px] rounded-full bg-white transition-[left] ${on ? "left-[19px]" : "left-[3px]"}`}
         />
       </span>
       {t("onlyFree")}

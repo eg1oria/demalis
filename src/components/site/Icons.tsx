@@ -182,6 +182,37 @@ const AMENITY_PATHS: Record<Amenity, React.ReactNode> = {
   ),
 };
 
+export const HeartIcon = ({
+  filled = false,
+  ...p
+}: IconProps & { filled?: boolean }) => (
+  <Icon strokeWidth={1.7} fill={filled ? "currentColor" : "none"} {...p}>
+    <path d="M12 20s-7.5-4.4-7.5-10A4.3 4.3 0 0112 7.4 4.3 4.3 0 0119.5 10c0 5.6-7.5 10-7.5 10z" />
+  </Icon>
+);
+export const ShareIcon = (p: IconProps) => (
+  <Icon strokeWidth={1.7} {...p}>
+    <path d="M12 15V3.5M7.5 8L12 3.5 16.5 8" />
+    <path d="M5 12.5V19a1.5 1.5 0 001.5 1.5h11A1.5 1.5 0 0019 19v-6.5" />
+  </Icon>
+);
+export const ArrowRightIcon = (p: IconProps) => (
+  <Icon strokeWidth={1.7} {...p}>
+    <path d="M4.5 12h15M14 6.5l5.5 5.5-5.5 5.5" />
+  </Icon>
+);
+export const CheckIcon = (p: IconProps) => (
+  <Icon strokeWidth={2} {...p}>
+    <path d="M5 12.5l4.5 4.5L19 7.5" />
+  </Icon>
+);
+export const MountainsIcon = (p: IconProps) => (
+  <Icon strokeWidth={1.4} {...p}>
+    <path d="M2.5 19.5l6.5-11 4 6.8 2.5-3.8 6 8z" />
+    <circle cx="17" cy="6" r="1.6" />
+  </Icon>
+);
+
 export function AmenityIcon({
   amenity,
   ...p

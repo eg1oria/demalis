@@ -53,10 +53,3 @@ export function placeAmenities(
 export function whatsappUrl(phone: string, text: string): string {
   return `https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`;
 }
-
-/** Стабильный вариант заглушки-пейзажа для объекта без фото. */
-export function landscapeVariant(id: string, variants: number): number {
-  let hash = 0;
-  for (const ch of id) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
-  return hash % variants;
-}

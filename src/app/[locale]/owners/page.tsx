@@ -24,7 +24,7 @@ export async function generateMetadata({
 }
 
 const h2 =
-  "font-serif text-[26px] leading-[1.15] font-medium tracking-[-0.015em] md:text-[38px] md:leading-[1.1]";
+  "font-display text-[22px] leading-[1.15] font-medium tracking-[-0.035em] md:text-[34px] md:leading-[1.1]";
 
 function CheckIcon({ className = "" }: { className?: string }) {
   return (
@@ -38,7 +38,7 @@ function CheckIcon({ className = "" }: { className?: string }) {
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
-      className={`mt-0.5 flex-none text-accent ${className}`}
+      className={`mt-0.5 flex-none text-text ${className}`}
     >
       <path d="M5 12.5l4.5 4.5L19 7.5" />
     </svg>
@@ -60,36 +60,36 @@ export default async function OwnersPage({
   return (
     <>
       <Header />
-      <main className="mx-auto flex w-full max-w-[1440px] flex-col px-5 md:px-20">
+      <main className="mx-auto flex w-full max-w-[1440px] flex-col px-5 md:px-10 lg:px-20">
         {/* Проблема и главное действие */}
-        <section className="pt-6 md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-16 md:pt-12">
+        <section className="pt-10 md:grid md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] md:items-end md:gap-16 md:pt-20">
           <div>
-            <p className="text-xs font-semibold tracking-[0.1em] text-text-muted uppercase">
+            <p className="text-[11px] font-medium tracking-[0.14em] text-text-muted uppercase">
               {t("eyebrow")}
             </p>
-            <h1 className="mt-3 font-serif text-[34px] leading-[1.08] font-medium tracking-[-0.025em] md:text-6xl">
+            <h1 className="mt-4 font-display text-[30px] leading-[1.06] font-medium tracking-[-0.045em] md:text-[56px]">
               {t("title")}
             </h1>
-            <p className="mt-4 max-w-xl text-base leading-normal text-text-secondary md:text-xl">
+            <p className="mt-5 max-w-xl text-base leading-relaxed text-text-secondary md:text-lg">
               {t("lead")}
             </p>
-            <div className="mt-6 flex flex-wrap gap-2.5">
+            <div className="mt-7 flex flex-wrap gap-2.5">
               <a
                 href="#add"
-                className="flex h-13 items-center rounded-2xl bg-accent px-5 text-[15px] font-semibold text-white"
+                className="flex h-12 items-center rounded-[10px] bg-text px-5 text-[15px] font-medium text-white transition-opacity hover:opacity-90"
               >
                 {t("cta")}
               </a>
               <a
                 href="#pricing"
-                className="flex h-13 items-center rounded-2xl border border-line-strong bg-surface px-5 text-[15px] font-semibold"
+                className="flex h-12 items-center rounded-[10px] border border-line px-5 text-[15px] transition-colors hover:border-text"
               >
                 {t("ctaPricing")}
               </a>
             </div>
           </div>
-          <div className="mt-8 rounded-3xl border border-line-soft bg-surface p-5 md:mt-0 md:p-8">
-            <h2 className="font-serif text-xl font-medium">
+          <div className="mt-10 border-t border-line pt-6 md:mt-0 md:border-t-0 md:border-l md:pt-0 md:pl-10">
+            <h2 className="font-display text-lg font-medium tracking-[-0.03em]">
               {t("problemTitle")}
             </h2>
             <ul className="mt-3 flex flex-col gap-3 text-[15px] leading-normal text-text-secondary">
@@ -107,18 +107,15 @@ export default async function OwnersPage({
         </section>
 
         {/* Как это работает */}
-        <section className="mt-12 md:mt-20">
+        <section className="mt-16 border-t border-line pt-10 md:mt-24 md:pt-14">
           <h2 className={h2}>{t("stepsTitle")}</h2>
-          <ol className="mt-5 grid gap-3 md:mt-8 md:grid-cols-3 md:gap-6">
+          <ol className="mt-6 grid gap-8 md:mt-10 md:grid-cols-3 md:gap-10">
             {steps.map((i) => (
-              <li
-                key={i}
-                className="flex flex-col gap-2 rounded-3xl border border-line-soft bg-surface p-5"
-              >
-                <span className="flex size-9 items-center justify-center rounded-full bg-surface-muted text-sm font-semibold">
-                  {i}
+              <li key={i} className="flex flex-col gap-2">
+                <span className="tabular font-display text-sm text-text-muted">
+                  0{i}
                 </span>
-                <h3 className="mt-1 text-lg font-semibold">
+                <h3 className="mt-1 text-lg font-medium">
                   {t(`step${i}Title`)}
                 </h3>
                 <p className="text-[15px] leading-normal text-text-secondary">
@@ -130,9 +127,9 @@ export default async function OwnersPage({
         </section>
 
         {/* Что получает владелец */}
-        <section className="mt-12 md:mt-20">
+        <section className="mt-16 border-t border-line pt-10 md:mt-24 md:pt-14">
           <h2 className={h2}>{t("benefitsTitle")}</h2>
-          <ul className="mt-5 grid gap-x-8 gap-y-3 md:mt-8 md:grid-cols-2">
+          <ul className="mt-6 grid gap-x-10 gap-y-4 md:mt-10 md:grid-cols-2">
             {benefits.map((i) => (
               <li
                 key={i}
@@ -146,23 +143,26 @@ export default async function OwnersPage({
         </section>
 
         {/* Тарифы: без оплаты на сайте, только заявка */}
-        <section id="pricing" className="mt-12 scroll-mt-4 md:mt-20">
+        <section
+          id="pricing"
+          className="mt-16 scroll-mt-4 border-t border-line pt-10 md:mt-24 md:pt-14"
+        >
           <h2 className={h2}>{t("pricingTitle")}</h2>
           <p className="mt-2 max-w-2xl text-[15px] text-text-secondary">
             {t("pricingNote")}
           </p>
-          <ul className="mt-5 grid gap-3 md:mt-8 md:grid-cols-2 md:gap-6 xl:grid-cols-4">
+          <ul className="mt-6 grid gap-3 md:mt-10 md:grid-cols-2 md:gap-4 xl:grid-cols-4">
             {PRICING.map((plan) => (
               <li
                 key={plan.id}
-                className="flex flex-col gap-4 rounded-3xl border border-line-soft bg-surface p-5"
+                className="flex flex-col gap-5 rounded-2xl border border-line bg-surface p-5 md:p-6"
               >
                 <div>
-                  <h3 className="text-lg font-semibold">
+                  <h3 className="text-base font-medium">
                     {t(`plan_${plan.id}`)}
                   </h3>
                   <p className="mt-1">
-                    <span className="font-serif text-[28px] font-medium tracking-[-0.02em]">
+                    <span className="tabular font-display text-[26px] font-medium tracking-[-0.04em]">
                       {formatTenge(plan.price, locale)}
                     </span>{" "}
                     <span className="text-sm text-text-muted">
@@ -182,7 +182,7 @@ export default async function OwnersPage({
                 </ul>
                 <a
                   href="#add"
-                  className="flex h-12 items-center justify-center rounded-[14px] border border-line-strong text-[15px] font-semibold"
+                  className="flex h-11 items-center justify-center rounded-[10px] border border-line text-[15px] transition-colors hover:border-text"
                 >
                   {t("choosePlan")}
                 </a>
@@ -192,16 +192,16 @@ export default async function OwnersPage({
         </section>
 
         {/* Частые вопросы */}
-        <section className="mt-12 md:mt-20">
+        <section className="mt-16 border-t border-line pt-10 md:mt-24 md:pt-14">
           <h2 className={h2}>{t("faqTitle")}</h2>
-          <div className="mt-5 flex max-w-3xl flex-col border-t border-line md:mt-8">
+          <div className="mt-6 flex max-w-3xl flex-col border-t border-line md:mt-10">
             {faq.map((i) => (
               <details key={i} className="group border-b border-line">
-                <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-3 text-base font-semibold [&::-webkit-details-marker]:hidden">
+                <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-3 text-base font-medium [&::-webkit-details-marker]:hidden">
                   {t(`faq${i}Q`)}
                   <span
                     aria-hidden="true"
-                    className="text-xl text-text-muted group-open:rotate-45"
+                    className="text-xl text-text-muted transition-transform group-open:rotate-45"
                   >
                     +
                   </span>
@@ -217,7 +217,7 @@ export default async function OwnersPage({
         {/* Форма «Добавить объект» */}
         <section
           id="add"
-          className="mt-12 scroll-mt-4 md:mt-20 md:grid md:grid-cols-2 md:gap-16"
+          className="mt-16 scroll-mt-4 border-t border-line pt-10 md:mt-24 md:grid md:grid-cols-2 md:gap-16 md:pt-14"
         >
           <div>
             <h2 className={h2}>{t("formTitle")}</h2>

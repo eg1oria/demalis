@@ -46,16 +46,19 @@ export default async function PrivacyPage({
   return (
     <>
       <Header />
-      <main className="mx-auto w-full max-w-3xl flex-1 px-5 pt-6 pb-4 md:pt-12">
-        <h1 className="font-serif text-[28px] leading-[1.1] font-medium tracking-[-0.02em] break-words hyphens-auto md:text-5xl">
+      <main className="mx-auto w-full max-w-3xl flex-1 px-5 pt-10 pb-4 md:pt-16">
+        <h1 className="font-display text-[24px] leading-[1.1] font-medium tracking-[-0.04em] break-words hyphens-auto md:text-[40px]">
           {t("title")}
         </h1>
         <p className="mt-2 text-sm text-text-muted">
           {t("updated", { date: updated })}
         </p>
         {PRIVACY[locale as Locale].map((section) => (
-          <section key={section.title} className="mt-8">
-            <h2 className="font-serif text-[22px] font-medium tracking-[-0.01em]">
+          <section
+            key={section.title}
+            className="mt-10 border-t border-line pt-8"
+          >
+            <h2 className="font-display text-lg font-medium tracking-[-0.03em] md:text-xl">
               {section.title}
             </h2>
             {section.paragraphs.map((p) => (

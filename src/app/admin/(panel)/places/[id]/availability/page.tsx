@@ -38,7 +38,9 @@ export default async function AvailabilityPage({
       >
         ← {place.name_ru}
       </Link>
-      <h1 className="font-serif text-2xl font-medium">Занятость на 60 дней</h1>
+      <h1 className="font-display text-xl font-medium tracking-[-0.03em]">
+        Занятость на 60 дней
+      </h1>
       <p className="text-text-secondary">
         Нажмите на день, чтобы сменить статус: нет данных → свободно → мало мест
         → занято → нет данных. Сохраняется сразу.

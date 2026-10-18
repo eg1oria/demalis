@@ -9,7 +9,7 @@ export default async function ImportPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="font-serif text-2xl font-medium">
+      <h1 className="font-display text-xl font-medium tracking-[-0.03em]">
         Импорт объектов из CSV
       </h1>
       <ol className="list-decimal space-y-1 pl-5 text-text-secondary">

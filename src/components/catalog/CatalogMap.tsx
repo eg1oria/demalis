@@ -59,7 +59,7 @@ export function CatalogMap({
   const selected = places.find((p) => p.id === selectedId);
 
   return (
-    <div className="relative h-[calc(100dvh-8.5rem)] min-h-[480px] overflow-hidden md:mx-20 md:mb-6 md:h-[calc(100dvh-14rem)] md:rounded-3xl">
+    <div className="relative h-[calc(100dvh-8.5rem)] min-h-[480px] overflow-hidden md:mx-10 md:my-6 md:h-[calc(100dvh-15rem)] md:rounded-2xl lg:mx-20">
       <LeafletMap
         places={pins}
         selectedId={selectedId}
@@ -68,7 +68,7 @@ export function CatalogMap({
 
       <div className="pointer-events-none absolute inset-x-0 top-3 z-[1000] flex flex-col items-center gap-2 px-3">
         {nightLabel && (
-          <span className="flex h-8 items-center gap-1.5 rounded-full bg-white/95 px-3 text-[13px] font-semibold shadow-float">
+          <span className="flex h-8 items-center gap-1.5 rounded-full bg-white/95 px-3 text-[13px] font-medium shadow-float">
             <StatusDot status="free" size={7} />
             {t("mapFree", { count: freeCount, date: nightLabel })}
           </span>
@@ -81,19 +81,18 @@ export function CatalogMap({
       </div>
 
       <div className="absolute inset-x-0 bottom-4 z-[1000] flex flex-col items-center gap-3 px-4">
-        <div className="shadow-float">
+        <div className="rounded-full bg-surface shadow-float">
           <ViewToggle filters={filters} />
         </div>
 
         {selected && (
           <Link
             href={{ pathname: `/place/${selected.slug}`, query: placeQuery }}
-            className="flex w-full max-w-md items-center gap-3.5 rounded-3xl bg-surface p-3 shadow-float"
+            className="flex w-full max-w-md items-center gap-3.5 rounded-2xl bg-surface p-2.5 shadow-float"
           >
-            <div className="relative size-28 flex-none overflow-hidden rounded-2xl bg-surface-muted">
+            <div className="relative size-26 flex-none overflow-hidden rounded-xl bg-surface-muted">
               <PlacePhoto
                 path={visiblePhotos(selected)[0]}
-                seed={selected.id}
                 alt={placeName(selected, locale)}
                 sizes="112px"
               />
@@ -101,7 +100,7 @@ export function CatalogMap({
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               {selected.status && nightLabel && (
                 <span
-                  className={`flex items-center gap-1.5 text-[13px] font-semibold ${
+                  className={`flex items-center gap-1.5 text-[13px] font-medium ${
                     {
                       free: "text-status-free-text",
                       limited: "text-status-limited-text",
@@ -112,7 +111,7 @@ export function CatalogMap({
                   {tStatus(selected.status)}
                 </span>
               )}
-              <span className="line-clamp-2 text-lg leading-snug font-semibold">
+              <span className="line-clamp-2 text-base leading-snug font-medium">
                 {placeName(selected, locale)}
               </span>
               <span className="text-sm text-text-secondary">
@@ -127,7 +126,7 @@ export function CatalogMap({
                   .join(" · ")}
               </span>
               {selected.price_from != null && (
-                <span className="text-base font-semibold">
+                <span className="tabular text-[15px] font-medium">
                   {f.priceFrom(selected.price_from)}
                 </span>
               )}

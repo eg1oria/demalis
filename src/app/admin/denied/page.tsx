@@ -14,7 +14,9 @@ export default async function DeniedPage() {
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-4 py-12">
       <div className={cardClass}>
-        <h1 className="mb-2 font-serif text-2xl font-medium">Нет доступа</h1>
+        <h1 className="mb-2 font-display text-xl font-medium tracking-[-0.03em]">
+          Нет доступа
+        </h1>
         <p className="mb-6 text-text-secondary">
           У аккаунта <b className="text-text">{check.email}</b> нет прав на
           админку.

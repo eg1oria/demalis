@@ -29,6 +29,9 @@ export function languageAlternates(path: string): Record<string, string> {
  * Метаданные страницы сайта: title, description, canonical, hreflang и Open Graph.
  * path — адрес без языка («/catalog», «/place/slug», «» для главной).
  */
+/** Заставка для соцсетей у страниц без фото. */
+export const OG_FALLBACK = "/api/og";
+
 export function pageMetadata({
   locale,
   path,
@@ -59,7 +62,8 @@ export function pageMetadata({
       url: `/${locale}${path}`,
       title: absoluteTitle ? title : `${title} — ${SITE_NAME}`,
       description: desc,
-      images: images.slice(0, 4),
+      // Без своих фото — фирменная заставка (src/app/api/og/route.tsx).
+      images: images.length > 0 ? images.slice(0, 4) : [OG_FALLBACK],
     },
   };
 }

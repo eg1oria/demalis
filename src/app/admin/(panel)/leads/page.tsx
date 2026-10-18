@@ -53,7 +53,9 @@ export default async function LeadsPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="font-serif text-2xl font-medium">Заявки</h1>
+      <h1 className="font-display text-xl font-medium tracking-[-0.03em]">
+        Заявки
+      </h1>
 
       <form className="flex flex-col gap-2 sm:flex-row">
         <select

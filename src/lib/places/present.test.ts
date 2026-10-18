@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  landscapeVariant,
   placeAmenities,
   placeDescription,
   placeName,
@@ -73,14 +72,5 @@ describe("whatsappUrl", () => {
     expect(whatsappUrl("+77011234567", "Здравствуйте! 4 гостя")).toBe(
       "https://wa.me/77011234567?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5!%204%20%D0%B3%D0%BE%D1%81%D1%82%D1%8F",
     );
-  });
-});
-
-describe("landscapeVariant", () => {
-  it("стабилен и в диапазоне", () => {
-    const v = landscapeVariant("9c3fc9d6-b03e-4521-a403-5a67db7e65ec", 4);
-    expect(v).toBe(landscapeVariant("9c3fc9d6-b03e-4521-a403-5a67db7e65ec", 4));
-    expect(v).toBeGreaterThanOrEqual(0);
-    expect(v).toBeLessThan(4);
   });
 });

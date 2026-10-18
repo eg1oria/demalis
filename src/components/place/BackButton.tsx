@@ -20,7 +20,7 @@ export function BackButton() {
         if (fromSite && history.length > 1) router.back();
         else router.push("/catalog");
       }}
-      className="flex size-11 items-center justify-center rounded-full bg-white/95"
+      className="flex size-11 items-center justify-center rounded-full bg-white/95 text-text"
     >
       <ChevronLeftIcon />
     </button>

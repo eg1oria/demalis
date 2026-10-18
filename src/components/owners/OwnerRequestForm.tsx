@@ -16,7 +16,7 @@ import {
 import { DIRECTIONS, PLACE_TYPES } from "@/lib/places/constants";
 
 const inputClass =
-  "h-12 w-full min-w-0 rounded-[14px] border border-line bg-surface px-3.5 text-base outline-none focus:border-text aria-invalid:border-status-limited";
+  "h-12 w-full min-w-0 rounded-[10px] border border-line bg-surface px-3.5 text-base outline-none transition-colors focus:border-text aria-invalid:border-status-limited";
 const labelClass = "flex flex-col gap-1.5 text-[13px] text-text-muted";
 
 /** Форма «Добавить объект»: создаёт черновик объекта (Этап 7). */
@@ -40,7 +40,7 @@ export function OwnerRequestForm() {
     return (
       <div
         role="status"
-        className="flex flex-col gap-3 rounded-3xl bg-status-free-bg p-5"
+        className="flex flex-col gap-3 rounded-2xl bg-status-free-bg p-5"
       >
         <div className="flex items-center gap-3.5">
           <span className="flex size-10 flex-none items-center justify-center rounded-full bg-white text-status-block-icon">
@@ -58,7 +58,7 @@ export function OwnerRequestForm() {
               <path d="M5 12.5l4.5 4.5L19 7.5" />
             </svg>
           </span>
-          <span className="text-lg font-semibold text-status-block-title">
+          <span className="text-lg font-medium text-status-block-title">
             {t("sentTitle")}
           </span>
         </div>
@@ -88,7 +88,7 @@ export function OwnerRequestForm() {
   return (
     <form
       onSubmit={onSubmit}
-      className="relative flex flex-col gap-4 rounded-3xl border border-line-soft bg-surface p-4 md:p-6"
+      className="relative flex flex-col gap-4 rounded-2xl border border-line bg-surface p-4 md:p-6"
     >
       {/* Ловушка для ботов: человек это поле не видит. */}
       <div
@@ -205,7 +205,7 @@ export function OwnerRequestForm() {
             name="consent"
             {...invalid("consent")}
             required
-            className="mt-0.5 size-5 flex-none accent-accent"
+            className="mt-0.5 size-5 flex-none accent-text"
           />
           <span>
             {t.rich("consent", {
@@ -214,7 +214,7 @@ export function OwnerRequestForm() {
                 <Link
                   href="/privacy"
                   target="_blank"
-                  className="text-accent underline"
+                  className="text-text underline underline-offset-2"
                 >
                   {chunks}
                 </Link>
@@ -228,7 +228,7 @@ export function OwnerRequestForm() {
       {(formError || Object.keys(errors).length > 0) && (
         <p
           role="alert"
-          className="rounded-[14px] bg-status-limited-bg p-3 text-sm text-status-limited-text"
+          className="rounded-[10px] bg-status-limited-bg p-3 text-sm text-status-limited-text"
         >
           {formError ? t(`error_${formError}`) : t("fixErrors")}
         </p>
@@ -237,7 +237,7 @@ export function OwnerRequestForm() {
       <button
         type="submit"
         disabled={pending}
-        className="flex h-13 items-center justify-center rounded-2xl bg-accent px-4.5 text-[15px] font-semibold text-white disabled:opacity-60"
+        className="flex h-12 items-center justify-center rounded-[10px] bg-text px-4.5 text-[15px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
       >
         {pending ? t("sending") : t("submit")}
       </button>

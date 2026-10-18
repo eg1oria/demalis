@@ -31,8 +31,8 @@ export function StatusDot({
 export function StatusBadge({ status }: { status: DisplayStatus }) {
   const t = useTranslations("Status");
   return (
-    <span className="flex h-7 items-center gap-1.5 rounded-full bg-white/95 px-2.5 text-[13px] font-semibold whitespace-nowrap text-text">
-      <StatusDot status={status} />
+    <span className="flex h-6.5 items-center gap-1.5 rounded-full bg-white/95 px-2.5 text-xs font-medium whitespace-nowrap text-text">
+      <StatusDot status={status} size={7} />
       {t(status)}
     </span>
   );

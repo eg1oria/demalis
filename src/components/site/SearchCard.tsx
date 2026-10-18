@@ -9,7 +9,7 @@ import {
   type WhenOption,
 } from "@/lib/catalog/filters";
 import { GuestStepper } from "./GuestStepper";
-import { SearchIcon } from "./Icons";
+import { ArrowRightIcon, SearchIcon } from "./Icons";
 import { SegmentedControl } from "./SegmentedControl";
 
 /** Поиск на главной: когда + сколько гостей → каталог. */
@@ -54,11 +54,13 @@ export function SearchCard({
   }, [key, counts, when, guests]);
 
   const customDate = when !== "this" && when !== "next" ? when : null;
+  // Свободных нет — не тупик «0 вариантов», а все объекты на эти даты.
+  const empty = count === 0;
 
   return (
-    <div className="flex flex-col gap-3 rounded-3xl border border-line-soft bg-surface p-4 shadow-float md:flex-row md:items-end md:gap-6 md:p-4 md:pl-6">
+    <div className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-4 md:flex-row md:items-end md:gap-6 md:p-5">
       <div className="flex flex-col gap-3 md:flex-1">
-        <span className="text-xs font-semibold tracking-[0.02em] text-text-muted">
+        <span className="text-[11px] font-medium tracking-[0.12em] text-text-muted uppercase">
           {t("when")}
         </span>
         <SegmentedControl
@@ -97,7 +99,7 @@ export function SearchCard({
         />
       </div>
 
-      <div className="border-t border-surface-muted pt-2 md:border-t-0 md:border-l md:pt-0 md:pl-6">
+      <div className="border-t border-line-soft pt-3 md:border-t-0 md:border-l md:pt-0 md:pl-6">
         <GuestStepper
           value={guests}
           min={1}
@@ -112,11 +114,20 @@ export function SearchCard({
 
       <div className="flex flex-col gap-3 md:w-72">
         <Link
-          href={catalogHref({ when, guests })}
-          className="flex h-14 items-center justify-center gap-2.5 rounded-2xl bg-accent text-base font-semibold text-white"
+          href={catalogHref({ when, guests, all: empty })}
+          className="flex h-14 items-center justify-center gap-2.5 rounded-[10px] bg-accent text-[15px] font-medium text-white transition-opacity hover:opacity-90"
         >
-          <SearchIcon />
-          {t("show", { variants: tf("variants", { n: count }) })}
+          {empty ? (
+            <>
+              {t("showAll")}
+              <ArrowRightIcon size={18} />
+            </>
+          ) : (
+            <>
+              <SearchIcon size={18} />
+              {t("show", { variants: tf("variants", { n: count }) })}
+            </>
+          )}
         </Link>
         <p className="flex items-center justify-center gap-2 text-xs text-text-muted md:hidden">
           <span className="size-[7px] rounded-full bg-status-free" />

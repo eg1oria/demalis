@@ -89,7 +89,9 @@ export default async function BillingPage({
 
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="font-serif text-2xl font-medium">Оплаты</h1>
+      <h1 className="font-display text-xl font-medium tracking-[-0.03em]">
+        Оплаты
+      </h1>
 
       <form className="flex flex-wrap items-center gap-2">
         <Link
@@ -118,7 +120,7 @@ export default async function BillingPage({
       </form>
 
       <section className="flex flex-col gap-2">
-        <h2 className="font-serif text-xl font-medium">
+        <h2 className="font-display text-lg font-medium tracking-[-0.03em]">
           Платные заявки · {monthLabel}
         </h2>
         <p className="text-sm text-text-muted">
@@ -151,7 +153,7 @@ export default async function BillingPage({
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="font-serif text-xl font-medium">
+        <h2 className="font-display text-lg font-medium tracking-[-0.03em]">
           Принятые оплаты · {monthLabel}
         </h2>
         <p className="text-sm text-text-muted">
@@ -185,7 +187,9 @@ export default async function BillingPage({
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="font-serif text-xl font-medium">Сейчас действует</h2>
+        <h2 className="font-display text-lg font-medium tracking-[-0.03em]">
+          Сейчас действует
+        </h2>
         <p className="text-sm text-text-secondary">
           Pro: {proNow.length}
           {proNow.length > 0 &&

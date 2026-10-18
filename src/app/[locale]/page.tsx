@@ -2,14 +2,15 @@ import type { Metadata } from "next";
 import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
 import { Header } from "@/components/Header";
 import { CollectionTiles } from "@/components/site/CollectionTiles";
-import { Landscape } from "@/components/site/Landscape";
 import { OwnersBlock } from "@/components/site/OwnersBlock";
+import { PlaceCard } from "@/components/site/PlaceCard";
 import { QuickChips } from "@/components/site/QuickChips";
 import { SearchCard } from "@/components/site/SearchCard";
+import { SectionTitle } from "@/components/site/SectionTitle";
 import { SITE_NAME } from "@/config/site";
 import type { Locale } from "@/i18n/routing";
 import { collectionsWithCounts } from "@/lib/catalog/collections";
-import { EMPTY_FILTERS } from "@/lib/catalog/filters";
+import { catalogHref, EMPTY_FILTERS } from "@/lib/catalog/filters";
 import { findPlaces } from "@/lib/catalog/query";
 import { almatyToday, toIsoDate } from "@/lib/dates";
 import { pageMetadata } from "@/lib/seo";
@@ -21,6 +22,8 @@ export const revalidate = 300;
 const DEFAULT_GUESTS = 2;
 /** Сколько подборок на главной (ТЗ: 3–4). */
 const HOME_COLLECTIONS = 4;
+/** Сколько объектов в ленте «Свободно в эту субботу». */
+const FREE_STRIP = 8;
 
 export async function generateMetadata({
   params,
@@ -47,40 +50,41 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
   const currentLocale = await getLocale();
   const now = new Date();
 
-  // Столько свободных вариантов на эти выходные для 2 гостей.
-  const [{ total: count }, collections] = await Promise.all([
+  // Свободные на эти выходные: число для 2 гостей и лента без ограничения по гостям.
+  const [{ total: count }, free, collections] = await Promise.all([
     findPlaces({ ...EMPTY_FILTERS, when: "this", guests: DEFAULT_GUESTS }, now),
+    findPlaces({ ...EMPTY_FILTERS, when: "this" }, now),
     collectionsWithCounts(HOME_COLLECTIONS),
   ]);
+  const freePlaces = free.all.slice(0, FREE_STRIP);
+
+  const container = "mx-auto w-full max-w-[1440px] px-5 md:px-10 lg:px-20";
 
   return (
     <>
       <Header />
-      <main className="mx-auto flex w-full max-w-[1440px] flex-col md:px-20">
-        <section className="grid items-center gap-6 px-5 pt-4 md:grid-cols-2 md:gap-16 md:px-0 md:pt-6">
-          <div>
-            <p className="text-xs font-semibold tracking-[0.1em] text-text-muted uppercase">
-              {t("eyebrow")}
-            </p>
-            <h1 className="mt-3 font-serif text-[38px] leading-[1.06] font-medium tracking-[-0.025em] md:text-7xl">
-              {t("titleLine1")}
-              <br />
-              <em className="text-accent">{t("titleLine2")}</em>
-            </h1>
-            <p className="mt-3.5 max-w-xl text-base leading-normal text-text-secondary md:mt-6 md:text-xl">
+      <main className="flex flex-col">
+        <section className={`${container} pt-10 md:pt-20`}>
+          <p className="text-[11px] font-medium tracking-[0.14em] text-text-muted uppercase">
+            {t("eyebrow")}
+          </p>
+          <h1 className="mt-4 font-display text-[34px] leading-[1.04] font-medium tracking-[-0.045em] md:text-[64px] lg:text-[80px]">
+            {t("titleLine1")}
+            <br />
+            <span className="text-text-muted">{t("titleLine2")}</span>
+          </h1>
+          <div className="mt-5 flex flex-col gap-3 md:mt-8 md:flex-row md:items-end md:justify-between">
+            <p className="max-w-lg text-base leading-relaxed text-text-secondary md:text-lg">
               {t("lead")}
             </p>
-            <p className="mt-6 hidden items-center gap-2 text-sm text-text-muted md:flex">
+            <p className="hidden items-center gap-2 text-sm text-text-muted md:flex">
               <span className="size-[7px] rounded-full bg-status-free" />
               {t("ownersUpdate")}
             </p>
           </div>
-          <div className="relative hidden aspect-[4/3] overflow-hidden rounded-3xl md:block">
-            <Landscape seed="home-hero-3" />
-          </div>
         </section>
 
-        <section className="mx-4 mt-6 md:mx-0 md:mt-10">
+        <section className={`${container} mt-8 md:mt-12`}>
           <SearchCard
             thisLabel={formatStay(resolveWhen("this", now), currentLocale)}
             nextLabel={formatStay(resolveWhen("next", now), currentLocale)}
@@ -88,27 +92,47 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
             initialCount={count ?? 0}
             today={toIsoDate(almatyToday(now))}
           />
+          <div className="mt-4">
+            <QuickChips />
+          </div>
         </section>
 
-        <section className="mt-5 px-4 md:px-0">
-          <QuickChips />
-        </section>
+        {freePlaces.length > 0 && (
+          <section className={`${container} mt-16 md:mt-24`}>
+            <SectionTitle
+              href={catalogHref({ when: "this" })}
+              linkLabel={t("all")}
+            >
+              {t("freeTitle")}
+            </SectionTitle>
+            <ul className="no-scrollbar -mx-5 mt-5 flex snap-x gap-4 overflow-x-auto px-5 md:mx-0 md:mt-7 md:grid md:grid-cols-3 md:gap-x-6 md:gap-y-10 md:overflow-visible md:px-0 lg:grid-cols-4">
+              {freePlaces.map((place) => (
+                <li
+                  key={place.id}
+                  className="w-[78%] flex-none snap-start md:w-auto"
+                >
+                  <PlaceCard place={place} query={{ when: "this" }} />
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {collections.length > 0 && (
           <section
             id="collections"
-            className="mt-11 scroll-mt-4 px-4 md:mt-20 md:px-0"
+            className={`${container} mt-16 scroll-mt-4 md:mt-24`}
           >
-            <h2 className="mx-1 font-serif text-[25px] leading-[1.15] font-medium tracking-[-0.015em] md:mx-0 md:text-[38px] md:leading-[1.1] md:tracking-[-0.02em]">
+            <SectionTitle href="/collections" linkLabel={t("all")}>
               {tc("title")}
-            </h2>
-            <div className="mt-4 md:mt-7">
+            </SectionTitle>
+            <div className="mt-5 md:mt-7">
               <CollectionTiles collections={collections} />
             </div>
           </section>
         )}
 
-        <section className="mx-4 mt-11 md:mx-0 md:mt-20">
+        <section className={`${container} mt-16 md:mt-24`}>
           <OwnersBlock />
         </section>
       </main>

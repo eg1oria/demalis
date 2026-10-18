@@ -88,10 +88,10 @@ export default async function CatalogPage({
           placeQuery={placeQuery}
         />
       ) : (
-        <main className="mx-auto w-full max-w-[1440px] flex-1 px-5 md:px-20">
-          <div className="flex items-end justify-between gap-3 pt-4.5 pb-1.5">
+        <main className="mx-auto w-full max-w-[1440px] flex-1 px-5 md:px-10 lg:px-20">
+          <div className="flex items-end justify-between gap-3 pt-6 pb-2 md:pt-10">
             <div>
-              <h1 className="font-serif text-[26px] leading-[1.1] font-medium tracking-[-0.015em] whitespace-nowrap">
+              <h1 className="tabular font-display text-[24px] leading-[1.1] font-medium tracking-[-0.035em] whitespace-nowrap md:text-[34px]">
                 {tf("variants", { n: total })}
               </h1>
               {nightLabel && (
@@ -105,26 +105,26 @@ export default async function CatalogPage({
             <ViewToggle filters={filters} />
           </div>
 
-          <div className="flex items-center justify-between gap-2 pb-2.5">
+          <div className="flex items-center justify-between gap-2 pb-4">
             {filters.when ? <OnlyFreeToggle filters={filters} /> : <span />}
             <SortSelect filters={filters} />
           </div>
 
           {places.length === 0 ? (
             <div className="flex flex-col items-start gap-3 py-16">
-              <h2 className="font-serif text-2xl font-medium">
+              <h2 className="font-display text-xl font-medium tracking-[-0.03em]">
                 {t("emptyTitle")}
               </h2>
               <p className="text-text-secondary">{t("emptyText")}</p>
               <Link
                 href="/catalog"
-                className="flex h-12 items-center rounded-[14px] border border-line-strong px-5 font-semibold"
+                className="flex h-11 items-center rounded-[10px] border border-text px-5 text-[15px]"
               >
                 {t("reset")}
               </Link>
             </div>
           ) : (
-            <ul className="grid gap-7.5 pt-1.5 md:grid-cols-2 md:gap-x-6 lg:grid-cols-3">
+            <ul className="grid gap-x-6 gap-y-9 pt-1.5 md:grid-cols-2 md:gap-y-12 lg:grid-cols-3">
               {places.map((place, i) => (
                 <li key={place.id}>
                   <PlaceCard
@@ -144,7 +144,7 @@ export default async function CatalogPage({
                 limit: filters.limit + PAGE_SIZE,
               })}
               scroll={false}
-              className="mx-auto mt-8 flex h-14 w-full max-w-md items-center justify-center rounded-2xl border border-line-strong font-semibold"
+              className="mx-auto mt-12 flex h-12 w-full max-w-xs items-center justify-center rounded-full border border-text text-[15px] transition-colors hover:bg-text hover:text-white"
             >
               {t("showMore")}
             </Link>

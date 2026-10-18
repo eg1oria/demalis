@@ -28,7 +28,9 @@ export async function PaymentsSection({ placeId }: { placeId: string }) {
   return (
     <section className={`${cardClass} flex flex-col gap-4`}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="font-serif text-xl font-medium">Оплаты</h2>
+        <h2 className="font-display text-lg font-medium tracking-[-0.03em]">
+          Оплаты
+        </h2>
         {payments.length > 0 && (
           <span className="text-sm text-text-muted">Всего: {tenge(total)}</span>
         )}

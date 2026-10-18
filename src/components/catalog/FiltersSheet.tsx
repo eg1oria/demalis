@@ -69,10 +69,13 @@ export function FiltersSheet({
         aria-modal="true"
         aria-labelledby="filters-title"
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[92dvh] w-full flex-col rounded-t-3xl bg-bg shadow-float md:max-w-xl md:rounded-3xl"
+        className="flex max-h-[92dvh] w-full flex-col rounded-t-2xl bg-bg shadow-float md:max-w-xl md:rounded-2xl"
       >
-        <div className="flex items-center justify-between border-b border-line-soft px-5 py-2">
-          <h2 id="filters-title" className="font-serif text-xl font-medium">
+        <div className="flex items-center justify-between border-b border-line px-5 py-2">
+          <h2
+            id="filters-title"
+            className="font-display text-lg font-medium tracking-[-0.03em]"
+          >
             {t("filtersTitle")}
           </h2>
           <button
@@ -151,7 +154,7 @@ export function FiltersSheet({
           </Group>
 
           <div className="flex flex-col gap-2">
-            <h3 className="text-sm font-semibold text-text-muted">
+            <h3 className="text-[11px] font-medium tracking-[0.12em] text-text-muted uppercase">
               {t("guests")}
             </h3>
             <GuestStepper
@@ -256,18 +259,18 @@ export function FiltersSheet({
           </Group>
         </div>
 
-        <div className="flex gap-2.5 border-t border-line-soft bg-surface px-5 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] md:rounded-b-3xl">
+        <div className="flex gap-2.5 border-t border-line bg-bg px-5 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] md:rounded-b-2xl">
           <button
             type="button"
             onClick={() => setDraft({ ...EMPTY_FILTERS, when: draft.when })}
-            className="h-13 flex-none rounded-2xl border border-line-strong px-5 font-semibold"
+            className="h-12 flex-none rounded-[10px] border border-line px-5 text-[15px] transition-colors hover:border-text"
           >
             {t("clear")}
           </button>
           <button
             type="button"
             onClick={() => onApply({ ...draft, limit: PAGE_SIZE })}
-            className="h-13 flex-1 rounded-2xl bg-accent font-semibold text-white"
+            className="h-12 flex-1 rounded-[10px] bg-text text-[15px] font-medium text-white"
           >
             {t("apply")}
           </button>
@@ -280,7 +283,7 @@ export function FiltersSheet({
 function Group({ title, children }: { title: string; children: ReactNode }) {
   return (
     <fieldset className="flex flex-col gap-2">
-      <legend className="mb-2 text-sm font-semibold text-text-muted">
+      <legend className="mb-2 text-[11px] font-medium tracking-[0.12em] text-text-muted uppercase">
         {title}
       </legend>
       <div className="flex flex-wrap gap-2">{children}</div>

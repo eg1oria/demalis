@@ -12,7 +12,7 @@ export default async function PanelLayout({ children }: LayoutProps<"/admin">) {
         <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2">
           <Link
             href="/admin"
-            className="font-serif text-lg font-semibold text-accent"
+            className="font-display text-base font-medium tracking-[-0.03em]"
           >
             {SITE_NAME} · админка
           </Link>

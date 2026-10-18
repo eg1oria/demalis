@@ -68,7 +68,9 @@ export default async function OwnerPage({
       <Link href="/admin/owners" className="text-sm text-text-muted">
         ← Все владельцы
       </Link>
-      <h1 className="font-serif text-2xl font-medium">{owner.name}</h1>
+      <h1 className="font-display text-xl font-medium tracking-[-0.03em]">
+        {owner.name}
+      </h1>
       {saved && (
         <p
           role="status"
@@ -79,7 +81,9 @@ export default async function OwnerPage({
       )}
 
       <section className={`${cardClass} flex flex-col gap-3`}>
-        <h2 className="font-serif text-xl font-medium">Telegram-бот</h2>
+        <h2 className="font-display text-lg font-medium tracking-[-0.03em]">
+          Telegram-бот
+        </h2>
         {owner.telegram_chat_id ? (
           <p className="text-sm text-text-secondary">
             Бот подключён
@@ -139,7 +143,9 @@ export default async function OwnerPage({
       </section>
 
       <section className={`${cardClass} flex flex-col gap-3`}>
-        <h2 className="font-serif text-xl font-medium">Ежемесячный отчёт</h2>
+        <h2 className="font-display text-lg font-medium tracking-[-0.03em]">
+          Ежемесячный отчёт
+        </h2>
         <p className="text-sm text-text-secondary">
           Бот сам присылает его 1-го числа за прошлый месяц. Цифры те же, что в{" "}
           <Link
@@ -197,7 +203,9 @@ export default async function OwnerPage({
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="font-serif text-xl font-medium">Объекты</h2>
+        <h2 className="font-display text-lg font-medium tracking-[-0.03em]">
+          Объекты
+        </h2>
         {owner.places.length === 0 ? (
           <p className="text-sm text-text-muted">
             Нет объектов. Назначьте владельца в карточке объекта (поле
@@ -224,7 +232,9 @@ export default async function OwnerPage({
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="font-serif text-xl font-medium">Данные</h2>
+        <h2 className="font-display text-lg font-medium tracking-[-0.03em]">
+          Данные
+        </h2>
         <OwnerForm owner={owner} />
       </section>
     </div>

@@ -16,7 +16,9 @@ export default async function LoginPage({
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-4 py-12">
       <div className={cardClass}>
-        <h1 className="mb-1 font-serif text-2xl font-medium">{SITE_NAME}</h1>
+        <h1 className="mb-1 font-display text-xl font-medium tracking-[-0.03em]">
+          {SITE_NAME}
+        </h1>
         <p className="mb-6 text-text-muted">
           Вход в админку по ссылке на email
         </p>

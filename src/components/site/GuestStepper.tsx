@@ -22,15 +22,15 @@ export function GuestStepper({
   increaseLabel: string;
 }) {
   const button =
-    "flex size-11 items-center justify-center rounded-full border border-line bg-surface disabled:opacity-40";
+    "flex size-11 items-center justify-center rounded-full border border-line transition-colors hover:border-text disabled:opacity-35 disabled:hover:border-line";
 
   return (
     <div className="flex items-center justify-between gap-4 pt-1.5">
       <div className="flex items-center gap-2.5">
-        <UsersIcon size={22} className="text-text-secondary" />
+        <UsersIcon size={20} className="text-text-muted" />
         <div className="flex flex-col">
           <span className="text-xs text-text-muted">{label}</span>
-          <span className="text-base font-semibold whitespace-nowrap">
+          <span className="text-base font-medium whitespace-nowrap">
             {valueLabel}
           </span>
         </div>
@@ -46,7 +46,7 @@ export function GuestStepper({
           <MinusIcon size={18} />
         </button>
         <span
-          className="min-w-5 text-center text-[17px] font-semibold"
+          className="tabular min-w-5 text-center text-[17px] font-medium"
           aria-live="polite"
         >
           {value}

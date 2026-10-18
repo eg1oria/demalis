@@ -12,7 +12,7 @@ import { YandexMetrika } from "@/components/site/YandexMetrika";
 import { SITE_NAME } from "@/config/site";
 import { routing } from "@/i18n/routing";
 import { SITE_URL } from "@/lib/seo";
-import { literata, onest } from "../fonts";
+import { geologica, unbounded } from "../fonts";
 import "../globals.css";
 
 const CLIENT_NAMESPACES = [
@@ -31,6 +31,7 @@ const CLIENT_NAMESPACES = [
   "Collections",
   "OwnerForm",
   "Plans",
+  "Favorites",
 ] as const;
 
 const METRIKA_ID = process.env.NEXT_PUBLIC_YANDEX_METRIKA_ID;
@@ -78,7 +79,7 @@ export default async function LocaleLayout({
   return (
     <html
       lang={locale}
-      className={`${onest.variable} ${literata.variable} h-full antialiased`}
+      className={`${geologica.variable} ${unbounded.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col font-sans">
         <NextIntlClientProvider messages={clientMessages}>

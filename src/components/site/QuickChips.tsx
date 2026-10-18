@@ -21,7 +21,7 @@ export function QuickChips() {
   return (
     <nav
       aria-label={h("quickFilters")}
-      className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 md:mx-0 md:flex-wrap md:px-0"
+      className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5 md:mx-0 md:flex-wrap md:px-0"
     >
       {QUICK.map(([key, filters]) => (
         <ChipLink key={key} href={catalogHref(filters)}>

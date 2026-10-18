@@ -12,7 +12,9 @@ export default async function NewOwnerPage() {
       <Link href="/admin/owners" className="text-sm text-text-muted">
         ← Все владельцы
       </Link>
-      <h1 className="font-serif text-2xl font-medium">Новый владелец</h1>
+      <h1 className="font-display text-xl font-medium tracking-[-0.03em]">
+        Новый владелец
+      </h1>
       <OwnerForm owner={null} />
       <p className="text-sm text-text-muted">
         После сохранения здесь появится кнопка «Создать код привязки», а объекты

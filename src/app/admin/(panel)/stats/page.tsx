@@ -84,7 +84,9 @@ export default async function StatsPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="font-serif text-2xl font-medium">Статистика</h1>
+      <h1 className="font-display text-xl font-medium tracking-[-0.03em]">
+        Статистика
+      </h1>
 
       <div className="flex flex-wrap items-center gap-2">
         <Link

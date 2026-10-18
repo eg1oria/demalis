@@ -5,8 +5,8 @@ export function VerifiedBadge({ onPhoto = true }: { onPhoto?: boolean }) {
   const t = useTranslations("Plans");
   return (
     <span
-      className={`flex h-7 items-center gap-1 rounded-full px-2.5 text-[13px] font-semibold whitespace-nowrap text-text ${
-        onPhoto ? "bg-white/95" : "border border-line bg-surface"
+      className={`flex h-6.5 items-center gap-1 rounded-full px-2.5 text-xs font-medium whitespace-nowrap text-text ${
+        onPhoto ? "bg-white/95" : "border border-line"
       }`}
     >
       <svg

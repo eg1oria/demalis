@@ -12,7 +12,9 @@ export default async function NewCollectionPage() {
       <Link href="/admin/collections" className="text-sm text-text-muted">
         ← Все подборки
       </Link>
-      <h1 className="font-serif text-2xl font-medium">Новая подборка</h1>
+      <h1 className="font-display text-xl font-medium tracking-[-0.03em]">
+        Новая подборка
+      </h1>
       <CollectionForm collection={null} />
     </div>
   );

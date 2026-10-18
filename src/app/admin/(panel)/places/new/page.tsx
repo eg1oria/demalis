@@ -15,7 +15,9 @@ export default async function NewPlacePage() {
       <Link href="/admin" className="text-sm text-text-muted">
         ← Все объекты
       </Link>
-      <h1 className="font-serif text-2xl font-medium">Новый объект</h1>
+      <h1 className="font-display text-xl font-medium tracking-[-0.03em]">
+        Новый объект
+      </h1>
       <PlaceForm place={null} owners={owners} />
     </div>
   );

@@ -26,7 +26,7 @@ describe("effectivePlan", () => {
     ).toMatchObject({
       photos: 5,
       video: false,
-      availability: false,
+      availability: true,
       verified: false,
     });
     expect(planFeatures({ plan: "pro", pro_until: null }, TODAY)).toMatchObject(

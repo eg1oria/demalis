@@ -55,8 +55,8 @@ export function CatalogTopBar({
   ].join(" · ");
 
   return (
-    <div className="border-b border-line-soft bg-bg" aria-busy={pending}>
-      <div className="mx-auto flex max-w-[1440px] items-center gap-2 px-3 pt-2.5 pb-2 md:px-20 md:pt-4">
+    <div className="border-b border-line bg-bg" aria-busy={pending}>
+      <div className="mx-auto flex max-w-[1440px] items-center gap-2 px-3 pt-2.5 pb-2 md:px-10 md:pt-5 lg:px-20">
         <Link
           href="/"
           aria-label={t("back")}
@@ -67,11 +67,11 @@ export function CatalogTopBar({
         <button
           type="button"
           onClick={() => setSheetOpen(true)}
-          className="flex h-13.5 min-w-0 flex-1 items-center gap-2.5 rounded-2xl border border-line bg-surface px-3.5 text-left md:max-w-md"
+          className="flex h-12 min-w-0 flex-1 items-center gap-2.5 rounded-[10px] border border-line bg-surface px-3.5 text-left transition-colors hover:border-text md:max-w-md"
         >
-          <CalendarIcon className="flex-none text-text-secondary" />
+          <CalendarIcon size={18} className="flex-none text-text-muted" />
           <span className="flex min-w-0 flex-col">
-            <span className="truncate text-sm font-semibold">
+            <span className="truncate text-sm font-medium">
               {whenLabel ?? t("anyDates")}
             </span>
             <span className="truncate text-xs text-text-muted">{summary}</span>
@@ -81,18 +81,18 @@ export function CatalogTopBar({
           type="button"
           aria-label={t("allFilters")}
           onClick={() => setSheetOpen(true)}
-          className="relative flex size-13.5 flex-none items-center justify-center rounded-2xl border border-line bg-surface"
+          className="relative flex size-12 flex-none items-center justify-center rounded-[10px] border border-line bg-surface transition-colors hover:border-text"
         >
-          <FiltersIcon size={22} />
+          <FiltersIcon size={20} />
           {active > 0 && (
-            <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[11px] font-bold text-white">
+            <span className="tabular absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-text px-1.5 text-[11px] font-medium text-white">
               {active}
             </span>
           )}
         </button>
       </div>
 
-      <div className="no-scrollbar mx-auto flex max-w-[1440px] gap-2 overflow-x-auto px-3 pt-0.5 pb-3 md:px-20">
+      <div className="no-scrollbar mx-auto flex max-w-[1440px] gap-2 overflow-x-auto px-3 pt-0.5 pb-3 md:px-10 md:pb-4 lg:px-20">
         {chips.map((chip) => {
           const on =
             "amenity" in chip

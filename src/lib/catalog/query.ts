@@ -10,6 +10,7 @@ import type { AvailabilityStatus } from "@/lib/places/constants";
 import { planFeatures, promote } from "@/lib/plans";
 import type { Tables } from "@/lib/supabase/database.types";
 import { createPublicClient } from "@/lib/supabase/public";
+import { getUpcomingWeekend } from "@/lib/weekend";
 import { resolveWhen } from "@/lib/when";
 import {
   AMENITY_FILTERS,
@@ -234,4 +235,35 @@ export async function findSimilar(
         Number(a.direction === place.direction),
     )
     .slice(0, limit);
+}
+
+/**
+ * Объекты для «Избранного» в порядке сохранения, со статусом на эту субботу.
+ * Снятые с публикации просто пропадают из списка.
+ */
+export async function findPlacesByIds(
+  ids: string[],
+  now: Date = new Date(),
+): Promise<PlaceCardData[]> {
+  if (ids.length === 0) return [];
+  const { data, error } = await createPublicClient()
+    .from("places")
+    .select(CARD_FIELDS)
+    .eq("status", "published")
+    .in("id", ids);
+  if (error) throw error;
+
+  const today = toIsoDate(almatyToday(now));
+  const statuses = await statusesForNight(
+    getUpcomingWeekend(now).saturday,
+    now,
+  );
+  const order = new Map(ids.map((id, i) => [id, i]));
+  return data
+    .map((place) => ({
+      ...place,
+      verified: planFeatures(place, today).verified,
+      status: placeStatus(place, statuses, today),
+    }))
+    .sort((a, b) => order.get(a.id)! - order.get(b.id)!);
 }

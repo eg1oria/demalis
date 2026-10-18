@@ -33,7 +33,9 @@ export default async function EditPlacePage({
         ← Все объекты
       </Link>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="font-serif text-2xl font-medium">{place.name_ru}</h1>
+        <h1 className="font-display text-xl font-medium tracking-[-0.03em]">
+          {place.name_ru}
+        </h1>
         <Link
           href={`/admin/places/${place.id}/availability`}
           className="flex h-11 items-center text-accent"

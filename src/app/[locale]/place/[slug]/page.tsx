@@ -12,16 +12,19 @@ import {
   UserIcon,
   WhatsAppIcon,
 } from "@/components/site/Icons";
-import { PlacePhoto } from "@/components/site/PlacePhoto";
-import { StatusBadge } from "@/components/site/StatusBadge";
+import { FavoriteButton } from "@/components/site/FavoriteButton";
+import { PlaceCard } from "@/components/site/PlaceCard";
+import { SectionTitle } from "@/components/site/SectionTitle";
+import { StatusDot } from "@/components/site/StatusBadge";
 import { VerifiedBadge } from "@/components/site/VerifiedBadge";
 import { AvailabilityCalendar } from "@/components/place/AvailabilityCalendar";
+import { Description } from "@/components/place/Description";
 import { Gallery } from "@/components/place/Gallery";
 import { LeadForm } from "@/components/place/LeadForm";
+import { ShareButton } from "@/components/place/ShareButton";
 import { StatusBlock } from "@/components/place/StatusBlock";
 import { TrackedPhoneLink } from "@/components/place/TrackedPhoneLink";
 import { ViewTracker } from "@/components/place/ViewTracker";
-import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { parseFilters } from "@/lib/catalog/filters";
 import {
@@ -232,261 +235,298 @@ export default async function PlacePage({ params, searchParams }: Props) {
       ? `https://www.openstreetmap.org/?mlat=${place.lat}&mlon=${place.lng}#map=13/${place.lat}/${place.lng}`
       : null;
 
-  const h2 = "font-serif text-[22px] font-medium tracking-[-0.01em]";
+  const h2 =
+    "font-display text-lg font-medium tracking-[-0.03em] md:text-[22px]";
+  const section = "border-t border-line pt-8 mt-8 md:pt-10 md:mt-10";
   const contactClass =
-    "flex h-14 items-center gap-2.5 rounded-[14px] border border-line-soft bg-surface px-3.5 text-sm font-medium";
+    "flex h-12 items-center gap-2.5 rounded-[10px] border border-line px-3.5 text-sm transition-colors hover:border-text";
+
+  const priceBlock = place.price_from != null && (
+    <div>
+      <span className="text-sm text-text-muted">
+        {tf.rich("priceFromRich", {
+          price: formatTenge(place.price_from, currentLocale),
+          muted: (chunks) => <span>{chunks}</span>,
+          b: (chunks) => (
+            <span className="tabular font-display text-[26px] font-medium tracking-[-0.04em] text-text">
+              {chunks}
+            </span>
+          ),
+        })}
+      </span>
+      <p className="mt-0.5 text-[13px] text-text-muted">
+        {tf(`unit_${place.price_unit}`)}
+      </p>
+    </div>
+  );
 
   return (
     <>
       <Header hideOnMobile />
-      <main className="mx-auto w-full max-w-3xl flex-1 md:px-6 md:pt-2">
-        <Gallery urls={photos} alt={name} seed={place.id} />
+      <main className="mx-auto w-full max-w-[1440px] flex-1 md:px-10 md:pt-8 lg:px-20">
+        <Gallery
+          urls={photos}
+          alt={name}
+          actions={
+            <>
+              <ShareButton title={name} />
+              <FavoriteButton placeId={place.id} variant="photo" />
+            </>
+          }
+        />
 
-        <article className="relative -mt-6 flex flex-col rounded-t-3xl bg-bg px-5 pt-6 md:mt-0 md:px-0">
-          <p className="text-xs font-semibold tracking-[0.08em] text-text-muted uppercase">
-            {tTypes(place.type)} · {tDir(place.direction)}
-          </p>
-          <h1 className="mt-2 font-serif text-[32px] leading-[1.1] font-medium tracking-[-0.02em]">
-            {name}
-          </h1>
-          {features.verified && (
-            <div className="mt-2.5 flex">
-              <VerifiedBadge onPhoto={false} />
-            </div>
-          )}
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm text-text-secondary">
-            {place.drive_minutes != null && (
-              <span className="flex items-center gap-1.5">
-                <ClockIcon size={16} />
-                {t("fromAlmaty", { time: drive(place.drive_minutes) })}
-              </span>
-            )}
-            {place.capacity_max != null && (
-              <span className="flex items-center gap-1.5">
-                <UserIcon size={16} />
-                {tf("upToGuests", { n: place.capacity_max })}
-              </span>
-            )}
-          </div>
-
-          <div className="mt-5">
-            <StatusBlock
-              status={nightStatus}
-              title={statusTitle}
-              subtitle={statusSubtitle}
-            />
-          </div>
-
-          {place.price_from != null && (
-            <div className="mt-6 border-y border-line py-4.5">
-              <span className="text-sm text-text-muted">
-                {tf.rich("priceFromRich", {
-                  price: formatTenge(place.price_from, currentLocale),
-                  muted: (chunks) => <span>{chunks}</span>,
-                  b: (chunks) => (
-                    <span className="font-serif text-[28px] font-medium tracking-[-0.02em] text-text">
-                      {chunks}
-                    </span>
-                  ),
-                })}
-              </span>
-              <p className="mt-0.5 text-[13px] text-text-muted">
-                {tf(`unit_${place.price_unit}`)}
-              </p>
-            </div>
-          )}
-
-          {amenities.length > 0 && (
-            <section className="mt-8">
-              <h2 className={h2}>{t("amenities")}</h2>
-              <ul className="mt-3.5 grid grid-cols-2 gap-2.5 md:grid-cols-3">
-                {amenities.map((amenity) => (
-                  <li
-                    key={amenity}
-                    className="flex min-h-14 items-center gap-2.5 rounded-[14px] border border-line-soft bg-surface px-3.5 text-sm font-medium"
-                  >
-                    <AmenityIcon
-                      amenity={amenity}
-                      size={22}
-                      className="flex-none text-accent"
-                    />
-                    {tAmenities(amenity)}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          {description && (
-            <section className="mt-8">
-              <h2 className={h2}>{t("about")}</h2>
-              <p className="mt-3 text-[15px] leading-relaxed whitespace-pre-line text-text-secondary">
-                {description}
-              </p>
-            </section>
-          )}
-
-          {features.availability && (
-            <section className="mt-8">
-              <div className="flex items-baseline justify-between gap-3">
-                <h2 className={h2}>{tCalendar("title")}</h2>
-                <span className="text-[13px] text-text-muted">
-                  {updatedDays === null
-                    ? tCalendar("never")
-                    : tCalendar("updated", { days: updatedDays })}
+        <div className="relative -mt-5 rounded-t-2xl bg-bg px-5 pt-6 md:mt-0 md:px-0 md:pt-8 lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-16 lg:pt-10">
+          <article className="flex min-w-0 flex-col">
+            <p className="text-[11px] font-medium tracking-[0.14em] text-text-muted uppercase">
+              {tTypes(place.type)} · {tDir(place.direction)}
+            </p>
+            <h1 className="mt-3 font-display text-[26px] leading-[1.1] font-medium tracking-[-0.04em] md:text-[40px]">
+              {name}
+            </h1>
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-text-secondary">
+              {features.verified && <VerifiedBadge onPhoto={false} />}
+              {place.drive_minutes != null && (
+                <span className="flex items-center gap-1.5">
+                  <ClockIcon size={16} className="text-text-muted" />
+                  {t("fromAlmaty", { time: drive(place.drive_minutes) })}
                 </span>
-              </div>
-              {stale && updatedDays !== null && (
-                <p className="mt-2 text-sm text-text-secondary">
-                  {tCalendar("staleNote")}
-                </p>
               )}
-              <div className="mt-3.5">
-                <AvailabilityCalendar
-                  days={calendarDays}
-                  statuses={calendarStatuses}
-                  selected={stay?.nights ?? []}
+              {place.capacity_max != null && (
+                <span className="flex items-center gap-1.5">
+                  <UserIcon size={16} className="text-text-muted" />
+                  {tf("upToGuests", { n: place.capacity_max })}
+                </span>
+              )}
+            </div>
+
+            {/* На десктопе статус и цена — в блоке справа. */}
+            <div className="mt-6 lg:hidden">
+              <StatusBlock
+                status={nightStatus}
+                title={statusTitle}
+                subtitle={statusSubtitle}
+              />
+            </div>
+            {priceBlock && (
+              <div className="mt-6 border-t border-line pt-5 lg:hidden">
+                {priceBlock}
+              </div>
+            )}
+
+            {amenities.length > 0 && (
+              <section className={section}>
+                <h2 className={h2}>{t("amenities")}</h2>
+                <ul className="mt-5 grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-3">
+                  {amenities.map((amenity) => (
+                    <li
+                      key={amenity}
+                      className="flex items-center gap-3 text-[15px]"
+                    >
+                      <AmenityIcon
+                        amenity={amenity}
+                        size={20}
+                        className="flex-none text-text-muted"
+                      />
+                      {tAmenities(amenity)}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {description && (
+              <section className={section}>
+                <h2 className={h2}>{t("about")}</h2>
+                <div className="mt-4">
+                  <Description text={description} />
+                </div>
+              </section>
+            )}
+
+            {features.availability && (
+              <section className={section}>
+                <div className="flex items-baseline justify-between gap-3">
+                  <h2 className={h2}>{tCalendar("title")}</h2>
+                  <span className="text-[13px] text-text-muted">
+                    {updatedDays === null
+                      ? tCalendar("never")
+                      : tCalendar("updated", { days: updatedDays })}
+                  </span>
+                </div>
+                {stale && updatedDays !== null && (
+                  <p className="mt-2 text-sm text-text-secondary">
+                    {tCalendar("staleNote")}
+                  </p>
+                )}
+                <div className="mt-5 md:max-w-md">
+                  <AvailabilityCalendar
+                    days={calendarDays}
+                    statuses={calendarStatuses}
+                    selected={stay?.nights ?? []}
+                  />
+                </div>
+              </section>
+            )}
+
+            <section id="lead" className={`${section} scroll-mt-6`}>
+              <h2 className={h2}>{tLead("title")}</h2>
+              <p className="mt-2 text-sm text-text-secondary">
+                {tLead("lead")}
+              </p>
+              <div className="mt-5">
+                <LeadForm
+                  placeId={place.id}
+                  today={calendarDays[0]}
+                  checkIn={stay?.checkIn}
+                  checkOut={stay?.checkOut}
+                  guests={guests}
                 />
               </div>
             </section>
-          )}
 
-          <section id="lead" className="mt-8 scroll-mt-4">
-            <h2 className={h2}>{tLead("title")}</h2>
-            <p className="mt-2 text-sm text-text-secondary">{tLead("lead")}</p>
-            <div className="mt-3.5">
-              <LeadForm
-                placeId={place.id}
-                today={calendarDays[0]}
-                checkIn={stay?.checkIn}
-                checkOut={stay?.checkOut}
-                guests={guests}
-              />
-            </div>
-          </section>
-
-          <section className="mt-8">
-            <h2 className={h2}>{t("contacts")}</h2>
-            <div className="mt-3.5 grid gap-2.5 sm:grid-cols-2">
-              <a
-                href={waHref}
-                target="_blank"
-                rel="noopener nofollow"
-                className={contactClass}
-              >
-                <WhatsAppIcon size={22} className="text-accent" />
-                {t("writeWhatsApp")}
-              </a>
-              <TrackedPhoneLink
-                placeId={place.id}
-                phone={place.whatsapp_phone}
-                className={contactClass}
-              >
-                <PhoneIcon size={22} className="text-accent" />
-                {t("call")}
-              </TrackedPhoneLink>
-              {place.instagram_url && (
+            <section className={section}>
+              <h2 className={h2}>{t("contacts")}</h2>
+              <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
                 <a
-                  href={goHref("instagram", place.id)}
+                  href={waHref}
                   target="_blank"
                   rel="noopener nofollow"
                   className={contactClass}
                 >
-                  <InstagramIcon size={22} className="text-accent" />
-                  {t("instagram")}
+                  <WhatsAppIcon size={20} className="text-text-muted" />
+                  {t("writeWhatsApp")}
                 </a>
-              )}
-              {features.video && place.video_url && (
-                <a
-                  href={place.video_url}
-                  target="_blank"
-                  rel="noopener"
+                <TrackedPhoneLink
+                  placeId={place.id}
+                  phone={place.whatsapp_phone}
                   className={contactClass}
                 >
-                  <PlayIcon size={22} className="text-accent" />
-                  {t("video")}
-                </a>
-              )}
-            </div>
-          </section>
+                  <PhoneIcon size={20} className="text-text-muted" />
+                  {t("call")}
+                </TrackedPhoneLink>
+                {place.instagram_url && (
+                  <a
+                    href={goHref("instagram", place.id)}
+                    target="_blank"
+                    rel="noopener nofollow"
+                    className={contactClass}
+                  >
+                    <InstagramIcon size={20} className="text-text-muted" />
+                    {t("instagram")}
+                  </a>
+                )}
+                {features.video && place.video_url && (
+                  <a
+                    href={place.video_url}
+                    target="_blank"
+                    rel="noopener"
+                    className={contactClass}
+                  >
+                    <PlayIcon size={20} className="text-text-muted" />
+                    {t("video")}
+                  </a>
+                )}
+              </div>
+            </section>
 
-          {(place.address_text || mapHref) && (
-            <section className="mt-8">
-              <h2 className={h2}>{t("location")}</h2>
-              {place.address_text && (
-                <p className="mt-3 text-sm leading-relaxed text-text-secondary">
-                  {place.address_text}
+            {(place.address_text || mapHref) && (
+              <section className={section}>
+                <h2 className={h2}>{t("location")}</h2>
+                {place.address_text && (
+                  <p className="mt-4 text-[15px] leading-relaxed text-text-secondary">
+                    {place.address_text}
+                  </p>
+                )}
+                {mapHref && (
+                  <a
+                    href={mapHref}
+                    target="_blank"
+                    rel="noopener"
+                    className="mt-4 flex h-11 w-fit items-center gap-2 rounded-full border border-text px-4.5 text-sm transition-colors hover:bg-text hover:text-white"
+                  >
+                    <PinIcon size={16} />
+                    {t("openMap")}
+                  </a>
+                )}
+              </section>
+            )}
+          </article>
+
+          {/* Десктоп: цена, статус и связь всегда под рукой. */}
+          <aside className="hidden lg:block">
+            <div className="sticky top-8 flex flex-col gap-5 rounded-2xl border border-line bg-surface p-6">
+              {priceBlock}
+              <div className="flex items-start gap-2.5 border-y border-line py-4">
+                <span className="mt-1.5 flex">
+                  <StatusDot status={nightStatus} />
+                </span>
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[15px] font-medium">{statusTitle}</span>
+                  <span className="text-[13px] text-text-muted">
+                    {statusSubtitle}
+                  </span>
+                </div>
+              </div>
+              {(stayLabel || guests) && (
+                <p className="-mt-1 text-sm text-text-secondary">
+                  {[stayLabel, guests && tf("guests", { n: guests })]
+                    .filter(Boolean)
+                    .join(" · ")}
                 </p>
               )}
-              {mapHref && (
+              <div className="flex flex-col gap-2.5">
                 <a
-                  href={mapHref}
+                  href={waHref}
                   target="_blank"
-                  rel="noopener"
-                  className="mt-2 flex h-12 items-center justify-center gap-2 rounded-[14px] border border-line-strong text-[15px] font-semibold"
+                  rel="noopener nofollow"
+                  className="flex h-12 items-center justify-center gap-2 rounded-[10px] bg-accent text-[15px] font-medium text-white transition-opacity hover:opacity-90"
                 >
-                  <PinIcon size={18} />
-                  {t("openMap")}
+                  <WhatsAppIcon size={18} />
+                  {t("writeWhatsApp")}
                 </a>
-              )}
-            </section>
-          )}
+                <a
+                  href="#lead"
+                  className="flex h-12 items-center justify-center rounded-[10px] border border-text text-[15px] transition-colors hover:bg-text hover:text-white"
+                >
+                  {tLead("title")}
+                </a>
+                <TrackedPhoneLink
+                  placeId={place.id}
+                  phone={place.whatsapp_phone}
+                  className="flex h-10 items-center justify-center gap-2 text-sm text-text-secondary transition-colors hover:text-text"
+                >
+                  <PhoneIcon size={16} />
+                  {t("call")}
+                </TrackedPhoneLink>
+              </div>
+              <div className="flex gap-2 border-t border-line pt-5">
+                <FavoriteButton placeId={place.id} variant="plain" />
+                <ShareButton title={name} variant="plain" />
+              </div>
+            </div>
+          </aside>
+        </div>
 
-          {similar.length > 0 && (
-            <section className="mt-8">
-              <h2 className={h2}>{t("similar")}</h2>
-              <ul className="mt-3.5 grid grid-cols-2 gap-3 md:grid-cols-4">
-                {similar.map((other) => {
-                  const otherName = placeName(other, currentLocale);
-                  return (
-                    <li key={other.id}>
-                      <Link
-                        href={`/place/${other.slug}`}
-                        className="flex flex-col gap-2 text-text"
-                      >
-                        <div className="relative h-31 overflow-hidden rounded-2xl bg-surface-muted">
-                          <PlacePhoto
-                            path={visiblePhotos(other)[0]}
-                            seed={other.id}
-                            alt={otherName}
-                            sizes="(min-width: 768px) 25vw, 50vw"
-                          />
-                          <span className="absolute top-2 left-2">
-                            <StatusBadge
-                              status={placeStatus(
-                                other,
-                                similarStatuses,
-                                today,
-                              )}
-                            />
-                          </span>
-                        </div>
-                        <span className="text-[15px] leading-snug font-semibold">
-                          {otherName}
-                        </span>
-                        <span className="-mt-1 text-[13px] text-text-secondary">
-                          {[
-                            other.price_from != null &&
-                              tf("priceFrom", {
-                                price: formatTenge(
-                                  other.price_from,
-                                  currentLocale,
-                                ),
-                              }),
-                            other.drive_minutes != null &&
-                              drive(other.drive_minutes),
-                          ]
-                            .filter(Boolean)
-                            .join(" · ")}
-                        </span>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
-          )}
-        </article>
+        {similar.length > 0 && (
+          <section className="mt-14 border-t border-line px-5 pt-10 md:mt-20 md:px-0">
+            <SectionTitle>{t("similar")}</SectionTitle>
+            <ul className="no-scrollbar -mx-5 mt-6 flex snap-x gap-4 overflow-x-auto px-5 md:mx-0 md:grid md:grid-cols-4 md:gap-6 md:overflow-visible md:px-0">
+              {similar.map((other) => (
+                <li
+                  key={other.id}
+                  className="w-[70%] flex-none snap-start md:w-auto"
+                >
+                  <PlaceCard
+                    place={{
+                      ...other,
+                      status: placeStatus(other, similarStatuses, today),
+                    }}
+                  />
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </main>
 
       <ViewTracker placeId={place.id} />
@@ -495,15 +535,15 @@ export default async function PlacePage({ params, searchParams }: Props) {
         dangerouslySetInnerHTML={{ __html: jsonLdString(structuredData) }}
       />
 
-      {/* Нижняя панель: цена, заявка и главная кнопка — WhatsApp. */}
+      {/* Нижняя панель на телефоне и планшете: цена, заявка и главная кнопка — WhatsApp. */}
       <div
         data-contact-bar
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-line-soft bg-surface shadow-float"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface lg:hidden"
       >
         <div className="mx-auto flex max-w-3xl items-center gap-2.5 px-4 pt-3 pb-[max(16px,env(safe-area-inset-bottom))]">
           <div className="flex min-w-0 flex-1 flex-col">
             {place.price_from != null && (
-              <span className="text-base font-semibold">
+              <span className="tabular text-base font-medium">
                 {formatTenge(place.price_from, currentLocale)}
               </span>
             )}
@@ -515,7 +555,7 @@ export default async function PlacePage({ params, searchParams }: Props) {
           </div>
           <a
             href="#lead"
-            className="flex h-13 flex-none items-center rounded-2xl border border-line-strong bg-surface px-4 text-[15px] font-semibold"
+            className="flex h-12 flex-none items-center rounded-[10px] border border-line px-4 text-[15px]"
           >
             {tLead("button")}
           </a>
@@ -523,9 +563,9 @@ export default async function PlacePage({ params, searchParams }: Props) {
             href={waHref}
             target="_blank"
             rel="noopener nofollow"
-            className="flex h-13 flex-none items-center gap-2 rounded-2xl bg-accent px-4.5 text-[15px] font-semibold text-white"
+            className="flex h-12 flex-none items-center gap-2 rounded-[10px] bg-accent px-4.5 text-[15px] font-medium text-white"
           >
-            <WhatsAppIcon size={19} />
+            <WhatsAppIcon size={18} />
             {t("whatsapp")}
           </a>
         </div>

@@ -61,7 +61,7 @@ export function AvailabilityCalendar({
   });
 
   return (
-    <div className="rounded-3xl border border-line-soft bg-surface p-4">
+    <div className="rounded-2xl border border-line bg-surface p-4 md:p-5">
       <div className="mb-3 flex items-center justify-between">
         <button
           type="button"
@@ -72,7 +72,7 @@ export function AvailabilityCalendar({
         >
           <ChevronLeftIcon size={18} />
         </button>
-        <span className="text-base font-semibold capitalize">{title}</span>
+        <span className="text-base font-medium capitalize">{title}</span>
         <button
           type="button"
           aria-label={t("nextMonth")}
@@ -110,7 +110,7 @@ export function AvailabilityCalendar({
             <span
               key={date}
               title={tStatus(status)}
-              className={`flex aspect-square items-center justify-center rounded-[10px] text-sm font-medium ${CELL[status]} ${
+              className={`tabular flex aspect-square items-center justify-center rounded-lg text-sm ${CELL[status]} ${
                 selected.includes(date) ? "ring-2 ring-text ring-inset" : ""
               }`}
             >
@@ -120,7 +120,7 @@ export function AvailabilityCalendar({
         })}
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 border-t border-line-soft pt-3 text-xs text-text-secondary">
+      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 border-t border-line pt-3 text-xs text-text-secondary">
         {(
           [
             ["free", t("legendFree")],

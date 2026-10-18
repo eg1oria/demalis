@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Header } from "@/components/Header";
 import { CollectionTiles } from "@/components/site/CollectionTiles";
 import { PlaceCard } from "@/components/site/PlaceCard";
+import { SectionTitle } from "@/components/site/SectionTitle";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { catalogHref } from "@/lib/catalog/filters";
@@ -80,18 +81,20 @@ export default async function CollectionPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLdString(breadcrumbs) }}
       />
-      <main className="mx-auto w-full max-w-[1440px] flex-1 px-5 md:px-20">
+      <main className="mx-auto w-full max-w-[1440px] flex-1 px-5 md:px-10 lg:px-20">
         <nav
           aria-label="breadcrumbs"
-          className="flex gap-1.5 pt-4 text-[13px] text-text-muted"
+          className="flex gap-1.5 pt-6 text-[13px] text-text-muted md:pt-10"
         >
           <Link href="/" className="hover:underline">
             {tm("home")}
           </Link>
           <span aria-hidden="true">/</span>
-          <span>{t("title")}</span>
+          <Link href="/collections" className="hover:underline">
+            {t("title")}
+          </Link>
         </nav>
-        <h1 className="mt-2 font-serif text-[32px] leading-[1.1] font-medium tracking-[-0.02em] md:text-5xl">
+        <h1 className="mt-3 font-display text-[28px] leading-[1.08] font-medium tracking-[-0.04em] md:text-[48px]">
           {title}
         </h1>
         {intro && (
@@ -99,13 +102,13 @@ export default async function CollectionPage({ params }: Props) {
             {intro}
           </p>
         )}
-        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-          <span className="text-sm text-text-muted">
+        <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
+          <span className="tabular text-sm text-text-muted">
             {tf("variants", { n: total })}
           </span>
           <Link
             href={catalogHref({ ...filters, when: "this" })}
-            className="flex h-11 items-center rounded-full border border-line bg-surface px-4 text-sm font-semibold"
+            className="flex h-10 items-center rounded-full border border-text px-4 text-sm transition-colors hover:bg-text hover:text-white"
           >
             {t("openCatalog")}
           </Link>
@@ -113,19 +116,19 @@ export default async function CollectionPage({ params }: Props) {
 
         {places.length === 0 ? (
           <div className="flex flex-col items-start gap-3 py-12">
-            <h2 className="font-serif text-2xl font-medium">
+            <h2 className="font-display text-xl font-medium tracking-[-0.03em]">
               {t("emptyTitle")}
             </h2>
             <p className="text-text-secondary">{t("emptyText")}</p>
             <Link
               href="/catalog"
-              className="flex h-12 items-center rounded-[14px] border border-line-strong px-5 font-semibold"
+              className="flex h-11 items-center rounded-[10px] border border-text px-5 text-[15px]"
             >
               {t("toCatalog")}
             </Link>
           </div>
         ) : (
-          <ul className="grid gap-7.5 pt-6 md:grid-cols-2 md:gap-x-6 lg:grid-cols-3">
+          <ul className="grid gap-x-6 gap-y-9 pt-8 md:grid-cols-2 md:gap-y-12 md:pt-10 lg:grid-cols-3">
             {places.map((place, i) => (
               <li key={place.id}>
                 <PlaceCard
@@ -139,13 +142,15 @@ export default async function CollectionPage({ params }: Props) {
         )}
 
         {others.length > 1 && (
-          <section className="mt-12">
-            <h2 className="font-serif text-[25px] leading-[1.15] font-medium tracking-[-0.015em]">
+          <section className="mt-20 border-t border-line pt-10">
+            <SectionTitle href="/collections" linkLabel={t("all")}>
               {t("other")}
-            </h2>
-            <div className="mt-4">
+            </SectionTitle>
+            <div className="mt-6">
               <CollectionTiles
-                collections={others.filter((c) => c.id !== collection.id)}
+                collections={others
+                  .filter((c) => c.id !== collection.id)
+                  .slice(0, 4)}
               />
             </div>
           </section>

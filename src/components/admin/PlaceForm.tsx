@@ -281,7 +281,7 @@ function Section({
 }) {
   return (
     <fieldset className={`${cardClass} flex flex-col gap-3`}>
-      <legend className="float-left mb-1 font-serif text-lg font-medium">
+      <legend className="float-left mb-1 font-display text-lg font-medium">
         {title}
       </legend>
       {children}

@@ -2,6 +2,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { addDays } from "@/lib/dates";
 import { getUpcomingWeekend } from "@/lib/weekend";
+import { ArrowRightIcon } from "./Icons";
 
 // Превью бота: как владелец видит даты. Статусы здесь — просто иллюстрация.
 const PREVIEW = [
@@ -22,28 +23,28 @@ export function OwnersBlock() {
   });
 
   return (
-    <section className="flex flex-col gap-3.5 rounded-3xl bg-owners-bg p-6 text-bg md:grid md:grid-cols-2 md:items-center md:gap-10 md:p-16">
-      <div className="flex flex-col gap-3.5">
-        <p className="text-xs font-semibold tracking-[0.1em] text-owners-eyebrow uppercase">
+    <section className="flex flex-col gap-8 rounded-2xl bg-owners-bg px-6 py-8 text-bg md:grid md:grid-cols-[1.2fr_1fr] md:items-end md:gap-16 md:p-14">
+      <div className="flex flex-col gap-4">
+        <p className="text-[11px] font-medium tracking-[0.14em] text-owners-eyebrow uppercase">
           {t("eyebrow")}
         </p>
-        <h2 className="font-serif text-[26px] leading-[1.15] font-medium tracking-[-0.015em] text-white md:text-[44px]">
+        <h2 className="font-display text-[26px] leading-[1.1] font-medium tracking-[-0.035em] text-white md:text-[40px]">
           {t("title")}
         </h2>
-        <p className="text-[15px] leading-normal text-owners-text md:text-lg">
+        <p className="max-w-md text-[15px] leading-relaxed text-owners-text md:text-base">
           {t("text")}
         </p>
       </div>
-      <div className="flex flex-col gap-3.5 md:rounded-3xl md:bg-owners-surface md:p-6">
-        <div className="mt-1 flex gap-2">
+      <div className="flex flex-col gap-4">
+        <div className="flex gap-px overflow-hidden rounded-[10px] border border-white/10">
           {PREVIEW.map(({ offset, dot, faded }) => {
             const date = addDays(saturday, offset - 1);
             return (
               <div
                 key={offset}
-                className={`flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-owners-tile text-sm font-semibold capitalize ${faded ? "text-owners-full" : ""}`}
+                className={`flex h-12 flex-1 items-center justify-center gap-2 bg-owners-tile text-sm capitalize ${faded ? "text-owners-full" : ""}`}
               >
-                <span className={`size-2 rounded-full ${dot}`} />
+                <span className={`size-1.5 rounded-full ${dot}`} />
                 {format.format(date)} {date.getUTCDate()}
               </div>
             );
@@ -51,9 +52,10 @@ export function OwnersBlock() {
         </div>
         <Link
           href="/owners#add"
-          className="mt-1.5 flex h-13 items-center justify-center rounded-[14px] bg-white text-base font-semibold text-text"
+          className="flex h-13 items-center justify-center gap-2 rounded-[10px] bg-white text-[15px] font-medium text-text transition-opacity hover:opacity-90"
         >
           {t("cta")}
+          <ArrowRightIcon size={18} />
         </Link>
       </div>
     </section>

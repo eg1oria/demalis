@@ -10,21 +10,23 @@ export function MobileMenu() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="relative md:hidden">
+    <div className="md:hidden">
       <button
         type="button"
         aria-label={t("menu")}
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="flex size-11 items-center justify-center rounded-full"
+        className="flex size-11 items-center justify-center"
       >
         {open ? <CloseIcon size={22} /> : <MenuIcon size={22} />}
       </button>
       {open && (
-        <nav className="absolute right-0 top-12 z-20 flex w-56 flex-col rounded-[14px] border border-line-soft bg-surface p-2 shadow-[0_10px_30px_rgba(23,32,28,0.06)]">
+        <nav className="absolute inset-x-0 top-15 z-40 flex flex-col border-b border-line bg-bg px-5 pt-2 pb-6">
           {(
             [
               ["/catalog", t("catalog")],
+              ["/collections", t("collections")],
+              ["/favorites", t("favorites")],
               ["/owners", t("owners")],
             ] as const
           ).map(([href, label]) => (
@@ -32,11 +34,18 @@ export function MobileMenu() {
               key={href}
               href={href}
               onClick={() => setOpen(false)}
-              className="flex min-h-11 items-center rounded-[10px] px-3 font-medium"
+              className="flex min-h-13 items-center border-b border-line-soft font-display text-lg"
             >
               {label}
             </Link>
           ))}
+          <Link
+            href="/owners#add"
+            onClick={() => setOpen(false)}
+            className="mt-5 flex h-12 items-center justify-center rounded-[10px] bg-text text-[15px] font-medium text-white"
+          >
+            {t("addPlace")}
+          </Link>
         </nav>
       )}
     </div>
