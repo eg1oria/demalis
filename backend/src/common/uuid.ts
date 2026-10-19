@@ -1,0 +1,10 @@
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function isUuid(value: unknown): value is string {
+  return typeof value === 'string' && UUID.test(value);
+}
+
+/** Строка из тела запроса; всё остальное — пустая строка. */
+export function str(value: unknown): string {
+  return typeof value === 'string' ? value : '';
+}

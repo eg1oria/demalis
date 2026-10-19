@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { inputClass, secondaryButtonClass } from "@/components/admin/ui";
 import { requireAdminPage } from "@/lib/admin/auth";
-import { monthRange, parseMonth, shiftMonth } from "@/lib/dates";
+import { parseMonth, shiftMonth } from "@/lib/dates";
 import { PLACE_STATUSES } from "@/lib/places/constants";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { adminApi, query } from "@/lib/api/client";
+import type { Tables } from "@/lib/api/types";
 
 export const metadata: Metadata = { title: "Статистика" };
 
@@ -22,19 +23,23 @@ export default async function StatsPage({
   const month =
     typeof monthParam === "string" ? parseMonth(monthParam, new Date()) : null;
 
-  const supabase = createAdminClient();
-  const places = await supabase.from("places").select("id, name_ru, status");
-  if (places.error) throw places.error;
-
+  type StatsPlace = Pick<Tables<"places">, "id" | "name_ru" | "status">;
+  let places: StatsPlace[];
   let rows: { placeId: string; sort: number[]; metrics: Metric[] }[];
   if (month) {
-    const { from, to } = monthRange(month);
-    const { data, error } = await supabase.rpc("place_stats_between", {
-      p_from: from.toISOString(),
-      p_to: to.toISOString(),
-    });
-    if (error) throw error;
-    rows = data.map((s) => ({
+    const stats = await adminApi<{
+      places: StatsPlace[];
+      rows: {
+        place_id: string;
+        views: number;
+        whatsapp: number;
+        phone: number;
+        instagram: number;
+        leads: number;
+      }[];
+    }>(`/admin/stats${query({ month })}`);
+    places = stats.places;
+    rows = stats.rows.map((s) => ({
       placeId: s.place_id,
       sort: [s.views, s.leads],
       metrics: [
@@ -46,9 +51,24 @@ export default async function StatsPage({
       ],
     }));
   } else {
-    const { data, error } = await supabase.rpc("place_stats");
-    if (error) throw error;
-    rows = data.map((s) => ({
+    const stats = await adminApi<{
+      places: StatsPlace[];
+      rows: (Record<
+        | "views_7"
+        | "views_30"
+        | "whatsapp_7"
+        | "whatsapp_30"
+        | "phone_7"
+        | "phone_30"
+        | "instagram_7"
+        | "instagram_30"
+        | "leads_7"
+        | "leads_30",
+        number
+      > & { place_id: string })[];
+    }>("/admin/stats");
+    places = stats.places;
+    rows = stats.rows.map((s) => ({
       placeId: s.place_id,
       sort: [s.views_30, s.leads_30],
       metrics: [
@@ -61,7 +81,7 @@ export default async function StatsPage({
     }));
   }
 
-  const byId = new Map(places.data.map((p) => [p.id, p]));
+  const byId = new Map(places.map((p) => [p.id, p]));
   const list = rows
     .flatMap((r) => {
       const place = byId.get(r.placeId);

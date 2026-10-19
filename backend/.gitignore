@@ -56,3 +56,5 @@ Thumbs.db
 
 # Загружаемые файлы (если храните локально)
 /uploads
+# Клиент Prisma (npx prisma generate)
+/src/generated

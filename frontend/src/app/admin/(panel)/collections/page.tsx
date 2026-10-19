@@ -2,18 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { primaryButtonClass } from "@/components/admin/ui";
 import { requireAdminPage } from "@/lib/admin/auth";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { adminApi } from "@/lib/api/client";
+import type { Tables } from "@/lib/api/types";
 
 export const metadata: Metadata = { title: "Подборки" };
 
 export default async function CollectionsPage() {
   await requireAdminPage();
-  const { data: collections, error } = await createAdminClient()
-    .from("collections")
-    .select("id, slug, title_ru, filters, sort_order, published")
-    .order("sort_order")
-    .order("title_ru");
-  if (error) throw error;
+  const collections =
+    await adminApi<Tables<"collections">[]>("/admin/collections");
 
   return (
     <div className="flex flex-col gap-4">

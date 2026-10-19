@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/admin/auth";
 import { normalizeCollectionFilters } from "@/lib/collections";
 import { isValidSlug, slugify } from "@/lib/slug";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { adminApi, ApiError } from "@/lib/api/client";
 
 export type SaveCollectionState = { error?: string };
 
@@ -39,22 +39,21 @@ export async function saveCollection(
     published: formData.get("published") === "on",
   };
 
-  const supabase = createAdminClient();
-  const { data, error } = id
-    ? await supabase
-        .from("collections")
-        .update(row)
-        .eq("id", id)
-        .select("id")
-        .single()
-    : await supabase.from("collections").insert(row).select("id").single();
-  if (error)
-    return {
-      error:
-        error.code === "23505"
-          ? `Адрес «${slug}» уже занят другой подборкой`
-          : `Ошибка базы: ${error.message}`,
-    };
+  let data: { id: string } | { error: string };
+  try {
+    data = await adminApi(
+      id ? `/admin/collections/${id}` : "/admin/collections",
+      {
+        method: id ? "PATCH" : "POST",
+        body: row,
+      },
+    );
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 409)
+      return { error: `Адрес «${slug}» уже занят другой подборкой` };
+    throw e;
+  }
+  if ("error" in data) return { error: data.error };
 
   // Подборки видны на главной, на своих страницах и в sitemap.
   revalidatePath("/", "layout");

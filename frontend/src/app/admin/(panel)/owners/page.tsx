@@ -2,17 +2,20 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { primaryButtonClass } from "@/components/admin/ui";
 import { requireAdminPage } from "@/lib/admin/auth";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { adminApi } from "@/lib/api/client";
+import type { Tables } from "@/lib/api/types";
 
 export const metadata: Metadata = { title: "Владельцы" };
 
 export default async function OwnersPage() {
   await requireAdminPage();
-  const { data: owners, error } = await createAdminClient()
-    .from("owners")
-    .select("id, name, phone, telegram_chat_id, link_code, places (id)")
-    .order("name");
-  if (error) throw error;
+  const owners =
+    await adminApi<
+      (Pick<
+        Tables<"owners">,
+        "id" | "name" | "phone" | "telegram_chat_id" | "link_code"
+      > & { places: { id: string }[] })[]
+    >("/admin/owners");
 
   return (
     <div className="flex flex-col gap-4">

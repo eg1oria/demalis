@@ -1,11 +1,10 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { isDevLoginAllowed } from "@/lib/admin/devLogin";
 import { isAdminEmail } from "@/lib/admin/emails";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
+import { clearAdminSession, setAdminSession } from "@/lib/admin/session";
+import { api, ApiError } from "@/lib/api/client";
 
 export type LoginState = { error?: string; sentTo?: string };
 
@@ -22,39 +21,45 @@ function adminEmailFrom(formData: FormData): { email: string } | LoginState {
   return { email };
 }
 
+/** Текст ошибки из ответа бэкенда ({ error: "…" }). */
+function apiErrorText(e: unknown, fallback: string): string {
+  if (
+    e instanceof ApiError &&
+    e.body &&
+    typeof e.body === "object" &&
+    "error" in e.body
+  )
+    return String(e.body.error);
+  return fallback;
+}
+
+/** Письмо со ссылкой для входа (ссылка ведёт на /admin/auth/callback). */
 export async function sendMagicLink(
   _prev: LoginState,
   formData: FormData,
 ): Promise<LoginState> {
   const checked = adminEmailFrom(formData);
   if (!("email" in checked)) return checked;
-  const { email } = checked;
 
-  const h = await headers();
-  const origin = `${h.get("x-forwarded-proto") ?? "http"}://${h.get("host")}`;
-
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: `${origin}/admin/auth/callback` },
-  });
-
-  if (error) {
-    console.error("signInWithOtp", error);
+  try {
+    return await api<{ sentTo: string }>("/auth/magic-link", {
+      method: "POST",
+      body: { email: checked.email },
+    });
+  } catch (e) {
+    console.error("sendMagicLink", e);
     return {
-      error:
-        error.status === 429
-          ? "Слишком много писем подряд. Подождите минуту и попробуйте снова."
-          : "Не удалось отправить письмо. Попробуйте ещё раз.",
+      error: apiErrorText(
+        e,
+        "Не удалось отправить письмо. Попробуйте ещё раз.",
+      ),
     };
   }
-  return { sentTo: email };
 }
 
 /**
- * Вход без письма при локальной разработке: сервер сам выпускает одноразовую
- * ссылку (как в письме) и сразу обменивает её на сессию. Только для email
- * из ADMIN_EMAILS и только когда isDevLoginAllowed().
+ * Вход без письма при локальной разработке: бэкенд сразу выдаёт токен.
+ * Только для email из ADMIN_EMAILS и только когда isDevLoginAllowed().
  */
 export async function devSignIn(
   _prev: LoginState,
@@ -63,45 +68,27 @@ export async function devSignIn(
   if (!isDevLoginAllowed()) return { error: "Вход без письма отключён" };
   const checked = adminEmailFrom(formData);
   if (!("email" in checked)) return checked;
-  const { email } = checked;
 
-  const admin = createAdminClient();
-  let link = await admin.auth.admin.generateLink({ type: "magiclink", email });
-  if (link.error) {
-    // Первый вход: пользователя в локальной базе ещё нет — создаём.
-    const created = await admin.auth.admin.createUser({
-      email,
-      email_confirm: true,
-    });
-    if (created.error) {
-      console.error("devSignIn createUser", created.error);
-      return {
-        error: "Не удалось войти. Запущен ли Supabase (npm run db:start)?",
-      };
-    }
-    link = await admin.auth.admin.generateLink({ type: "magiclink", email });
-  }
-  if (link.error) {
-    console.error("devSignIn generateLink", link.error);
+  let token: string;
+  try {
+    ({ token } = await api<{ token: string }>("/auth/dev-login", {
+      method: "POST",
+      body: { email: checked.email },
+    }));
+  } catch (e) {
+    console.error("devSignIn", e);
     return {
-      error: "Не удалось войти. Запущен ли Supabase (npm run db:start)?",
+      error: apiErrorText(
+        e,
+        "Не удалось войти. Запущен ли бэкенд (cd backend && npm run start:dev)?",
+      ),
     };
   }
-
-  const supabase = await createClient();
-  const { error } = await supabase.auth.verifyOtp({
-    type: "email",
-    token_hash: link.data.properties.hashed_token,
-  });
-  if (error) {
-    console.error("devSignIn verifyOtp", error);
-    return { error: "Не удалось войти. Попробуйте ещё раз." };
-  }
+  await setAdminSession(token);
   redirect("/admin");
 }
 
 export async function signOut() {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
+  await clearAdminSession();
   redirect("/admin/login");
 }

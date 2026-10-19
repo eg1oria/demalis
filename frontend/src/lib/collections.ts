@@ -4,7 +4,7 @@ import {
   parseFilters,
   toSearchParams,
 } from "@/lib/catalog/filters";
-import type { Tables } from "@/lib/supabase/database.types";
+import type { Tables } from "@/lib/api/types";
 
 export type Collection = Tables<"collections">;
 

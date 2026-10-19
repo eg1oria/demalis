@@ -10,9 +10,8 @@ import {
 } from "@/components/admin/ui";
 import { requireAdminPage } from "@/lib/admin/auth";
 import { PLACE_STATUSES } from "@/lib/places/constants";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { getBotUsername } from "@/lib/telegram/api";
-import { ownerReport } from "@/lib/bot/monthly";
+import { adminApi, apiOrNull } from "@/lib/api/client";
+import type { Tables } from "@/lib/api/types";
 import { parseMonth, shiftMonth } from "@/lib/dates";
 import { createLinkCode, sendReportNow, unlinkTelegram } from "../actions";
 
@@ -36,24 +35,28 @@ export default async function OwnerPage({
   const { saved, month, report: sentResult } = await searchParams;
   if (!UUID.test(id)) notFound();
 
-  const { data: owner, error } = await createAdminClient()
-    .from("owners")
-    .select(
-      "id, name, phone, telegram_chat_id, link_code, language, places (id, name_ru, status)",
-    )
-    .eq("id", id)
-    .maybeSingle();
-  if (error) throw error;
+  const owner = await apiOrNull<
+    Pick<
+      Tables<"owners">,
+      "id" | "name" | "phone" | "telegram_chat_id" | "link_code" | "language"
+    > & {
+      places: Pick<Tables<"places">, "id" | "name_ru" | "status">[];
+      /** Логин бота для ссылки t.me/…; null — бот не настроен. */
+      botUsername: string | null;
+    }
+  >(`/admin/owners/${id}`, { admin: true });
   if (!owner) notFound();
 
-  const username = owner.link_code ? await getBotUsername() : null;
+  const username = owner.botUsername;
   // Предпросмотр отчёта: по умолчанию — за прошлый месяц.
   const now = new Date();
   const reportMonth =
     typeof month === "string"
       ? parseMonth(month, now)
       : shiftMonth(parseMonth(undefined, now), -1);
-  const { report } = await ownerReport(owner.id, reportMonth);
+  const { report } = await adminApi<{
+    report: { text: string; lang: "ru" | "kk" } | null;
+  }>(`/admin/owners/${owner.id}/report?month=${reportMonth}`);
   const reportResult =
     typeof sentResult === "string" && sentResult in REPORT_RESULTS
       ? (sentResult as keyof typeof REPORT_RESULTS)

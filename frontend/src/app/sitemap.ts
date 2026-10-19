@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { routing } from "@/i18n/routing";
 import { collectionsWithCounts } from "@/lib/catalog/collections";
 import { absoluteUrl, languageAlternates } from "@/lib/seo";
-import { createPublicClient } from "@/lib/supabase/public";
+import { api } from "@/lib/api/client";
 
 // Новые объекты и подборки попадают в sitemap в течение часа.
 export const revalidate = 3600;
@@ -26,15 +26,10 @@ function entries(
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const supabase = createPublicClient();
   const [places, collections] = await Promise.all([
-    supabase
-      .from("places")
-      .select("slug, updated_at")
-      .eq("status", "published"),
+    api<{ slug: string; updated_at: string }[]>("/public/sitemap"),
     collectionsWithCounts(),
   ]);
-  if (places.error) throw places.error;
 
   return [
     ...entries("", { changeFrequency: "daily", priority: 1 }),
@@ -47,7 +42,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.8,
       }),
     ),
-    ...places.data.flatMap((p) =>
+    ...places.flatMap((p) =>
       entries(`/place/${p.slug}`, {
         lastModified: p.updated_at,
         changeFrequency: "daily",

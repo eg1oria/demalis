@@ -2,8 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin/auth";
-import { validatePayment } from "@/lib/payments/validate";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { adminApi } from "@/lib/api/client";
 
 export type AddPaymentState = { error?: string; ok?: boolean };
 
@@ -15,18 +14,19 @@ export async function addPayment(
 ): Promise<AddPaymentState> {
   await requireAdmin();
   const get = (key: string) => String(formData.get(key) ?? "");
-  const result = validatePayment({
-    amount: get("amount"),
-    kind: get("kind"),
-    paid_at: get("paid_at"),
-    comment: get("comment"),
-  });
-  if (!result.ok) return { error: result.error };
-
-  const { error } = await createAdminClient()
-    .from("payments")
-    .insert({ ...result.data, place_id: placeId });
-  if (error) return { error: `Ошибка базы: ${error.message}` };
+  const result = await adminApi<AddPaymentState>(
+    `/admin/places/${placeId}/payments`,
+    {
+      method: "POST",
+      body: {
+        amount: get("amount"),
+        kind: get("kind"),
+        paid_at: get("paid_at"),
+        comment: get("comment"),
+      },
+    },
+  );
+  if (result.error) return { error: result.error };
   revalidatePath(`/admin/places/${placeId}`);
   revalidatePath("/admin/billing");
   return { ok: true };
@@ -37,12 +37,9 @@ export async function deletePayment(
   placeId: string,
 ): Promise<void> {
   await requireAdmin();
-  const { error } = await createAdminClient()
-    .from("payments")
-    .delete()
-    .eq("id", paymentId)
-    .eq("place_id", placeId);
-  if (error) throw error;
+  await adminApi(`/admin/places/${placeId}/payments/${paymentId}`, {
+    method: "DELETE",
+  });
   revalidatePath(`/admin/places/${placeId}`);
   revalidatePath("/admin/billing");
 }

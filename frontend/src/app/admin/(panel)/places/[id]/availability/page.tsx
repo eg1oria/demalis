@@ -5,7 +5,8 @@ import { AvailabilityGrid } from "@/components/admin/AvailabilityGrid";
 import { requireAdminPage } from "@/lib/admin/auth";
 import { nextDays } from "@/lib/dates";
 import { AVAILABILITY_DAYS } from "@/lib/places/constants";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { adminApi, ApiError, query } from "@/lib/api/client";
+import type { Tables } from "@/lib/api/types";
 
 export const metadata: Metadata = { title: "Занятость" };
 
@@ -17,18 +18,15 @@ export default async function AvailabilityPage({
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
 
   const days = nextDays(new Date(), AVAILABILITY_DAYS);
-  const supabase = createAdminClient();
-  const [{ data: place }, { data: rows, error }] = await Promise.all([
-    supabase.from("places").select("id, name_ru").eq("id", id).maybeSingle(),
-    supabase
-      .from("availability")
-      .select("date, status, updated_at")
-      .eq("place_id", id)
-      .gte("date", days[0])
-      .lte("date", days[days.length - 1]),
-  ]);
-  if (error) throw error;
-  if (!place) notFound();
+  const { place, rows } = await adminApi<{
+    place: { id: string; name_ru: string };
+    rows: Pick<Tables<"availability">, "date" | "status" | "updated_at">[];
+  }>(
+    `/admin/places/${id}/availability${query({ from: days[0], to: days[days.length - 1] })}`,
+  ).catch((e) => {
+    if (e instanceof ApiError && e.status === 404) notFound();
+    throw e;
+  });
 
   return (
     <div className="flex flex-col gap-4">

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { photoUrl } from "@/lib/supabase/env";
+import { photoUrl } from "@/lib/api/photos";
 import { Landscape } from "./Landscape";
 
 /** Фото объекта через next/image или заглушка, если фото нет. */

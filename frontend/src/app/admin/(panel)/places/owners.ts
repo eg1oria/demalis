@@ -1,11 +1,8 @@
 import "server-only";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { adminApi } from "@/lib/api/client";
 
 export async function listOwners() {
-  const { data, error } = await createAdminClient()
-    .from("owners")
-    .select("id, name")
-    .order("name");
-  if (error) throw error;
-  return data;
+  const owners =
+    await adminApi<{ id: string; name: string }[]>("/admin/owners");
+  return owners.map(({ id, name }) => ({ id, name }));
 }

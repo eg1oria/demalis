@@ -1,7 +1,8 @@
 import { deletePayment } from "@/app/admin/(panel)/places/payments";
 import { almatyToday, toIsoDate } from "@/lib/dates";
 import { PAYMENT_KINDS } from "@/lib/payments/validate";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { adminApi } from "@/lib/api/client";
+import type { Tables } from "@/lib/api/types";
 import { PaymentForm } from "./PaymentForm";
 import { cardClass } from "./ui";
 
@@ -16,13 +17,9 @@ const date = (iso: string) =>
 
 /** Оплаты объекта (Этап 8): отметка «оплачено» с суммой и датой. */
 export async function PaymentsSection({ placeId }: { placeId: string }) {
-  const { data: payments, error } = await createAdminClient()
-    .from("payments")
-    .select("id, amount, kind, paid_at, comment")
-    .eq("place_id", placeId)
-    .order("paid_at", { ascending: false })
-    .order("created_at", { ascending: false });
-  if (error) throw error;
+  const payments = await adminApi<Tables<"payments">[]>(
+    `/admin/places/${placeId}/payments`,
+  );
   const total = payments.reduce((sum, p) => sum + p.amount, 0);
 
   return (

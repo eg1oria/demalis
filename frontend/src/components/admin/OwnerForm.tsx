@@ -5,7 +5,7 @@ import {
   type SaveOwnerState,
   saveOwner,
 } from "@/app/admin/(panel)/owners/actions";
-import type { Tables } from "@/lib/supabase/database.types";
+import type { Tables } from "@/lib/api/types";
 import { cardClass, inputClass, labelClass, primaryButtonClass } from "./ui";
 
 export function OwnerForm({

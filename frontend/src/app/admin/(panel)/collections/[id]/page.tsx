@@ -6,7 +6,8 @@ import { requireAdminPage } from "@/lib/admin/auth";
 import { catalogHref } from "@/lib/catalog/filters";
 import { findPlaces } from "@/lib/catalog/query";
 import { collectionFilters } from "@/lib/collections";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { apiOrNull } from "@/lib/api/client";
+import type { Tables } from "@/lib/api/types";
 
 export const metadata: Metadata = { title: "Подборка" };
 
@@ -21,12 +22,10 @@ export default async function EditCollectionPage({
   const { saved } = await searchParams;
   if (!UUID.test(id)) notFound();
 
-  const { data: collection, error } = await createAdminClient()
-    .from("collections")
-    .select("*")
-    .eq("id", id)
-    .maybeSingle();
-  if (error) throw error;
+  const collection = await apiOrNull<Tables<"collections">>(
+    `/admin/collections/${id}`,
+    { admin: true },
+  );
   if (!collection) notFound();
 
   const filters = collectionFilters(collection.filters);

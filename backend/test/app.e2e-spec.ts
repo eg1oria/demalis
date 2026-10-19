@@ -4,10 +4,11 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 
-describe('AppController (e2e)', () => {
+// Нужна запущенная база (docker compose up -d) и backend/.env.
+describe('API (e2e)', () => {
   let app: INestApplication<App>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -16,14 +17,27 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
-  it('/ (GET)', () => {
+  it('/health — бэкенд видит базу', () => {
     return request(app.getHttpServer())
-      .get('/')
+      .get('/health')
       .expect(200)
-      .expect('Hello World!');
+      .expect({ ok: true });
   });
 
-  afterEach(async () => {
+  it('/admin/* без входа — 401', () => {
+    return request(app.getHttpServer()).get('/admin/places').expect(401);
+  });
+
+  it('/public/collections — только опубликованные', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/public/collections')
+      .expect(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    for (const c of res.body as { published: boolean }[])
+      expect(c.published).toBe(true);
+  });
+
+  afterAll(async () => {
     await app.close();
   });
 });

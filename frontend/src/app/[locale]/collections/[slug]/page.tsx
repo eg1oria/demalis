@@ -19,7 +19,7 @@ import {
   collectionTitle,
 } from "@/lib/collections";
 import { visiblePhotos } from "@/lib/places/present";
-import { photoUrl } from "@/lib/supabase/env";
+import { photoUrl } from "@/lib/api/photos";
 import {
   absoluteUrl,
   breadcrumbJsonLd,

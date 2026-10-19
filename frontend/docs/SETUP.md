@@ -1,60 +1,36 @@
-# Инструкция для владельца проекта: Supabase и Vercel
+# Инструкция для владельца проекта: бэкенд, Vercel и Telegram
 
-Оба сервиса бесплатны на старте, банковская карта не нужна. Ключи никому не пересылай и не вставляй в код — только в `.env.local` (на своём компьютере) и в настройки Vercel.
+Проект из двух частей: **бэкенд** (`backend/`, NestJS + PostgreSQL — база, вход в админку, фото, Telegram-бот, ежедневные задачи) и **сайт** (`frontend/`, Next.js на Vercel). Ключи никому не пересылай и не вставляй в код — только в `.env`/`.env.local` (на своём компьютере), в настройки сервера и в настройки Vercel.
 
 Интерфейсы сервисов иногда меняются. Если пункт меню называется немного иначе, ищи по смыслу.
 
 ---
 
-## 1. Supabase (база данных, вход в админку, хранение фото)
+## 1. Бэкенд (база данных, вход в админку, хранение фото)
 
-Понадобится с Этапа 1. Можно сделать заранее.
+Бэкенду нужен постоянно работающий сервер с диском: фото лежат в папке `uploads/`, а бот и ежедневные задачи работают внутри процесса. Vercel для этого не подходит. Подойдёт VPS (например, PS.kz, Hoster.kz, Hetzner) с Docker или сервисы вроде Railway / Render с постоянным диском.
 
-1. Зайди на https://supabase.com → **Start your project** → войди через GitHub.
-2. **New project**:
-   - **Name:** `demalis`;
-   - **Database Password:** нажми **Generate**, сохрани пароль в менеджере паролей (в `.env` он не нужен);
-   - **Region:** ближайший к Казахстану — **Central EU (Frankfurt)**;
-   - тариф — **Free**.
-3. Подожди 1–2 минуты, пока проект создаётся.
-4. Скопируй ключи:
-   - **Project Settings → Data API** (или кнопка **Connect** вверху) → **Project URL** → это `NEXT_PUBLIC_SUPABASE_URL`;
-   - **Project Settings → API Keys**:
-     - **Publishable key** (начинается с `sb_publishable_`) → `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`;
-     - **Secret key** (начинается с `sb_secret_`) → `SUPABASE_SECRET_KEY`.
-   - Если видишь только старые ключи **anon** и **service_role** — подойдут и они: `anon` вместо publishable, `service_role` вместо secret.
-5. Реши, с каких email можно входить в админку. Впиши их через запятую в `ADMIN_EMAILS`, например `me@gmail.com,partner@gmail.com`.
-
-> ⚠️ **Secret key даёт полный доступ к базе.** Никогда не добавляй к нему префикс `NEXT_PUBLIC_` и не отправляй в чаты.
->
-> ℹ️ На бесплатном тарифе Supabase ставит проект на паузу, если им не пользоваться около недели. Включается обратно кнопкой **Restore** в панели.
-
-### Настройка входа по ссылке
-
-**Authentication → URL Configuration**:
-
-- **Site URL** — адрес сайта на Vercel (появится после шага 2);
-- **Redirect URLs** — `http://localhost:3000/**` и `https://<твой-адрес>.vercel.app/**`.
-
-> ℹ️ Встроенная почта Supabase на бесплатном тарифе отправляет всего несколько писем в час и часто попадает в «Спам». Если ссылка не приходит: проверь «Спам», подожди час или подключи свой SMTP (Authentication → Emails → SMTP Settings) — например, бесплатный тариф Resend или Brevo.
->
-> Кнопка «Войти без письма» на странице входа работает только при локальной разработке (`npm run dev` + `npm run db:start`). На Vercel и с облачным Supabase её нет — там вход только по ссылке из письма.
-
-### Создать таблицы в облачной базе
-
-Таблицы описаны в миграциях `supabase/migrations/*.sql`. Один раз свяжи проект и отправь миграции:
+1. **PostgreSQL 17.** На VPS — контейнер `postgres:17` (как в `docker-compose.yml`) или управляемая база у хостинга. Строка подключения → `DATABASE_URL`.
+2. **Почта для входа в админку.** Нужен SMTP: бесплатный тариф [Resend](https://resend.com) или [Brevo](https://www.brevo.com) подойдёт. Строка вида `smtps://логин:пароль@smtp.сервис:465` → `SMTP_URL`, адрес отправителя → `MAIL_FROM`.
+3. **Секреты.** Сгенерируй три длинные случайные строки (`openssl rand -hex 32`) → `JWT_SECRET`, `RATE_LIMIT_SECRET`, `INTERNAL_API_SECRET`. Последний впиши и на Vercel (раздел 2).
+4. **Остальное** — по `backend/.env.example`: `SITE_URL` (адрес сайта), `PUBLIC_API_URL` (https-адрес бэкенда, например `https://api.<домен>`), `ADMIN_EMAILS` (email админов через запятую).
+5. **Запуск:**
 
 ```bash
-npx supabase login
-npx supabase link --project-ref <ref>
-npx supabase db push
+cd backend
+npm ci
+npm run build
+npm run db:deploy      # таблицы в базе (и после каждого обновления)
+npm run start:prod     # слушает PORT (по умолчанию 4000)
 ```
 
-`<ref>` — часть адреса проекта: `https://<ref>.supabase.co`. При `link` спросят пароль базы из шага 2.
+Перед бэкендом поставь nginx/Caddy с https и включи `TRUST_PROXY=1`. Папку `uploads/` (или `UPLOADS_DIR`) не забудь включить в резервные копии вместе с базой.
 
-После каждого нового этапа с изменениями базы повторяй `npx supabase db push`.
+> ⚠️ **`JWT_SECRET` даёт вход в админку.** Никому не показывай, не добавляй префикс `NEXT_PUBLIC_`.
+>
+> Кнопка «Войти без письма» работает только при локальной разработке (`npm run dev` и бэкенд на этом компьютере). На сервере вход — только по ссылке из письма.
 
-Тестовые объекты в облако можно залить так: пропиши облачные ключи в `.env.local` и запусти `npm run seed`. Удаляются они повторным запуском или вручную (у всех в названии `[ТЕСТ]`).
+Тестовые объекты можно залить командой `npm run seed` в `backend/`. Удаляются они повторным запуском или вручную (у всех в названии `[ТЕСТ]`).
 
 ---
 
@@ -62,10 +38,10 @@ npx supabase db push
 
 1. Зайди на https://vercel.com → **Sign Up** → **Continue with GitHub**. Тариф — **Hobby** (бесплатный).
 2. **Add New… → Project** → найди репозиторий `demalis` → **Import**. Если репозитория нет в списке, нажми **Adjust GitHub App Permissions** и дай доступ к нему.
-3. **Framework Preset** определится сам (Next.js). Root Directory оставь пустым: проект лежит в корне репозитория.
-4. Открой **Environment Variables** и добавь переменные из `.env.example`. Нужны `NEXT_PUBLIC_SITE_NAME`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` и `ADMIN_EMAILS` — без ключей Supabase сборка не пройдёт.
+3. **Framework Preset** определится сам (Next.js). **Root Directory** — `frontend`.
+4. Открой **Environment Variables** и добавь переменные из `.env.example`. Нужны `NEXT_PUBLIC_SITE_NAME`, `NEXT_PUBLIC_SITE_URL`, `API_URL` и `NEXT_PUBLIC_API_URL` (https-адрес бэкенда), `INTERNAL_API_SECRET` (как на бэкенде) и `ADMIN_EMAILS` — без работающего бэкенда сборка не пройдёт.
 5. **Deploy**. Через 1–2 минуты появится адрес вида `https://demalis-xxx.vercel.app`. Он должен открывать `/ru`.
-6. **Settings → Functions → Function Region** → по возможности выбери **Frankfurt (fra1)**, рядом с базой Supabase.
+6. **Settings → Functions → Function Region** → выбери регион поближе к серверу бэкенда.
 
 Дальше каждый `git push` в ветку `main` сам обновляет сайт.
 
@@ -82,8 +58,8 @@ npx supabase db push
 3. Найди своего бота по логину и нажми **Start** (бот не может писать тому, кто ему ни разу не писал).
 4. Открой в браузере `https://api.telegram.org/bot<ТОКЕН>/getUpdates` (вместо `<ТОКЕН>` — токен из п. 2). В ответе найди `"chat":{"id":123456789` — это число и есть `ADMIN_TELEGRAM_CHAT_ID`.
    - Хочешь получать заявки в группу: добавь бота в группу, напиши там любое сообщение и снова открой ссылку — id группы начинается с минуса (`-100...`).
-5. Впиши оба значения в `.env.local` и в Vercel → Settings → Environment Variables, затем сделай Redeploy.
-6. Заполни и `NEXT_PUBLIC_SITE_URL` (адрес сайта) — тогда в сообщении будет ссылка на список заявок.
+5. Впиши оба значения в `backend/.env` (и в настройки сервера бэкенда), затем перезапусти бэкенд.
+6. Заполни и `SITE_URL` (адрес сайта) — тогда в сообщении будет ссылка на список заявок.
 
 Если переменные не заданы, заявки всё равно сохраняются и видны в админке (`/admin/leads`), просто без сообщения в Telegram.
 
@@ -93,58 +69,50 @@ npx supabase db push
 
 Бот тот же, что в разделе 2а. Владельцы отмечают в нём свободные даты, получают заявки и напоминания.
 
-**1. Секреты.** Придумай две длинные случайные строки (буквы и цифры, 30+ символов) и впиши в `.env.local` и в Vercel → Settings → Environment Variables:
+**1. Секреты.** Придумай две длинные случайные строки (буквы и цифры, 30+ символов) и впиши в `backend/.env` (и на сервер бэкенда):
 
-- `TELEGRAM_WEBHOOK_SECRET` — Telegram будет присылать её с каждым сообщением, чужие запросы сайт отклонит;
-- `CRON_SECRET` — Vercel будет присылать её в еженедельный запуск напоминаний.
+- `TELEGRAM_WEBHOOK_SECRET` — Telegram будет присылать её с каждым сообщением, чужие запросы бэкенд отклонит;
+- `CRON_SECRET` — для ручного запуска ежедневных задач.
 
-После этого — Redeploy.
+После этого перезапусти бэкенд.
 
-**2. Подключить бота к сайту** (один раз, после деплоя и каждый раз при смене адреса сайта). Проще всего — открыть в браузере ссылку, подставив свои значения:
+**2. Подключить бота к бэкенду** (один раз, после деплоя и каждый раз при смене адреса бэкенда). Проще всего — открыть в браузере ссылку, подставив свои значения:
 
 ```
-https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook?url=<NEXT_PUBLIC_SITE_URL>/api/telegram/webhook&secret_token=<TELEGRAM_WEBHOOK_SECRET>
+https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook?url=<PUBLIC_API_URL>/telegram/webhook&secret_token=<TELEGRAM_WEBHOOK_SECRET>
 ```
 
-Ответ `"ok":true` — готово. Или из терминала: `npm run bot:webhook` (берёт значения из `.env.local`, адрес сайта должен быть `https://`).
+Ответ `"ok":true` — готово. Или из терминала: `cd backend && npm run bot:webhook` (берёт значения из `backend/.env`, адрес бэкенда должен быть `https://`).
 
 **3. Привязать владельца.** Админка → «Владельцы» → «Добавить владельца» → «Создать код привязки». Отправь владельцу ссылку `t.me/…?start=КОД` (или код: он пишет боту `/start КОД`). Владелец выбирает язык — и бот показывает меню. Код одноразовый. Объекты владельцу назначаются в карточке объекта (поле «Владелец»).
 
-**4. Ежедневный запуск** в 12:00 по Алматы (`vercel.json`, 07:00 UTC, адрес `/api/cron/daily`): по четвергам — напоминание «Обновите занятость на выходные»; 1-го числа — отчёт владельцам за прошлый месяц (Этап 9); каждый день — истёкший Pro возвращается на Free, а владельцу за 5 дней до конца Pro уходит напоминание (Этап 8). На бесплатном тарифе Vercel запуск бывает в течение часа — то есть между 12:00 и 12:59. Проверить вручную: Vercel → проект → Settings → Cron Jobs → Run.
+**4. Ежедневный запуск** в 12:00 по Алматы (07:00 UTC) делает сам бэкенд (`src/cron/cron.service.ts`): по четвергам — напоминание «Обновите занятость на выходные»; 1-го числа — отчёт владельцам за прошлый месяц (Этап 9, если запуск сорвался — досылается 2-го и 3-го); каждый день — истёкший Pro возвращается на Free, а владельцу за 5 дней до конца Pro уходит напоминание (Этап 8). Проверить вручную: `curl -X POST <PUBLIC_API_URL>/cron/daily -H "Authorization: Bearer <CRON_SECRET>"`.
 
 ---
 
 ## 3. Локальный запуск на своём компьютере
 
-```bash
-cp .env.example .env.local
-```
-
-Открой `.env.local` и вставь значения из шагов выше, затем:
-
-```bash
-npm install
-npm run dev
-```
-
-Сайт откроется на http://localhost:3000.
+См. `README.md` в корне репозитория: `docker compose up -d`, затем бэкенд (`backend/`) и сайт (`frontend/`). Сайт откроется на http://localhost:3000.
 
 ---
 
 ## Куда какой ключ
 
-| Переменная                             | Где взять                                            | Этап |
-| -------------------------------------- | ---------------------------------------------------- | ---- |
-| `NEXT_PUBLIC_SITE_NAME`                | Название сайта, по умолчанию «Демалыс»               | 0    |
-| `NEXT_PUBLIC_SUPABASE_URL`             | Supabase → Project Settings → Data API → Project URL | 1    |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase → Project Settings → API Keys → Publishable | 1    |
-| `SUPABASE_SECRET_KEY`                  | Supabase → Project Settings → API Keys → Secret      | 1    |
-| `ADMIN_EMAILS`                         | Твои email через запятую                             | 1    |
-| `TELEGRAM_BOT_TOKEN`                   | @BotFather в Telegram, см. раздел 2а                 | 4–5  |
-| `TELEGRAM_WEBHOOK_SECRET`              | Любая длинная случайная строка, см. раздел 2б        | 5    |
-| `CRON_SECRET`                          | Любая длинная случайная строка, см. раздел 2б        | 5    |
-| `ADMIN_TELEGRAM_CHAT_ID`               | См. раздел 2а                                        | 4    |
-| `NEXT_PUBLIC_SITE_URL`                 | Адрес сайта на Vercel или свой домен                 | 4, 6 |
-| `NEXT_PUBLIC_YANDEX_METRIKA_ID`        | Яндекс Метрика, см. `docs/SEO.md`                    | 6    |
-| `YANDEX_VERIFICATION`                  | Яндекс Вебмастер, см. `docs/SEO.md`                  | 6    |
-| `GOOGLE_SITE_VERIFICATION`             | Google Search Console, см. `docs/SEO.md`             | 6    |
+| Переменная                        | Где           | Где взять                                     | Этап |
+| --------------------------------- | ------------- | --------------------------------------------- | ---- |
+| `NEXT_PUBLIC_SITE_NAME`           | сайт          | Название сайта, по умолчанию «Демалыс»        | 0    |
+| `API_URL`, `NEXT_PUBLIC_API_URL`  | сайт          | Адрес бэкенда, см. раздел 1                   | 12   |
+| `INTERNAL_API_SECRET`             | сайт и бэкенд | Одна и та же случайная строка, см. раздел 1   | 12   |
+| `ADMIN_EMAILS`                    | сайт и бэкенд | Твои email через запятую                      | 1    |
+| `DATABASE_URL`                    | бэкенд        | PostgreSQL, см. раздел 1                      | 12   |
+| `JWT_SECRET`, `RATE_LIMIT_SECRET` | бэкенд        | Случайные строки, см. раздел 1                | 12   |
+| `SMTP_URL`, `MAIL_FROM`           | бэкенд        | Почтовый сервис, см. раздел 1                 | 12   |
+| `SITE_URL`, `PUBLIC_API_URL`      | бэкенд        | Адреса сайта и бэкенда                        | 12   |
+| `TELEGRAM_BOT_TOKEN`              | бэкенд        | @BotFather в Telegram, см. раздел 2а          | 4–5  |
+| `TELEGRAM_WEBHOOK_SECRET`         | бэкенд        | Любая длинная случайная строка, см. раздел 2б | 5    |
+| `CRON_SECRET`                     | бэкенд        | Любая длинная случайная строка, см. раздел 2б | 5    |
+| `ADMIN_TELEGRAM_CHAT_ID`          | бэкенд        | См. раздел 2а                                 | 4    |
+| `NEXT_PUBLIC_SITE_URL`            | сайт          | Адрес сайта на Vercel или свой домен          | 6    |
+| `NEXT_PUBLIC_YANDEX_METRIKA_ID`   | сайт          | Яндекс Метрика, см. `docs/SEO.md`             | 6    |
+| `YANDEX_VERIFICATION`             | сайт          | Яндекс Вебмастер, см. `docs/SEO.md`           | 6    |
+| `GOOGLE_SITE_VERIFICATION`        | сайт          | Google Search Console, см. `docs/SEO.md`      | 6    |

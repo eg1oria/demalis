@@ -14,7 +14,8 @@ import {
 } from "@/lib/places/constants";
 import { almatyToday, toIsoDate } from "@/lib/dates";
 import { effectivePlan, isFeatured } from "@/lib/plans";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { adminApi, query } from "@/lib/api/client";
+import type { Tables } from "@/lib/api/types";
 
 export const metadata: Metadata = { title: "Объекты" };
 
@@ -35,22 +36,23 @@ export default async function PlacesPage({
       ? (params.status as PlaceStatus)
       : null;
 
-  const supabase = createAdminClient();
   const today = toIsoDate(almatyToday(new Date()));
-  let query = supabase
-    .from("places")
-    .select(
-      "id, slug, name_ru, type, direction, status, price_from, updated_at, plan, pro_until, featured_until",
-    )
-    .order("updated_at", { ascending: false });
-
-  if (status) query = query.eq("status", status);
-  // Символы, которые ломают синтаксис фильтра PostgREST, выкидываем.
-  const safeQ = q.replace(/[,()*%"\\]/g, " ").trim();
-  if (safeQ) query = query.or(`name_ru.ilike.*${safeQ}*,slug.ilike.*${safeQ}*`);
-
-  const { data: places, error } = await query;
-  if (error) throw error;
+  const places = await adminApi<
+    Pick<
+      Tables<"places">,
+      | "id"
+      | "slug"
+      | "name_ru"
+      | "type"
+      | "direction"
+      | "status"
+      | "price_from"
+      | "updated_at"
+      | "plan"
+      | "pro_until"
+      | "featured_until"
+    >[]
+  >(`/admin/places${query({ status, q })}`);
 
   return (
     <div className="flex flex-col gap-4">

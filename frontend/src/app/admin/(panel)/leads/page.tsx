@@ -6,7 +6,8 @@ import { inputClass, secondaryButtonClass } from "@/components/admin/ui";
 import { TIME_ZONE } from "@/config/site";
 import { requireAdminPage } from "@/lib/admin/auth";
 import { LEAD_STATUSES, type LeadStatus } from "@/lib/leads/constants";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { adminApi, query } from "@/lib/api/client";
+import type { Tables } from "@/lib/api/types";
 
 export const metadata: Metadata = { title: "Заявки" };
 
@@ -39,17 +40,9 @@ export default async function LeadsPage({
       ? (params.status as LeadStatus)
       : null;
 
-  let query = createAdminClient()
-    .from("leads")
-    .select(
-      "id, name, phone, date_from, date_to, guests, comment, status, billable, created_at, place:places (id, name_ru)",
-    )
-    .order("created_at", { ascending: false })
-    .limit(LIMIT);
-  if (status) query = query.eq("status", status);
-
-  const { data: leads, error } = await query;
-  if (error) throw error;
+  const leads = await adminApi<
+    (Tables<"leads"> & { place: { id: string; name_ru: string } | null })[]
+  >(`/admin/leads${query({ status, limit: LIMIT })}`);
 
   return (
     <div className="flex flex-col gap-4">

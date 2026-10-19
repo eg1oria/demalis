@@ -1,30 +1,18 @@
 import "server-only";
 import { type Collection, collectionFilters } from "@/lib/collections";
 import { visiblePhotos } from "@/lib/places/present";
-import { createPublicClient } from "@/lib/supabase/public";
+import { api, apiOrNull } from "@/lib/api/client";
 import { findPlaces } from "./query";
 
-/** Опубликованные подборки по порядку (RLS не отдаст скрытые). */
-export async function listCollections(): Promise<Collection[]> {
-  const { data, error } = await createPublicClient()
-    .from("collections")
-    .select("*")
-    .order("sort_order")
-    .order("title_ru");
-  if (error) throw error;
-  return data;
+/** Опубликованные подборки по порядку. */
+export function listCollections(): Promise<Collection[]> {
+  return api<Collection[]>("/public/collections");
 }
 
-export async function getCollectionBySlug(
-  slug: string,
-): Promise<Collection | null> {
-  const { data, error } = await createPublicClient()
-    .from("collections")
-    .select("*")
-    .eq("slug", slug)
-    .maybeSingle();
-  if (error) throw error;
-  return data;
+export function getCollectionBySlug(slug: string): Promise<Collection | null> {
+  return apiOrNull<Collection>(
+    `/public/collections/${encodeURIComponent(slug)}`,
+  );
 }
 
 /**

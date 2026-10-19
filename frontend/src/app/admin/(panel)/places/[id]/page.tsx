@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { PaymentsSection } from "@/components/admin/PaymentsSection";
 import { PlaceForm } from "@/components/admin/PlaceForm";
 import { requireAdminPage } from "@/lib/admin/auth";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { apiOrNull } from "@/lib/api/client";
+import type { Tables } from "@/lib/api/types";
 import { listOwners } from "../owners";
 
 export const metadata: Metadata = { title: "Объект" };
@@ -20,11 +21,10 @@ export default async function EditPlacePage({
   const { saved } = await searchParams;
   if (!UUID.test(id)) notFound();
 
-  const [{ data: place, error }, owners] = await Promise.all([
-    createAdminClient().from("places").select("*").eq("id", id).maybeSingle(),
+  const [place, owners] = await Promise.all([
+    apiOrNull<Tables<"places">>(`/admin/places/${id}`, { admin: true }),
     listOwners(),
   ]);
-  if (error) throw error;
   if (!place) notFound();
 
   return (

@@ -1,23 +1,17 @@
 import "server-only";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { isAdminEmail } from "./emails";
+import { ADMIN_COOKIE, api } from "@/lib/api/client";
 
 export type AdminCheck =
   | { status: "admin"; email: string }
   | { status: "forbidden"; email: string }
   | { status: "anonymous" };
 
+/** Кто вошёл: бэкенд проверяет токен из cookie и список ADMIN_EMAILS. */
 export async function checkAdmin(): Promise<AdminCheck> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user?.email) return { status: "anonymous" };
-  return isAdminEmail(user.email)
-    ? { status: "admin", email: user.email }
-    : { status: "forbidden", email: user.email };
+  if (!(await cookies()).has(ADMIN_COOKIE)) return { status: "anonymous" };
+  return api<AdminCheck>("/auth/me", { admin: true });
 }
 
 /** Для server actions: бросает ошибку, если вызывает не админ. */

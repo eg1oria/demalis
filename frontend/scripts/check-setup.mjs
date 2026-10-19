@@ -1,9 +1,8 @@
 // Проверка перед `npm run dev` (скрипт predev): после `git pull` чаще всего
-// ломается одно из трёх — не установлены новые библиотеки, нет ключей в
-// .env.local или в локальной базе нет новых таблиц. Скрипт говорит, что
-// сделать, а новые миграции в локальную базу применяет сам.
+// ломается одно из трёх — не установлены новые библиотеки, нет настроек в
+// .env.local или не запущен бэкенд. Скрипт говорит, что сделать.
+// Миграции базы применяет бэкенд: cd backend && npm run db:migrate.
 // Без зависимостей: только встроенные модули Node.
-import { spawnSync } from "node:child_process";
 
 // Пропустить проверку: SKIP_SETUP_CHECK=1 npm run dev
 if (process.env.SKIP_SETUP_CHECK) process.exit(0);
@@ -37,81 +36,30 @@ if (existsSync(".env.local")) {
     if (match) env[match[1]] = match[2].replace(/^["']|["']$/g, "");
   }
 }
-const required = [
-  "NEXT_PUBLIC_SUPABASE_URL",
-  "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
-  "SUPABASE_SECRET_KEY",
-];
+const required = ["API_URL", "NEXT_PUBLIC_API_URL", "INTERNAL_API_SECRET"];
 const missing = required.filter((key) => !env[key] && !process.env[key]);
 if (!existsSync(".env.local") && missing.length > 0) {
   problems.push(
-    "Нет файла .env.local.\n   Выполни: cp .env.example .env.local — и впиши ключи (README, «Запуск локально»).",
+    "Нет файла .env.local.\n   Выполни: cp .env.example .env.local — и впиши значения (README, «Запуск локально»).",
   );
 } else if (missing.length > 0) {
   problems.push(
-    `В .env.local не заполнены: ${missing.join(", ")}.\n   Ключи печатает npm run db:start (README, «Запуск локально»).`,
+    `В .env.local не заполнены: ${missing.join(", ")}.\n   См. .env.example и README, «Запуск локально».`,
   );
 }
 
-// ── 3. Локальная база: запущена ли и есть ли новые миграции ─────────────
-const url =
-  env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-const isLocal = url && /\/\/(127\.0\.0\.1|localhost)(:|\/|$)/.test(url);
-if (isLocal && outdated.length === 0 && missing.length === 0) {
-  let running = false;
+// ── 3. Бэкенд запущен и видит базу ──────────────────────────────────────
+const apiUrl = (env.API_URL || process.env.API_URL || "").replace(/\/$/, "");
+if (apiUrl && outdated.length === 0) {
   try {
-    await fetch(`${url.replace(/\/$/, "")}/rest/v1/`, {
+    const response = await fetch(`${apiUrl}/health`, {
       signal: AbortSignal.timeout(3000),
     });
-    running = true;
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
   } catch {
     problems.push(
-      `Локальная база не отвечает (${url}).\n   Запусти Docker Desktop, затем: npm run db:start`,
+      `Бэкенд не отвечает (${apiUrl}/health).\n   Запусти базу и бэкенд: docker compose up -d (в корне), затем cd backend && npm run start:dev`,
     );
-  }
-  if (running) {
-    const result = spawnSync(
-      process.platform === "win32" ? "npx.cmd" : "npx",
-      ["supabase", "migration", "up", "--local"],
-      {
-        encoding: "utf8",
-        timeout: 60_000,
-        shell: process.platform === "win32",
-      },
-    );
-    if (result.status === 0) {
-      // Новые версии CLI печатают JSON {"applied":[...]}, старые — строки «Applying migration …».
-      let applied = [];
-      try {
-        applied = JSON.parse(result.stdout).applied ?? [];
-      } catch {
-        applied =
-          `${result.stdout}\n${result.stderr}`.match(
-            /Applying migration \S+/g,
-          ) ?? [];
-      }
-      if (applied.length > 0)
-        notes.push(
-          `Применены новые миграции базы: ${applied
-            .map((a) =>
-              a
-                .replace("Applying migration ", "")
-                .split(/[\\/]/)
-                .pop()
-                .replace(/\.{3}$/, ""),
-            )
-            .join(", ")}`,
-        );
-    } else {
-      const error = `${result.stderr || result.error?.message || ""}`
-        .trim()
-        .split("\n")
-        .slice(-2)
-        .join(" ");
-      problems.push(
-        `Не удалось применить новые миграции к локальной базе.\n   Выполни вручную: npm run db:migrate (или npm run db:reset — он пересоздаст базу, тестовые данные потом: npm run seed)${error ? `\n   Ошибка: ${error}` : ""}`,
-      );
-    }
   }
 }
 

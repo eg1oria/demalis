@@ -1,4 +1,4 @@
-import type { Tables } from "@/lib/supabase/database.types";
+import type { Tables } from "@/lib/api/types";
 import type { Amenity } from "./constants";
 
 type Localizable = Pick<Tables<"places">, "name_ru" | "name_kk">;

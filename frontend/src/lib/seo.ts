@@ -118,7 +118,9 @@ export function lodgingJsonLd(place: {
     name: place.name,
     ...(place.description && { description: place.description }),
     url: place.url,
-    ...(place.images.length > 0 && { image: place.images }),
+    ...(place.images.length > 0 && {
+      image: place.images.map((src) => new URL(src, SITE_URL).toString()),
+    }),
     address: {
       "@type": "PostalAddress",
       ...(place.address && { streetAddress: place.address }),

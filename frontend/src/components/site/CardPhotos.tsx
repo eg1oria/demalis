@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
-import { photoUrl } from "@/lib/supabase/env";
+import { photoUrl } from "@/lib/api/photos";
 import { ChevronLeftIcon, ChevronRightIcon } from "./Icons";
 import { Landscape } from "./Landscape";
 

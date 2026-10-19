@@ -1,4 +1,4 @@
-// Значения enum из базы (supabase/migrations) и подписи для админки.
+// Значения enum из базы (backend/prisma/schema.prisma) и подписи для админки.
 
 export const PLACE_TYPES = {
   glamping: "Глэмпинг",
@@ -59,8 +59,6 @@ export type PlaceStatus = keyof typeof PLACE_STATUSES;
 export type Plan = keyof typeof PLANS;
 export type AvailabilityStatus = keyof typeof AVAILABILITY_STATUSES;
 export type Amenity = keyof typeof AMENITIES;
-
-export const PHOTOS_BUCKET = "place-photos";
 
 /** Сколько дней вперёд админ редактирует занятость. */
 export const AVAILABILITY_DAYS = 60;

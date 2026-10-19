@@ -1,0 +1,31 @@
+# Локальная инфраструктура для разработки: база и почтовый ящик.
+# Запуск: docker compose up -d (из корня репозитория).
+name: demalis
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: demalis
+      POSTGRES_PASSWORD: demalis
+      POSTGRES_DB: demalis
+    ports:
+      # 5432–5434 на этом компьютере часто заняты другими базами.
+      - "127.0.0.1:5440:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U demalis -d demalis"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Письма со ссылкой для входа в админку при разработке: http://127.0.0.1:8025
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
+
+volumes:
+  postgres-data:

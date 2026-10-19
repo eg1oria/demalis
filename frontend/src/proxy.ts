@@ -1,19 +1,17 @@
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import createMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
-import { updateSession } from "./lib/supabase/proxy";
 
 const intl = createMiddleware(routing);
 
 export default function proxy(request: NextRequest) {
-  // Админка не локализована — только обновляем сессию Supabase.
-  if (request.nextUrl.pathname.startsWith("/admin")) {
-    return updateSession(request);
-  }
+  // Админка не локализована; сессию проверяет бэкенд на каждой странице.
+  if (request.nextUrl.pathname.startsWith("/admin")) return NextResponse.next();
   return intl(request);
 }
 
 export const config = {
-  // Всё, кроме API, служебных путей Next/Vercel и файлов с расширением.
-  matcher: "/((?!api|_next|_vercel|.*\\..*).*)",
+  // Всё, кроме API, фото, служебных путей Next/Vercel и файлов с расширением.
+  matcher: "/((?!api|uploads|_next|_vercel|.*\\..*).*)",
 };

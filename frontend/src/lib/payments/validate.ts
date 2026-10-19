@@ -1,4 +1,4 @@
-import type { Enums } from "@/lib/supabase/database.types";
+import type { Enums } from "@/lib/api/types";
 
 export type PaymentKind = Enums<"payment_kind">;
 

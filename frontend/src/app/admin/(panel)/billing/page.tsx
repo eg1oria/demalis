@@ -2,16 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { inputClass, secondaryButtonClass } from "@/components/admin/ui";
 import { requireAdminPage } from "@/lib/admin/auth";
-import {
-  almatyToday,
-  monthRange,
-  parseMonth,
-  shiftMonth,
-  toIsoDate,
-} from "@/lib/dates";
+import { almatyToday, parseMonth, shiftMonth, toIsoDate } from "@/lib/dates";
 import { PAYMENT_KINDS, type PaymentKind } from "@/lib/payments/validate";
 import { effectivePlan, isFeatured } from "@/lib/plans";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { adminApi, query } from "@/lib/api/client";
+import type { Tables } from "@/lib/api/types";
 
 export const metadata: Metadata = { title: "Оплаты" };
 
@@ -28,36 +23,24 @@ export default async function BillingPage({
   const now = new Date();
   const today = toIsoDate(almatyToday(now));
   const month = parseMonth((await searchParams).month, now);
-  const { from, to } = monthRange(month);
   const monthLabel = new Date(`${month}-01T00:00:00Z`).toLocaleDateString(
     "ru-RU",
     { month: "long", year: "numeric", timeZone: "UTC" },
   );
 
-  const supabase = createAdminClient();
-  const [leads, payments, places] = await Promise.all([
-    supabase
-      .from("leads")
-      .select("place_id, billable")
-      .gte("created_at", from.toISOString())
-      .lt("created_at", to.toISOString()),
-    supabase
-      .from("payments")
-      .select("id, place_id, amount, kind, paid_at, comment")
-      .gte("paid_at", `${month}-01`)
-      .lt("paid_at", `${shiftMonth(month, 1)}-01`)
-      .order("paid_at"),
-    supabase
-      .from("places")
-      .select("id, name_ru, plan, pro_until, featured_until"),
-  ]);
-  if (leads.error) throw leads.error;
-  if (payments.error) throw payments.error;
-  if (places.error) throw places.error;
+  // Заявки за месяц по Алматы, оплаты по дате оплаты — считает бэкенд.
+  const { leads, payments, places } = await adminApi<{
+    leads: Pick<Tables<"leads">, "place_id" | "billable">[];
+    payments: Omit<Tables<"payments">, "created_at">[];
+    places: Pick<
+      Tables<"places">,
+      "id" | "name_ru" | "plan" | "pro_until" | "featured_until"
+    >[];
+  }>(`/admin/billing${query({ month })}`);
 
-  const placeById = new Map(places.data.map((p) => [p.id, p]));
+  const placeById = new Map(places.map((p) => [p.id, p]));
   const byPlace = new Map<string, { total: number; billable: number }>();
-  for (const lead of leads.data) {
+  for (const lead of leads) {
     const row = byPlace.get(lead.place_id) ?? { total: 0, billable: 0 };
     row.total++;
     if (lead.billable) row.billable++;
@@ -78,12 +61,12 @@ export default async function BillingPage({
   const billableTotal = rows.reduce((s, r) => s + r.billable, 0);
 
   const sumByKind = new Map<PaymentKind, number>();
-  for (const p of payments.data)
+  for (const p of payments)
     sumByKind.set(p.kind, (sumByKind.get(p.kind) ?? 0) + p.amount);
-  const paymentsTotal = payments.data.reduce((s, p) => s + p.amount, 0);
+  const paymentsTotal = payments.reduce((s, p) => s + p.amount, 0);
 
-  const proNow = places.data.filter((p) => effectivePlan(p, today) === "pro");
-  const featuredNow = places.data.filter((p) => isFeatured(p, today));
+  const proNow = places.filter((p) => effectivePlan(p, today) === "pro");
+  const featuredNow = places.filter((p) => isFeatured(p, today));
 
   const cardClass = "rounded-[14px] border border-line-soft bg-surface p-3";
 
@@ -163,9 +146,9 @@ export default async function BillingPage({
             .join("")}
           . Отмечаются в карточке объекта, блок «Оплаты».
         </p>
-        {payments.data.length > 0 && (
+        {payments.length > 0 && (
           <ul className="flex flex-col gap-2">
-            {payments.data.map((p) => (
+            {payments.map((p) => (
               <li key={p.id} className={`${cardClass} flex flex-col`}>
                 <span className="font-medium">
                   {tenge(p.amount)} · {PAYMENT_KINDS[p.kind]}

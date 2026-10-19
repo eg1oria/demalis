@@ -15,7 +15,7 @@ import {
 } from "@/lib/places/constants";
 import { PLAN_FEATURES } from "@/config/pricing";
 import { slugify } from "@/lib/slug";
-import type { Tables } from "@/lib/supabase/database.types";
+import type { Tables } from "@/lib/api/types";
 import { PhotoManager } from "./PhotoManager";
 import {
   cardClass,

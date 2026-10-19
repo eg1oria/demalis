@@ -1,0 +1,275 @@
+// Схема базы Демалыс. Таблицы и поля — в snake_case, как в API.
+// CHECK-ограничения, которых Prisma не умеет описывать, дописаны вручную
+// в SQL первой миграции (prisma/migrations/*_init/migration.sql).
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── Типы ──────────────────────────────────────────────────────────────────
+
+enum PlaceType {
+  glamping
+  aframe
+  house
+  zona_otdyha
+  banya_complex
+  guesthouse
+
+  @@map("place_type")
+}
+
+enum PlaceDirection {
+  gory_almaty
+  talgar
+  issyk_turgen
+  kaskelen
+  kapshagay
+  charyn_kolsai
+  drugoe
+
+  @@map("place_direction")
+}
+
+enum PriceUnit {
+  per_night_unit
+  per_person
+
+  @@map("price_unit")
+}
+
+enum PlaceStatus {
+  draft
+  published
+  hidden
+
+  @@map("place_status")
+}
+
+enum PlacePlan {
+  free
+  pro
+
+  @@map("place_plan")
+}
+
+enum AvailabilityStatus {
+  free
+  limited
+  full
+
+  @@map("availability_status")
+}
+
+enum LeadStatus {
+  new
+  sent_to_owner
+  confirmed
+  cancelled
+  no_answer
+
+  @@map("lead_status")
+}
+
+enum EventType {
+  view
+  whatsapp_click
+  phone_click
+  instagram_click
+
+  @@map("event_type")
+}
+
+enum PaymentKind {
+  pro
+  promotion
+  video
+  leads
+  other
+
+  @@map("payment_kind")
+}
+
+// ── Таблицы ───────────────────────────────────────────────────────────────
+
+model Owner {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name              String
+  phone             String?
+  telegram_chat_id  BigInt?  @unique
+  /// Одноразовый код привязки к боту: латиница и цифры, 6–16 символов.
+  link_code         String?  @unique
+  /// Язык бота, выбирается при первом /start. null — ещё не выбран.
+  language          String?
+  /// За какой месяц (YYYY-MM) уже ушёл автоматический отчёт.
+  last_report_month String?
+  created_at        DateTime @default(now()) @db.Timestamptz(6)
+
+  places Place[]
+
+  @@map("owners")
+}
+
+model Place {
+  id                String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug              String         @unique
+  name_ru           String
+  name_kk           String?
+  type              PlaceType
+  direction         PlaceDirection
+  address_text      String?
+  lat               Decimal?       @db.Decimal(9, 6)
+  lng               Decimal?       @db.Decimal(9, 6)
+  drive_minutes     Int?
+  price_from        Int?
+  price_unit        PriceUnit      @default(per_night_unit)
+  capacity_max      Int?
+  has_banya         Boolean        @default(false)
+  has_chan          Boolean        @default(false)
+  has_pool          Boolean        @default(false)
+  pets_allowed      Boolean        @default(false)
+  has_kitchen       Boolean        @default(false)
+  has_bbq           Boolean        @default(false)
+  winter_ok         Boolean        @default(false)
+  has_wifi          Boolean        @default(false)
+  description_ru    String?
+  description_kk    String?
+  whatsapp_phone    String
+  instagram_url     String?
+  /// Пути файлов в uploads/: places/<uuid>.<ext>. Первое — главное.
+  photos            String[]       @default([])
+  video_url         String?
+  status            PlaceStatus    @default(draft)
+  plan              PlacePlan      @default(free)
+  featured_until    DateTime?      @db.Date
+  /// Pro действует по эту дату включительно; null — без срока.
+  pro_until         DateTime?      @db.Date
+  /// Для какой даты окончания Pro владельцу уже ушло напоминание «за 5 дней».
+  pro_reminded_for  DateTime?      @db.Date
+  owner_id          String?        @db.Uuid
+  photos_permission Boolean        @default(false)
+  created_at        DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime       @default(now()) @updatedAt @db.Timestamptz(6)
+
+  owner        Owner?         @relation(fields: [owner_id], references: [id], onDelete: SetNull)
+  availability Availability[]
+  leads        Lead[]
+  events       Event[]
+  payments     Payment[]
+
+  @@index([status])
+  @@index([owner_id])
+  @@map("places")
+}
+
+/// Нет записи на дату — статус «неизвестно».
+model Availability {
+  place_id   String             @db.Uuid
+  date       DateTime           @db.Date
+  status     AvailabilityStatus
+  updated_at DateTime           @default(now()) @updatedAt @db.Timestamptz(6)
+
+  place Place @relation(fields: [place_id], references: [id], onDelete: Cascade)
+
+  @@id([place_id, date])
+  @@index([date])
+  @@map("availability")
+}
+
+model Lead {
+  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  place_id   String     @db.Uuid
+  name       String
+  phone      String
+  date_from  DateTime?  @db.Date
+  date_to    DateTime?  @db.Date
+  guests     Int?
+  comment    String?
+  status     LeadStatus @default(new)
+  billable   Boolean    @default(false)
+  created_at DateTime   @default(now()) @db.Timestamptz(6)
+
+  place Place @relation(fields: [place_id], references: [id], onDelete: Cascade)
+
+  @@index([place_id, created_at])
+  @@index([created_at])
+  @@map("leads")
+}
+
+/// Просмотры и клики. Без IP и персональных данных.
+model Event {
+  id         BigInt    @id @default(autoincrement())
+  place_id   String    @db.Uuid
+  type       EventType
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+
+  place Place @relation(fields: [place_id], references: [id], onDelete: Cascade)
+
+  @@index([place_id, created_at])
+  @@index([created_at])
+  @@map("events")
+}
+
+/// Лимит заявок: key — HMAC-хэш IP, сам IP не храним.
+model LeadRateLimit {
+  id         BigInt   @id @default(autoincrement())
+  key        String
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([key, created_at])
+  @@map("lead_rate_limits")
+}
+
+/// SEO-подборка: сохранённый набор фильтров каталога + тексты ru/kk.
+model Collection {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug       String   @unique
+  title_ru   String
+  title_kk   String?
+  intro_ru   String?
+  intro_kk   String?
+  filters    String   @default("")
+  /// Порядок на главной и в списках: меньше — выше.
+  sort_order Int      @default(100)
+  published  Boolean  @default(true)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@map("collections")
+}
+
+/// Оплаты, принятые вручную.
+model Payment {
+  id         String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  place_id   String      @db.Uuid
+  amount     Int
+  kind       PaymentKind
+  paid_at    DateTime    @default(dbgenerated("CURRENT_DATE")) @db.Date
+  comment    String?
+  created_at DateTime    @default(now()) @db.Timestamptz(6)
+
+  place Place @relation(fields: [place_id], references: [id], onDelete: Cascade)
+
+  @@index([place_id, paid_at])
+  @@index([paid_at])
+  @@map("payments")
+}
+
+/// Одноразовые ссылки для входа в админку. Храним только хэш токена.
+model LoginToken {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email      String
+  token_hash String    @unique
+  expires_at DateTime  @db.Timestamptz(6)
+  used_at    DateTime? @db.Timestamptz(6)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([email, created_at])
+  @@map("login_tokens")
+}

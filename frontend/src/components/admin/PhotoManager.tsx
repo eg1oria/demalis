@@ -3,13 +3,11 @@
 import Image from "next/image";
 import { useState } from "react";
 import { createPhotoUpload } from "@/app/admin/(panel)/places/actions";
-import { PHOTOS_BUCKET } from "@/lib/places/constants";
-import { createClient } from "@/lib/supabase/browser";
-import { photoUrl } from "@/lib/supabase/env";
+import { photoUrl } from "@/lib/api/photos";
 import { secondaryButtonClass } from "./ui";
 
 /**
- * Загрузка фото прямо в Supabase Storage по подписанной ссылке.
+ * Загрузка фото прямо в бэкенд по подписанной ссылке (PUT с файлом).
  * Список путей уходит в форму скрытым полем `photos` и сохраняется вместе с объектом.
  */
 export function PhotoManager({ initial }: { initial: string[] }) {
@@ -19,7 +17,6 @@ export function PhotoManager({ initial }: { initial: string[] }) {
 
   const upload = async (files: FileList) => {
     setError(null);
-    const supabase = createClient();
     const list = Array.from(files);
     setUploading((n) => n + list.length);
 
@@ -28,12 +25,17 @@ export function PhotoManager({ initial }: { initial: string[] }) {
         try {
           const signed = await createPhotoUpload(file.type);
           if ("error" in signed) throw new Error(signed.error);
-          const { error: uploadError } = await supabase.storage
-            .from(PHOTOS_BUCKET)
-            .uploadToSignedUrl(signed.path, signed.token, file, {
-              contentType: file.type,
-            });
-          if (uploadError) throw uploadError;
+          const response = await fetch(signed.url, {
+            method: "PUT",
+            headers: { "content-type": file.type },
+            body: file,
+          });
+          if (!response.ok) {
+            const body = await response.json().catch(() => null);
+            throw new Error(
+              body?.error ?? `ошибка загрузки (${response.status})`,
+            );
+          }
           setPhotos((prev) => [...prev, signed.path]);
         } catch (e) {
           setError(
