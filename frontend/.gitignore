@@ -24,10 +24,6 @@ next-env.d.ts
 # Vercel
 .vercel
 
-# Supabase CLI
-supabase/.temp/
-supabase/.branches/
-
 # Тесты и покрытие
 /coverage/
 .vitest/

@@ -20,21 +20,20 @@ npm run start:dev             # http://localhost:4000
 
 ## Команды
 
-| Команда                   | Что делает                                                   |
-| ------------------------- | ------------------------------------------------------------ |
-| `npm run start:dev`       | Сервер разработки с перезапуском при изменениях              |
-| `npm run build`           | Сборка в `dist/`                                             |
-| `npm run start:prod`      | Запуск собранного (`node dist/main`)                         |
-| `npm test`                | Юнит-тесты (Jest)                                            |
-| `npm run test:e2e`        | Проверка API на запущенной базе                              |
-| `npm run lint`            | oxlint                                                       |
-| `npm run db:migrate`      | Новые миграции в локальную базу (данные не стираются)        |
-| `npm run db:deploy`       | Миграции на сервере (без создания новых)                     |
-| `npm run db:reset`        | Пересоздать базу из миграций (данные стираются)              |
-| `npm run db:studio`       | Просмотр базы в браузере (Prisma Studio)                     |
-| `npm run seed`            | Тестовые объекты `[ТЕСТ]`                                    |
-| `npm run bot:webhook`     | Подключить Telegram-бота к `PUBLIC_API_URL/telegram/webhook` |
-| `npm run import:supabase` | Одноразовый перенос данных и фото из локального Supabase     |
+| Команда               | Что делает                                                   |
+| --------------------- | ------------------------------------------------------------ |
+| `npm run start:dev`   | Сервер разработки с перезапуском при изменениях              |
+| `npm run build`       | Сборка в `dist/`                                             |
+| `npm run start:prod`  | Запуск собранного (`node dist/main`)                         |
+| `npm test`            | Юнит-тесты (Jest)                                            |
+| `npm run test:e2e`    | Проверка API на запущенной базе                              |
+| `npm run lint`        | oxlint                                                       |
+| `npm run db:migrate`  | Новые миграции в локальную базу (данные не стираются)        |
+| `npm run db:deploy`   | Миграции на сервере (без создания новых)                     |
+| `npm run db:reset`    | Пересоздать базу из миграций (данные стираются)              |
+| `npm run db:studio`   | Просмотр базы в браузере (Prisma Studio)                     |
+| `npm run seed`        | Тестовые объекты `[ТЕСТ]`                                    |
+| `npm run bot:webhook` | Подключить Telegram-бота к `PUBLIC_API_URL/telegram/webhook` |
 
 ## Устройство
 
@@ -48,7 +47,7 @@ src/bot/, src/telegram/    Telegram-бот владельцев (grammY), уве
 src/cron/                  webhook бота и ежедневные задачи (12:00 по Алматы)
 src/common/                статистика (SQL), лимит заявок, сериализация ответа
 src/shared/                чистые модули — копии из frontend/src/lib (менять вместе)
-scripts/                   seed, webhook бота, импорт из Supabase
+scripts/                   seed, webhook бота
 ```
 
 Ответы API — в snake_case, как колонки базы: даты без времени — `"YYYY-MM-DD"`, моменты — ISO-строки.
@@ -77,5 +76,5 @@ curl http://127.0.0.1:4000/health                          # {"ok":true}
 - Миграции (`prisma migrate deploy`) образ применяет сам при каждом старте.
 - Тома: `postgres-data` — база, `uploads` — фото, `caddy-data` — сертификаты. Порт базы наружу не открыт; бэкенд опубликован только на `127.0.0.1:4000`, снаружи — через Caddy (80/443).
 - В образе `NODE_ENV=production`: «Войти без письма» отключён.
-- В образе нет `tsx` и dev-зависимостей, поэтому `npm run seed` и `import:supabase` там не работают. Webhook бота: `docker compose -f docker-compose.prod.yml exec backend node --no-warnings scripts/set-webhook.ts`.
+- В образе нет `tsx` и dev-зависимостей, поэтому `npm run seed` там не работает. Webhook бота: `docker compose -f docker-compose.prod.yml exec backend node --no-warnings scripts/set-webhook.ts`.
 - Если запущено несколько экземпляров, ежедневные задачи оставь только на одном (`CRON_ENABLED=false` на остальных).
