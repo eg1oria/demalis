@@ -72,6 +72,21 @@ services:
       - caddy-config:/config
     logging: *logging
 
+  # Копии базы и фото каждый день в 03:00 (Алматы) — deploy/backup/README.md.
+  backup:
+    build: deploy/backup
+    restart: unless-stopped
+    # Отсюда POSTGRES_PASSWORD и Telegram для сообщений об ошибках.
+    env_file: backend/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - uploads:/uploads:ro
+      # Папка на сервере, а не volume: docker compose down -v её не сотрёт.
+      - ./backups:/backups
+    logging: *logging
+
 volumes:
   postgres-data:
   uploads:

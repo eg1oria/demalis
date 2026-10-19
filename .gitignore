@@ -1,0 +1,2 @@
+# Резервные копии на сервере (docker-compose.prod.yml, сервис backup).
+backups/
