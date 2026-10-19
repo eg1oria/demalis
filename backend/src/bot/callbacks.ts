@@ -81,18 +81,40 @@ function unpackDate(yymmdd: string): IsoDate | null {
   return !Number.isNaN(d.getTime()) && toIsoDate(d) === iso ? iso : null;
 }
 
+/** Домик в кнопках — номер в порядке UNIT_ORDER; null — весь объект (все домики). */
+export type UnitIndex = number | null;
+
+/** Сколько домиков умещается в один символ кнопки (0–9, a–z). */
+export const MAX_BOT_UNITS = 36;
+
+const packUnit = (unit: UnitIndex) => (unit === null ? '-' : unit.toString(36));
+function unpackUnit(char: string | undefined): UnitIndex | undefined {
+  if (char === '-') return null;
+  if (!char || !/^[0-9a-z]$/.test(char)) return undefined;
+  return parseInt(char, 36);
+}
+
 export type Callback =
   | { kind: 'lang'; lang: BotLang }
   | { kind: 'menu'; action: 'dates' }
   | { kind: 'pick'; placeId: string }
+  /** Выбор домика: номер по порядку или null — все домики сразу. */
+  | { kind: 'unit'; placeId: string; unit: UnitIndex }
   | {
       kind: 'toggle';
       placeId: string;
+      unit: UnitIndex;
       start: IsoDate;
       draft: string;
       index: number;
     }
-  | { kind: 'save'; placeId: string; start: IsoDate; draft: string }
+  | {
+      kind: 'save';
+      placeId: string;
+      unit: UnitIndex;
+      start: IsoDate;
+      draft: string;
+    }
   | { kind: 'lead'; leadId: string; action: 'contacted' | 'noAnswer' }
   /** Опрос про праздничную ночь: статус объекта на эту ночь. */
   | {
@@ -112,10 +134,12 @@ export function buildCallback(cb: Callback): string {
       return `menu:${cb.action}`;
     case 'pick':
       return `pick:${packId(cb.placeId)}`;
+    case 'unit':
+      return `pu:${packId(cb.placeId)}:${packUnit(cb.unit)}`;
     case 'toggle':
-      return `t:${packId(cb.placeId)}:${packDate(cb.start)}:${cb.draft}:${cb.index}`;
+      return `t:${packId(cb.placeId)}:${packUnit(cb.unit)}:${packDate(cb.start)}:${cb.draft}:${cb.index}`;
     case 'save':
-      return `s:${packId(cb.placeId)}:${packDate(cb.start)}:${cb.draft}`;
+      return `s:${packId(cb.placeId)}:${packUnit(cb.unit)}:${packDate(cb.start)}:${cb.draft}`;
     case 'lead':
       return `lead:${packId(cb.leadId)}:${cb.action === 'contacted' ? 'c' : 'n'}`;
     case 'holiday':
@@ -141,21 +165,36 @@ export function parseCallback(data: string): Callback | null {
     const placeId = id(parts[0]);
     return placeId ? { kind: 'pick', placeId } : null;
   }
-  if (
+  if (kind === 'pu' && parts.length === 2) {
+    const placeId = id(parts[0]);
+    const unit = unpackUnit(parts[1]);
+    return placeId && unit !== undefined
+      ? { kind: 'unit', placeId, unit }
+      : null;
+  }
+  // Кнопки до Этапа 14 — без домика: t/s без второго поля = весь объект.
+  const legacy =
     (kind === 't' && parts.length === 4) ||
-    (kind === 's' && parts.length === 3)
+    (kind === 's' && parts.length === 3);
+  if (
+    legacy ||
+    (kind === 't' && parts.length === 5) ||
+    (kind === 's' && parts.length === 4)
   ) {
     const placeId = id(parts[0]);
-    const start = unpackDate(parts[1]);
-    const draft = parts[2];
-    if (!placeId || !start || !DRAFT.test(draft)) return null;
-    if (kind === 's') return { kind: 'save', placeId, start, draft };
-    const index = Number(parts[3]);
+    const unit = legacy ? null : unpackUnit(parts[1]);
+    const rest = legacy ? parts.slice(1) : parts.slice(2);
+    const start = unpackDate(rest[0]);
+    const draft = rest[1];
+    if (!placeId || unit === undefined || !start || !DRAFT.test(draft))
+      return null;
+    if (kind === 's') return { kind: 'save', placeId, unit, start, draft };
+    const index = Number(rest[2]);
     return Number.isInteger(index) &&
       index >= 0 &&
       index < BOT_DAYS &&
-      /^\d+$/.test(parts[3])
-      ? { kind: 'toggle', placeId, start, draft, index }
+      /^\d+$/.test(rest[2])
+      ? { kind: 'toggle', placeId, unit, start, draft, index }
       : null;
   }
   if (kind === 'lead' && parts.length === 2) {

@@ -164,6 +164,16 @@ export function PlaceForm({
           {text("price_from", "Цена от, ₸", { inputMode: "numeric" })}
           {select("price_unit", "Цена за", PRICE_UNITS, "per_night_unit")}
         </div>
+        <div className="grid grid-cols-3 gap-3">
+          {text("price_weekday", "Будни (вс–чт), ₸", { inputMode: "numeric" })}
+          {text("price_weekend", "Пт и сб, ₸", { inputMode: "numeric" })}
+          {text("price_holiday", "Праздники, ₸", { inputMode: "numeric" })}
+        </div>
+        <p className="text-xs text-text-muted">
+          Цены по дням — необязательно: по ним сайт считает «за 2 ночи ≈ …».
+          Пустая «Цена от» — подставится самая низкая из них. Если у объекта
+          есть домики, их цены важнее.
+        </p>
         {text("capacity_max", "Гостей максимум", { inputMode: "numeric" })}
       </Section>
 

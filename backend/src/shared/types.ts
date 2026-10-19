@@ -34,6 +34,7 @@ export type Enums<T extends keyof DbEnums> = DbEnums[T];
 export type DbTables = {
   availability: {
     date: string;
+    free_capacity: number | null;
     place_id: string;
     price: number | null;
     status: Enums<'availability_status'>;
@@ -119,9 +120,12 @@ export type DbTables = {
     photos_permission: boolean;
     plan: Enums<'place_plan'>;
     price_from: number | null;
+    price_holiday: number | null;
     price_unit: Enums<'price_unit'>;
     pro_reminded_for: string | null;
     pro_until: string | null;
+    price_weekday: number | null;
+    price_weekend: number | null;
     slug: string;
     status: Enums<'place_status'>;
     type: Enums<'place_type'>;
@@ -129,6 +133,25 @@ export type DbTables = {
     video_url: string | null;
     whatsapp_phone: string;
     winter_ok: boolean;
+  };
+  unit_availability: {
+    date: string;
+    price: number | null;
+    status: Enums<'availability_status'>;
+    unit_id: string;
+    updated_at: string;
+  };
+  units: {
+    capacity: number;
+    created_at: string;
+    id: string;
+    name_kk: string | null;
+    name_ru: string;
+    place_id: string;
+    price_holiday: number | null;
+    price_weekday: number | null;
+    price_weekend: number | null;
+    sort_order: number;
   };
 };
 

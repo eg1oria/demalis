@@ -1,3 +1,4 @@
+import { isIsoDate as isRealDate } from "@/lib/dates";
 import {
   DIRECTIONS,
   type Direction,
@@ -39,8 +40,51 @@ export type AmenityFilter = keyof typeof AMENITY_FILTERS;
 export const SORT_OPTIONS = ["recommended", "price", "near"] as const;
 export type SortOption = (typeof SORT_OPTIONS)[number];
 
-/** Даты: «эти выходные», «следующие», конкретная дата. Фильтруют с Этапа 3. */
-export type WhenOption = "this" | "next" | `${number}-${number}-${number}`;
+type Iso = `${number}-${number}-${number}`;
+
+/**
+ * Даты: «эти выходные», «следующие», «будни» (ближайшие пн→ср),
+ * одна ночь «2026-12-31» или заезд_выезд «2026-12-30_2027-01-02».
+ */
+export type WhenOption = "this" | "next" | "weekdays" | Iso | `${Iso}_${Iso}`;
+
+/** Сколько ночей можно выбрать диапазоном. */
+export const MAX_NIGHTS = 14;
+
+const dayDiff = (from: string, to: string) =>
+  (Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 864e5;
+
+/** «2026-12-30_2027-01-02» → заезд и выезд; не диапазон или мусор → null. */
+export function parseRange(
+  value: string | undefined,
+): { checkIn: string; checkOut: string } | null {
+  const [checkIn, checkOut, extra] = (value ?? "").split("_");
+  if (extra !== undefined || !isIsoDate(checkIn) || !isIsoDate(checkOut))
+    return null;
+  const nights = dayDiff(checkIn, checkOut);
+  return nights >= 1 && nights <= MAX_NIGHTS ? { checkIn, checkOut } : null;
+}
+
+/** Заезд и выезд → значение для адреса; одна ночь — просто дата. */
+export function rangeWhen(
+  checkIn: string,
+  checkOut: string,
+): WhenOption | undefined {
+  if (!parseRange(`${checkIn}_${checkOut}`)) return undefined;
+  return (
+    dayDiff(checkIn, checkOut) === 1 ? checkIn : `${checkIn}_${checkOut}`
+  ) as WhenOption;
+}
+
+export function isWhenOption(value: string | undefined): value is WhenOption {
+  return (
+    value === "this" ||
+    value === "next" ||
+    value === "weekdays" ||
+    isIsoDate(value) ||
+    parseRange(value) !== null
+  );
+}
 
 export const MAX_GUESTS = 30;
 export const PAGE_SIZE = 12;
@@ -98,10 +142,7 @@ export function parseFilters(params: SearchParamsInput): CatalogFilters {
   const dir = get("dir");
 
   return {
-    when:
-      when === "this" || when === "next" || isIsoDate(when)
-        ? (when as WhenOption)
-        : undefined,
+    when: isWhenOption(when) ? when : undefined,
     drive: DRIVE_OPTIONS.find((d) => d === drive),
     guests:
       Number.isInteger(guests) && guests >= 1 && guests <= MAX_GUESTS
@@ -174,7 +215,5 @@ export function toggleAmenity(
   return { ...filters, amenities, limit: PAGE_SIZE };
 }
 
-function isIsoDate(value: string | undefined): boolean {
-  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  return !Number.isNaN(new Date(`${value}T00:00:00Z`).getTime());
-}
+const isIsoDate = (value: string | undefined): value is string =>
+  isRealDate(value);

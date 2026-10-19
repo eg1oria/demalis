@@ -22,6 +22,7 @@ const CLIENT_NAMESPACES = [
   "HomePage",
   "Format",
   "Catalog",
+  "Holidays",
   "Chips",
   "Types",
   "Directions",

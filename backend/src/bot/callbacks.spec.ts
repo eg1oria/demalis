@@ -44,6 +44,28 @@ describe('черновик отметок', () => {
   });
 });
 
+describe('кнопки до Этапа 14', () => {
+  it('без домика — весь объект', () => {
+    expect(
+      parseCallback(`t:${ID.replace(/-/g, '')}:260927:${DRAFT}:3`),
+    ).toEqual({
+      kind: 'toggle',
+      placeId: ID,
+      unit: null,
+      start: '2026-09-27',
+      draft: DRAFT,
+      index: 3,
+    });
+    expect(parseCallback(`s:${ID.replace(/-/g, '')}:260927:${DRAFT}`)).toEqual({
+      kind: 'save',
+      placeId: ID,
+      unit: null,
+      start: '2026-09-27',
+      draft: DRAFT,
+    });
+  });
+});
+
 describe('callback_data', () => {
   const all: Callback[] = [
     { kind: 'lang', lang: 'kk' },
@@ -52,11 +74,29 @@ describe('callback_data', () => {
     {
       kind: 'toggle',
       placeId: ID,
+      unit: null,
       start: '2026-09-27',
       draft: DRAFT,
       index: 13,
     },
-    { kind: 'save', placeId: ID, start: '2026-12-31', draft: DRAFT },
+    {
+      kind: 'toggle',
+      placeId: ID,
+      unit: 35,
+      start: '2026-09-27',
+      draft: DRAFT,
+      index: 13,
+    },
+    {
+      kind: 'save',
+      placeId: ID,
+      unit: null,
+      start: '2026-12-31',
+      draft: DRAFT,
+    },
+    { kind: 'save', placeId: ID, unit: 2, start: '2026-12-31', draft: DRAFT },
+    { kind: 'unit', placeId: ID, unit: 0 },
+    { kind: 'unit', placeId: ID, unit: null },
     { kind: 'lead', leadId: ID, action: 'contacted' },
     { kind: 'lead', leadId: ID, action: 'noAnswer' },
     { kind: 'holiday', placeId: ID, night: '2026-12-31', status: 'free' },
@@ -88,6 +128,9 @@ describe('callback_data', () => {
     `hs:${'a'.repeat(32)}:261232:f`,
     `hs:${'a'.repeat(32)}:261231`,
     `hp:${'a'.repeat(32)}:261231:f`,
+    `t:${'a'.repeat(32)}:A:260927:${DRAFT}:1`,
+    `pu:${'a'.repeat(32)}:`,
+    `pu:${'a'.repeat(32)}:ab`,
   ])('отклоняет «%s»', (data) => {
     expect(parseCallback(data)).toBeNull();
   });

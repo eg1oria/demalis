@@ -6,22 +6,41 @@ import { Link } from "@/i18n/navigation";
 import {
   catalogHref,
   MAX_GUESTS,
+  parseRange,
+  rangeWhen,
   type WhenOption,
 } from "@/lib/catalog/filters";
+import { addDays, toIsoDate } from "@/lib/dates";
+import { chipClass } from "./Chip";
+import { DateRangeInputs } from "./DateRangeInputs";
 import { GuestStepper } from "./GuestStepper";
 import { ArrowRightIcon, SearchIcon } from "./Icons";
 import { SegmentedControl } from "./SegmentedControl";
+
+/** Выбранный период: заезд и выезд (одна ночь — дата и следующий день). */
+function customRange(when: WhenOption) {
+  if (when === "this" || when === "next" || when === "weekdays") return null;
+  const range = parseRange(when);
+  if (range) return range;
+  const next = toIsoDate(addDays(new Date(`${when}T00:00:00Z`), 1));
+  return { checkIn: when, checkOut: next };
+}
 
 /** Поиск на главной: когда + сколько гостей → каталог. */
 export function SearchCard({
   thisLabel,
   nextLabel,
+  weekdaysLabel,
+  holidays,
   initialGuests,
   initialCount,
   today,
 }: {
   thisLabel: string;
   nextLabel: string;
+  weekdaysLabel: string;
+  /** Ближайшие праздники: подпись «Новый год · 31 дек. – 3 янв.» и значение для адреса. */
+  holidays: { when: WhenOption; label: string }[];
   initialGuests: number;
   initialCount: number;
   today: string;
@@ -53,7 +72,16 @@ export function SearchCard({
     return () => controller.abort();
   }, [key, counts, when, guests]);
 
-  const customDate = when !== "this" && when !== "next" ? when : null;
+  const range = customRange(when);
+  const [ownDates, setOwnDates] = useState(false);
+  const holiday = holidays.find((h) => h.when === when);
+  const showRange = ownDates || (range !== null && !holiday);
+  const formatDay = (iso: string) =>
+    new Date(`${iso}T00:00:00Z`).toLocaleDateString(locale, {
+      day: "numeric",
+      month: "short",
+      timeZone: "UTC",
+    });
   // Свободных нет — не тупик «0 вариантов», а все объекты на эти даты.
   const empty = count === 0;
 
@@ -64,39 +92,63 @@ export function SearchCard({
           {t("when")}
         </span>
         <SegmentedControl
-          value={customDate ? "date" : when}
-          onChange={(v) => v !== "date" && setWhen(v as WhenOption)}
+          value={showRange ? "dates" : holiday ? "" : when}
+          onChange={(v) => {
+            if (v === "dates") {
+              setOwnDates(true);
+              if (!range) {
+                const start = toIsoDate(
+                  addDays(new Date(`${today}T00:00:00Z`), 1),
+                );
+                setWhen(start as WhenOption);
+              }
+              return;
+            }
+            setOwnDates(false);
+            setWhen(v as WhenOption);
+          }}
           options={[
             { value: "this", label: t("thisWeekend"), hint: thisLabel },
             { value: "next", label: t("nextWeekend"), hint: nextLabel },
+            { value: "weekdays", label: t("weekdays"), hint: weekdaysLabel },
             {
-              value: "date",
+              value: "dates",
               label: t("ownDate"),
-              hint: customDate
-                ? new Date(`${customDate}T00:00:00Z`).toLocaleDateString(
-                    locale,
-                    {
-                      day: "numeric",
-                      month: "short",
-                      timeZone: "UTC",
-                    },
-                  )
-                : t("pickDate"),
-              input: (
-                <input
-                  type="date"
-                  min={today}
-                  aria-label={t("ownDate")}
-                  className="absolute inset-0 cursor-pointer opacity-0"
-                  onClick={(e) => e.currentTarget.showPicker?.()}
-                  onChange={(e) =>
-                    e.target.value && setWhen(e.target.value as WhenOption)
-                  }
-                />
-              ),
+              hint:
+                showRange && range
+                  ? `${formatDay(range.checkIn)} – ${formatDay(range.checkOut)}`
+                  : t("pickDate"),
             },
           ]}
         />
+        {showRange && (
+          <DateRangeInputs
+            checkIn={range?.checkIn ?? null}
+            checkOut={range?.checkOut ?? null}
+            today={today}
+            onChange={({ checkIn, checkOut }) => {
+              const next = rangeWhen(checkIn, checkOut);
+              if (next) setWhen(next);
+            }}
+          />
+        )}
+        {holidays.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {holidays.map((h) => (
+              <button
+                key={h.when}
+                type="button"
+                onClick={() => {
+                  setOwnDates(false);
+                  setWhen(h.when);
+                }}
+                className={chipClass(h.when === when)}
+              >
+                {h.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="border-t border-line-soft pt-3 md:border-t-0 md:border-l md:pt-0 md:pl-6">

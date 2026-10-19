@@ -24,6 +24,8 @@ type Texts = {
     stats: string;
   };
   pickPlace: string;
+  pickUnit: (place: string) => string;
+  allUnits: string;
   datesTitle: (place: string) => string;
   done: string;
   saved: (place: string) => string;
@@ -92,6 +94,9 @@ const ru: Texts = {
     stats: '📊 Статистика',
   },
   pickPlace: 'Какой объект?',
+  pickUnit: (place) =>
+    `${place}\n\nКакой домик отметить? «Все сразу» — одинаково для всех домиков.`,
+  allUnits: '🏡 Все домики сразу',
   datesTitle: (place) =>
     `${place}\n\nНажимайте на дату, чтобы поменять статус: 🟢 свободно → 🟡 мало мест → 🔴 занято. ⚪ — не отмечено.\nВ конце нажмите «Готово».`,
   done: '✅ Готово',
@@ -195,6 +200,9 @@ const kk: Texts = {
     stats: '📊 Статистика',
   },
   pickPlace: 'Қай нысан?',
+  pickUnit: (place) =>
+    `${place}\n\nҚай үйді белгілейміз? «Барлығы бірден» — барлық үйге бірдей.`,
+  allUnits: '🏡 Барлық үйлер бірден',
   datesTitle: (place) =>
     `${place}\n\nКүйін өзгерту үшін күнді басыңыз: 🟢 бос → 🟡 орын аз → 🔴 бос емес. ⚪ — белгіленбеген.\nСоңында «Дайын» батырмасын басыңыз.`,
   done: '✅ Дайын',

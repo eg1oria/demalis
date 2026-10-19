@@ -10,7 +10,9 @@ import {
   cycleStatus,
   decodeDraft,
   draftDates,
+  MAX_BOT_UNITS,
   parseCallback,
+  type UnitIndex,
 } from './callbacks';
 import {
   type BotOwner,
@@ -21,7 +23,6 @@ import {
   ownerPlace,
   ownerPlaces,
   ownerStats,
-  placeStatuses,
   recentLeads,
   saveStatuses,
   setLeadStatus,
@@ -32,17 +33,23 @@ import {
   languageKeyboard,
   leadKeyboard,
   mainMenu,
+  unitsKeyboard,
 } from './keyboards';
 import {
   decodeAwaiting,
   encodeAwaiting,
   nightLabel,
   parseNightPrice,
-  saveNightPrice,
   setAwaiting,
   skipPriceKeyboard,
 } from './holiday';
 import { normalizeLinkCode } from './linkCode';
+import {
+  dayStatuses,
+  placeUnits,
+  saveNightPrice,
+  type UnitRow,
+} from '../units/units';
 import {
   leadsListMessage,
   nightsLabel,
@@ -97,12 +104,50 @@ async function sendLinked(ctx: BotContext, owner: BotOwner, lang: BotLang) {
   );
 }
 
-async function sendDates(ctx: BotContext, place: BotPlace, edit: boolean) {
+const unitName = (u: UnitRow, lang: BotLang) =>
+  (lang === 'kk' && u.name_kk?.trim()) || u.name_ru;
+
+/** Домик по номеру из кнопки; null — весь объект; undefined — такого уже нет. */
+function unitAt(units: UnitRow[], unit: UnitIndex): UnitRow | null | undefined {
+  if (unit === null) return null;
+  return units[unit];
+}
+
+async function sendDates(
+  ctx: BotContext,
+  place: BotPlace,
+  edit: boolean,
+  unit: UnitIndex = null,
+  units: UnitRow[] = [],
+) {
   const lang = langOf(ctx);
   const start = today();
-  const statuses = await placeStatuses(place.id, draftDates(start));
-  const text = BOT_TEXTS[lang].datesTitle(placeName(place, lang));
-  const reply_markup = datesKeyboard(place.id, start, statuses, lang);
+  const row = unitAt(units, unit) ?? null;
+  const statuses = await dayStatuses(
+    place.id,
+    row?.id ?? null,
+    draftDates(start),
+  );
+  const title = row
+    ? `${placeName(place, lang)} · ${unitName(row, lang)}`
+    : placeName(place, lang);
+  const text = BOT_TEXTS[lang].datesTitle(title);
+  const reply_markup = datesKeyboard(place.id, unit, start, statuses, lang);
+  if (edit) await ctx.editMessageText(text, { reply_markup });
+  else await ctx.reply(text, { reply_markup });
+}
+
+/** Объект с домиками — сначала выбор домика, без домиков — сразу даты. */
+async function openPlace(ctx: BotContext, place: BotPlace, edit: boolean) {
+  const lang = langOf(ctx);
+  const units = (await placeUnits(place.id)).slice(0, MAX_BOT_UNITS);
+  if (units.length === 0) return sendDates(ctx, place, edit);
+  const text = BOT_TEXTS[lang].pickUnit(placeName(place, lang));
+  const reply_markup = unitsKeyboard(
+    place.id,
+    units.map((u) => unitName(u, lang)),
+    lang,
+  );
   if (edit) await ctx.editMessageText(text, { reply_markup });
   else await ctx.reply(text, { reply_markup });
 }
@@ -111,7 +156,7 @@ async function startDates(ctx: BotContext, owner: BotOwner) {
   const lang = langOf(ctx);
   const places = await ownerPlaces(owner.id);
   if (places.length === 0) return ctx.reply(BOT_TEXTS[lang].noPlaces);
-  if (places.length === 1) return sendDates(ctx, places[0], false);
+  if (places.length === 1) return openPlace(ctx, places[0], false);
   await ctx.reply(BOT_TEXTS[lang].pickPlace, {
     reply_markup: {
       inline_keyboard: places.map((p) => [
@@ -152,8 +197,17 @@ async function handleCallback(ctx: BotContext, owner: BotOwner, cb: Callback) {
     case 'pick': {
       const place = await ownerPlace(owner.id, cb.placeId);
       await ctx.answerCallbackQuery(place ? undefined : t.expired);
-      if (place) await sendDates(ctx, place, true);
+      if (place) await openPlace(ctx, place, true);
       return;
+    }
+
+    case 'unit': {
+      const place = await ownerPlace(owner.id, cb.placeId);
+      const units = place ? await placeUnits(place.id) : [];
+      if (!place || unitAt(units, cb.unit) === undefined)
+        return ctx.answerCallbackQuery(t.expired);
+      await ctx.answerCallbackQuery();
+      return sendDates(ctx, place, true, cb.unit, units);
     }
 
     case 'toggle': {
@@ -163,7 +217,13 @@ async function handleCallback(ctx: BotContext, owner: BotOwner, cb: Callback) {
       statuses[cb.index] = cycleStatus(statuses[cb.index]);
       await ignoreNotModified(
         ctx.editMessageReplyMarkup({
-          reply_markup: datesKeyboard(place.id, cb.start, statuses, lang),
+          reply_markup: datesKeyboard(
+            place.id,
+            cb.unit,
+            cb.start,
+            statuses,
+            lang,
+          ),
         }),
       );
       return ctx.answerCallbackQuery();
@@ -172,6 +232,9 @@ async function handleCallback(ctx: BotContext, owner: BotOwner, cb: Callback) {
     case 'save': {
       const place = await ownerPlace(owner.id, cb.placeId);
       if (!place) return ctx.answerCallbackQuery(t.expired);
+      // Домик удалили или порядок поменялся, пока кнопки висели в чате.
+      const unit = unitAt(await placeUnits(place.id), cb.unit);
+      if (unit === undefined) return ctx.answerCallbackQuery(t.expired);
       const statuses = decodeDraft(cb.draft);
       const from = today();
       const dates = draftDates(cb.start);
@@ -182,8 +245,14 @@ async function handleCallback(ctx: BotContext, owner: BotOwner, cb: Callback) {
         const status = statuses[i];
         return status && date >= from ? [{ date, status }] : [];
       });
-      await saveStatuses([place.id], days);
-      await ctx.editMessageText(t.saved(placeName(place, lang)));
+      await saveStatuses([place.id], days, unit?.id ?? null);
+      await ctx.editMessageText(
+        t.saved(
+          unit
+            ? `${placeName(place, lang)} · ${unitName(unit, lang)}`
+            : placeName(place, lang),
+        ),
+      );
       return ctx.answerCallbackQuery(t.statusSaved);
     }
 

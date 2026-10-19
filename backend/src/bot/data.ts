@@ -3,9 +3,9 @@ import type { LeadStatus } from '../shared/leads/constants';
 import type { AvailabilityStatus } from '../shared/places/constants';
 import { planFeatures } from '../shared/plans';
 import { placeStats } from '../common/stats';
+import { saveDays } from '../units/units';
 import { db } from '../prisma/prisma';
-import { dbDate, isoDate, isoDateOrNull } from '../prisma/dates';
-import type { DraftStatus } from './callbacks';
+import { isoDateOrNull } from '../prisma/dates';
 import { type BotLang, isBotLang } from './texts';
 
 /**
@@ -108,41 +108,16 @@ export function ownerPlace(
   });
 }
 
-export async function placeStatuses(
-  placeId: string,
-  dates: IsoDate[],
-): Promise<DraftStatus[]> {
-  const rows = await db().availability.findMany({
-    where: { place_id: placeId, date: { in: dates.map(dbDate) } },
-    select: { date: true, status: true },
-  });
-  const byDate = new Map(rows.map((r) => [isoDate(r.date), r.status]));
-  return dates.map((d) => byDate.get(d) ?? null);
-}
-
-/** Сохраняет отмеченные дни (неотмеченные не трогаем). */
+/**
+ * Сохраняет отмеченные дни (неотмеченные не трогаем). У объекта с домиками —
+ * всем домикам сразу (или одному, unitId), статус объекта пересчитывается.
+ */
 export async function saveStatuses(
   placeIds: string[],
   days: { date: IsoDate; status: AvailabilityStatus }[],
+  unitId: string | null = null,
 ) {
-  if (placeIds.length === 0 || days.length === 0) return;
-  const updatedAt = new Date();
-  await db().$transaction(
-    placeIds.flatMap((placeId) =>
-      days.map(({ date, status }) =>
-        db().availability.upsert({
-          where: { place_id_date: { place_id: placeId, date: dbDate(date) } },
-          create: {
-            place_id: placeId,
-            date: dbDate(date),
-            status,
-            updated_at: updatedAt,
-          },
-          update: { status, updated_at: updatedAt },
-        }),
-      ),
-    ),
-  );
+  for (const placeId of placeIds) await saveDays(placeId, unitId, days);
 }
 
 export type OwnerLead = {

@@ -6,6 +6,8 @@ import {
   onlyFree,
   PAGE_SIZE,
   parseFilters,
+  parseRange,
+  rangeWhen,
   toggleAmenity,
   toSearchParams,
 } from "./filters";
@@ -108,5 +110,36 @@ describe("хелперы", () => {
     const on = toggleAmenity(filters, "chan");
     expect(on).toMatchObject({ amenities: ["chan"], limit: PAGE_SIZE });
     expect(toggleAmenity(on, "chan").amenities).toEqual([]);
+  });
+});
+
+describe("даты: будни и диапазон", () => {
+  it("понимает будни и заезд_выезд", () => {
+    expect(parseFilters(new URLSearchParams("when=weekdays")).when).toBe(
+      "weekdays",
+    );
+    expect(
+      parseFilters(new URLSearchParams("when=2026-12-30_2027-01-02")).when,
+    ).toBe("2026-12-30_2027-01-02");
+  });
+
+  it.each([
+    "2026-12-30_2026-12-30",
+    "2027-01-02_2026-12-30",
+    "2026-12-01_2026-12-31",
+    "2026-12-30_2027-01-02_x",
+    "2026-02-30_2026-03-02",
+  ])("отклоняет «%s»", (when) => {
+    expect(parseFilters(new URLSearchParams({ when })).when).toBeUndefined();
+  });
+
+  it("диапазон в адрес: одна ночь — просто дата", () => {
+    expect(rangeWhen("2026-12-31", "2027-01-01")).toBe("2026-12-31");
+    expect(rangeWhen("2026-12-30", "2027-01-02")).toBe("2026-12-30_2027-01-02");
+    expect(rangeWhen("2026-12-30", "2026-12-30")).toBeUndefined();
+    expect(parseRange("2026-12-30_2027-01-02")).toEqual({
+      checkIn: "2026-12-30",
+      checkOut: "2027-01-02",
+    });
   });
 });

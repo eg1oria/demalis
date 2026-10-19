@@ -39,10 +39,13 @@ function weekdayIndex(date: string) {
 
 export function AvailabilityGrid({
   placeId,
+  unitId = null,
   days,
   initial,
 }: {
   placeId: string;
+  /** Домик; null — объект без домиков. */
+  unitId?: string | null;
   days: string[];
   initial: { date: string; status: AvailabilityStatus; updated_at: string }[];
 }) {
@@ -65,7 +68,7 @@ export function AvailabilityGrid({
     setError(null);
 
     startTransition(async () => {
-      const result = await setAvailability(placeId, date, next);
+      const result = await setAvailability(placeId, date, next, unitId);
       if (result.error) {
         setStatuses((s) => ({ ...s, [date]: previous }));
         setError(`Не сохранилось (${date}): ${result.error}`);

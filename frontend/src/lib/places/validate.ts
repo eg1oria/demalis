@@ -30,6 +30,9 @@ export type PlaceInput = {
   lng: number | null;
   drive_minutes: number | null;
   price_from: number | null;
+  price_weekday: number | null;
+  price_weekend: number | null;
+  price_holiday: number | null;
   price_unit: PriceUnit;
   capacity_max: number | null;
   description_ru: string | null;
@@ -44,6 +47,12 @@ export type PlaceInput = {
   owner_id: string | null;
   photos_permission: boolean;
 } & Record<Amenity, boolean>;
+
+/** Самая низкая из указанных цен; ни одной — null. */
+function minPrice(...prices: (number | null)[]): number | null {
+  const set = prices.filter((p): p is number => p !== null);
+  return set.length > 0 ? Math.min(...set) : null;
+}
 
 export type FieldError = { field: string; message: string };
 
@@ -61,6 +70,9 @@ export const FIELD_LABELS: Record<string, string> = {
   lng: "Долгота",
   drive_minutes: "Время в пути, мин",
   price_from: "Цена от, ₸",
+  price_weekday: "Цена в будни, ₸",
+  price_weekend: "Цена в пт и сб, ₸",
+  price_holiday: "Цена в праздники, ₸",
   price_unit: "Цена за",
   capacity_max: "Гостей максимум",
   description_ru: "Описание (рус)",
@@ -193,6 +205,10 @@ export function validatePlaceInput(raw: RawPlaceInput): ValidationResult {
       ))
     : null;
 
+  const price_weekday = int("price_weekday", 0);
+  const price_weekend = int("price_weekend", 0);
+  const price_holiday = int("price_holiday", 0);
+
   const amenities = Object.fromEntries(
     (Object.keys(AMENITIES) as Amenity[]).map((key) => [key, bool(key)]),
   ) as Record<Amenity, boolean>;
@@ -207,7 +223,13 @@ export function validatePlaceInput(raw: RawPlaceInput): ValidationResult {
     lat: coord("lat", 90),
     lng: coord("lng", 180),
     drive_minutes: int("drive_minutes", 0),
-    price_from: int("price_from", 0),
+    price_weekday,
+    price_weekend,
+    price_holiday,
+    // «Цена от» не указана — самая низкая из цен по дням.
+    price_from:
+      int("price_from", 0) ??
+      minPrice(price_weekday, price_weekend, price_holiday),
     price_unit: oneOf("price_unit", PRICE_UNITS, "per_night_unit"),
     capacity_max: int("capacity_max", 1),
     description_ru: text("description_ru"),

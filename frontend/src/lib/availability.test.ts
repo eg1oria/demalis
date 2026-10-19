@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   byNightStatus,
+  combineStatuses,
   daysSince,
   displayStatus,
   isAvailable,
   isStale,
-  keyNight,
 } from "./availability";
 
 const now = new Date("2026-10-01T07:00:00Z");
@@ -63,9 +63,13 @@ describe("isAvailable — «Свободно на выходные»", () => {
 });
 
 describe("хелперы", () => {
-  it("для выходных решает суббота, для даты — она сама", () => {
-    expect(keyNight(["2026-10-02", "2026-10-03"])).toBe("2026-10-03");
-    expect(keyNight(["2026-10-15"])).toBe("2026-10-15");
+  it("несколько ночей — худший статус", () => {
+    expect(combineStatuses(["free", "free"])).toBe("free");
+    expect(combineStatuses(["free", "limited"])).toBe("limited");
+    expect(combineStatuses(["limited", "unknown"])).toBe("unknown");
+    expect(combineStatuses(["unknown", "full", "free"])).toBe("full");
+    expect(combineStatuses(["stale", "free"])).toBe("stale");
+    expect(combineStatuses([])).toBe("unknown");
   });
 
   it("дней с обновления", () => {

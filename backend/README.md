@@ -45,6 +45,7 @@ src/auth/                  вход по ссылке на email (JWT), AdminGua
 src/photos/                загрузка фото по подписанной ссылке, раздача /uploads
 src/bot/, src/telegram/    Telegram-бот владельцев (grammY), уведомления
 src/cron/                  webhook бота и ежедневные задачи (12:00 по Алматы)
+src/units/                 домики: занятость по домикам → статус объекта (availability)
 src/common/                статистика (SQL), лимит заявок, сериализация ответа
 src/shared/                чистые модули — копии из frontend/src/lib (менять вместе)
 scripts/                   seed, webhook бота

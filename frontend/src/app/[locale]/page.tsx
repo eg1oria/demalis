@@ -10,9 +10,10 @@ import { SectionTitle } from "@/components/site/SectionTitle";
 import { SITE_NAME } from "@/config/site";
 import type { Locale } from "@/i18n/routing";
 import { collectionsWithCounts } from "@/lib/catalog/collections";
-import { catalogHref, EMPTY_FILTERS } from "@/lib/catalog/filters";
+import { catalogHref, EMPTY_FILTERS, rangeWhen } from "@/lib/catalog/filters";
 import { findPlaces } from "@/lib/catalog/query";
 import { almatyToday, toIsoDate } from "@/lib/dates";
+import { holidayStay, upcomingHolidays } from "@/lib/holidays";
 import { pageMetadata } from "@/lib/seo";
 import { formatStay, resolveWhen } from "@/lib/when";
 
@@ -47,6 +48,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
   setRequestLocale(locale as Locale);
   const t = await getTranslations("HomePage");
   const tc = await getTranslations("Collections");
+  const th = await getTranslations("Holidays");
   const currentLocale = await getLocale();
   const now = new Date();
 
@@ -88,6 +90,17 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
           <SearchCard
             thisLabel={formatStay(resolveWhen("this", now), currentLocale)}
             nextLabel={formatStay(resolveWhen("next", now), currentLocale)}
+            weekdaysLabel={formatStay(
+              resolveWhen("weekdays", now),
+              currentLocale,
+            )}
+            holidays={upcomingHolidays(now).map((h) => {
+              const stay = holidayStay(h);
+              return {
+                when: rangeWhen(stay.checkIn, stay.checkOut)!,
+                label: `${th(h.id)} · ${formatStay(stay, currentLocale)}`,
+              };
+            })}
             initialGuests={DEFAULT_GUESTS}
             initialCount={count ?? 0}
             today={toIsoDate(almatyToday(now))}

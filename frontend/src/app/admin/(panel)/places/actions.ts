@@ -63,12 +63,61 @@ export async function setAvailability(
   placeId: string,
   date: string,
   status: AvailabilityStatus | null,
+  unitId: string | null = null,
 ): Promise<{ error?: string; updatedAt?: string }> {
   await requireAdmin();
-  return adminApi(`/admin/places/${placeId}/availability/${date}`, {
-    method: "PUT",
-    body: { status },
-  });
+  const result = await adminApi<{ error?: string; updatedAt?: string }>(
+    `/admin/places/${placeId}/availability/${date}`,
+    { method: "PUT", body: { status, unit_id: unitId } },
+  );
+  // Статус объекта с домиками пересчитался — сайт должен увидеть сразу.
+  if (!result.error) revalidatePath("/", "layout");
+  return result;
+}
+
+// ── Домики ────────────────────────────────────────────────────────────────
+
+export type UnitFormState = { error?: string; saved?: boolean };
+
+/** Создать (без id) или изменить домик. Цены и места — как в форме. */
+export async function saveUnit(
+  placeId: string,
+  unitId: string | null,
+  formData: FormData,
+): Promise<UnitFormState> {
+  await requireAdmin();
+  const body = Object.fromEntries(
+    [
+      "name_ru",
+      "name_kk",
+      "capacity",
+      "price_weekday",
+      "price_weekend",
+      "price_holiday",
+      "sort_order",
+    ].map((key) => [key, String(formData.get(key) ?? "").replace(/\s/g, "")]),
+  );
+  body.name_ru = String(formData.get("name_ru") ?? "").trim();
+  body.name_kk = String(formData.get("name_kk") ?? "").trim();
+  const data = await adminApi<{ id: string } | { error: string }>(
+    unitId ? `/admin/units/${unitId}` : `/admin/places/${placeId}/units`,
+    { method: unitId ? "PATCH" : "POST", body },
+  );
+  if ("error" in data) return { error: data.error };
+  revalidatePath(`/admin/places/${placeId}`);
+  revalidatePath("/", "layout");
+  return { saved: true };
+}
+
+export async function deleteUnit(
+  placeId: string,
+  unitId: string,
+): Promise<{ error?: string }> {
+  await requireAdmin();
+  await adminApi(`/admin/units/${unitId}`, { method: "DELETE" });
+  revalidatePath(`/admin/places/${placeId}`);
+  revalidatePath("/", "layout");
+  return {};
 }
 
 // ── Импорт CSV ────────────────────────────────────────────────────────────

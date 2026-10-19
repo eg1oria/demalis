@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
 import { Header } from "@/components/Header";
@@ -29,22 +30,24 @@ import { ViewTracker } from "@/components/place/ViewTracker";
 import type { Locale } from "@/i18n/routing";
 import { parseFilters } from "@/lib/catalog/filters";
 import {
+  combineStatuses,
   daysSince,
   type DisplayStatus,
   displayStatus,
-  keyNight,
 } from "@/lib/availability";
 import {
   findSimilar,
   getPlaceAvailability,
   getPlaceBySlug,
   placeStatus,
-  statusesForNight,
+  statusesForStay,
+  stayIndex,
 } from "@/lib/catalog/query";
+import { stayEstimate, stayStatus } from "@/lib/stay";
 import { almatyToday, nextDays, toIsoDate } from "@/lib/dates";
 import { goHref } from "@/lib/go";
 import { planFeatures } from "@/lib/plans";
-import { formatTenge, splitMinutes } from "@/lib/format";
+import { formatDayMonth, formatTenge, splitMinutes } from "@/lib/format";
 import {
   placeAmenities,
   placeDescription,
@@ -60,7 +63,6 @@ import {
   pageMetadata,
 } from "@/lib/seo";
 import { formatStay, resolveWhen } from "@/lib/when";
-import { getUpcomingWeekend } from "@/lib/weekend";
 
 type Props = PageProps<"/[locale]/place/[slug]">;
 
@@ -116,8 +118,10 @@ export default async function PlacePage({ params, searchParams }: Props) {
   // Гости и даты приходят из фильтров каталога: календарь, блок статуса, текст WhatsApp.
   const { guests, when } = parseFilters(await searchParams);
   const stay = when ? resolveWhen(when, now) : null;
-  // Без выбранных дат отвечаем про эту субботу (раздел 4 ТЗ).
-  const night = stay ? keyNight(stay.nights) : getUpcomingWeekend(now).saturday;
+  // Без выбранных дат отвечаем про эти выходные (пт и сб, Этап 14).
+  const nights = (stay ?? resolveWhen("this", now)).nights;
+  const first = nights[0];
+  const last = nights[nights.length - 1];
 
   const [
     t,
@@ -128,6 +132,7 @@ export default async function PlacePage({ params, searchParams }: Props) {
     currentLocale,
     similar,
     availability,
+    index,
   ] = await Promise.all([
     getTranslations("Place"),
     getTranslations("Format"),
@@ -138,13 +143,14 @@ export default async function PlacePage({ params, searchParams }: Props) {
     findSimilar(place),
     getPlaceAvailability(
       place.id,
-      calendarDays[0] < night ? calendarDays[0] : night,
-      calendarDays[calendarDays.length - 1] > night
+      calendarDays[0] < first ? calendarDays[0] : first,
+      calendarDays[calendarDays.length - 1] > last
         ? calendarDays[calendarDays.length - 1]
-        : night,
+        : last,
     ),
+    stayIndex(nights, now, place.id),
   ]);
-  const similarStatuses = await statusesForNight(night, now);
+  const similarStatuses = await statusesForStay(nights, now);
 
   // Без календаря в тарифе гость видит только «Уточняйте наличие».
   const dayStatus = (date: string): DisplayStatus =>
@@ -154,11 +160,29 @@ export default async function PlacePage({ params, searchParams }: Props) {
   const calendarStatuses = Object.fromEntries(
     calendarDays.map((d) => [d, dayStatus(d)]),
   );
-  const nightStatus = dayStatus(night);
+  // Все ночи поездки (и места в домиках на гостей) — худший статус.
+  const nightStatus: DisplayStatus = features.availability
+    ? stayStatus(index, place.id, nights, guests)
+    : "unknown";
+  const estimate =
+    nightStatus !== "full" ? stayEstimate(place, index, nights, guests) : null;
   const updatedDays = availability.lastUpdatedAt
     ? daysSince(availability.lastUpdatedAt, now)
     : null;
   const stale = nightStatus === "stale" || (updatedDays ?? 0) > 7;
+  // Статус домика на ночи поездки (свежесть — как у объекта).
+  const unitStatus = (unitId: string): DisplayStatus =>
+    features.availability
+      ? combineStatuses(
+          nights.map((n) =>
+            displayStatus(
+              index.units.get(unitId)?.get(n)?.status,
+              availability.lastUpdatedAt,
+              now,
+            ),
+          ),
+        )
+      : "unknown";
 
   const name = placeName(place, currentLocale);
   const description = placeDescription(place, currentLocale);
@@ -172,23 +196,26 @@ export default async function PlacePage({ params, searchParams }: Props) {
   };
 
   const stayLabel = stay ? formatStay(stay, currentLocale) : null;
-  const nightDate = new Date(`${night}T00:00:00Z`).toLocaleDateString(
+  const nightsLabel = formatStay(
+    stay ?? resolveWhen("this", now),
     currentLocale,
-    { day: "numeric", month: "long", timeZone: "UTC" },
   );
   const tStatus = await getTranslations("Status");
   const tCalendar = await getTranslations("Calendar");
   const statusTitle =
     nightStatus === "stale" || nightStatus === "unknown"
       ? tStatus(nightStatus)
-      : !when || when === "this" || when === "next"
-        ? t("statusThisSaturday", { status: tStatus(nightStatus) })
-        : t("statusOnNight", { status: tStatus(nightStatus), date: nightDate });
+      : !when || when === "this"
+        ? t("statusThisWeekend", { status: tStatus(nightStatus) })
+        : t("statusOnNight", {
+            status: tStatus(nightStatus),
+            date: nightsLabel,
+          });
   const statusSubtitle =
     nightStatus === "stale" || nightStatus === "unknown"
       ? t("statusAsk")
       : t("statusUpdated", {
-          date: nightDate,
+          date: nightsLabel,
           ago: t("ago", { days: updatedDays ?? 0 }),
         });
   // Клики идут через /api/go/...: маршрут записывает событие и перенаправляет.
@@ -242,22 +269,58 @@ export default async function PlacePage({ params, searchParams }: Props) {
   const contactClass =
     "flex h-12 items-center gap-2.5 rounded-[10px] border border-line px-3.5 text-sm transition-colors hover:border-text";
 
-  const priceBlock = place.price_from != null && (
+  const bigPrice = (chunks: ReactNode) => (
+    <span className="tabular font-display text-[26px] font-medium tracking-[-0.04em] text-text">
+      {chunks}
+    </span>
+  );
+  const dayPrices = (p: {
+    price_weekday: number | null;
+    price_weekend: number | null;
+    price_holiday: number | null;
+  }) =>
+    (
+      [
+        ["priceWeekday", p.price_weekday],
+        ["priceWeekend", p.price_weekend],
+        ["priceHoliday", p.price_holiday],
+      ] as const
+    )
+      .filter(([, price]) => price != null)
+      .map(([key, price]) => `${t(key)} ${formatTenge(price!, currentLocale)}`)
+      .join(" · ");
+  const placeDayPrices = dayPrices(place);
+  const estimateText = (e: NonNullable<typeof estimate>, b = bigPrice) =>
+    tf.rich(e.nights === 1 ? "nightPriceRich" : "stayPriceRich", {
+      date: formatDayMonth(e.firstNight),
+      n: e.nights,
+      price: formatTenge(e.total, currentLocale),
+      muted: (chunks) => <span>{chunks}</span>,
+      b,
+    });
+
+  // С датами — сумма за все ночи; без них — «от» и цены по дням.
+  const priceBlock = (place.price_from != null || estimate) && (
     <div>
       <span className="text-sm text-text-muted">
-        {tf.rich("priceFromRich", {
-          price: formatTenge(place.price_from, currentLocale),
-          muted: (chunks) => <span>{chunks}</span>,
-          b: (chunks) => (
-            <span className="tabular font-display text-[26px] font-medium tracking-[-0.04em] text-text">
-              {chunks}
-            </span>
-          ),
-        })}
+        {estimate
+          ? estimateText(estimate)
+          : tf.rich("priceFromRich", {
+              price: formatTenge(place.price_from!, currentLocale),
+              muted: (chunks) => <span>{chunks}</span>,
+              b: bigPrice,
+            })}
+        {estimate?.perPersonUnknownGuests && ` ${tf("perPerson")}`}
       </span>
       <p className="mt-0.5 text-[13px] text-text-muted">
+        {estimate && place.price_from != null
+          ? `${tf("priceFrom", { price: formatTenge(place.price_from, currentLocale) })} · `
+          : ""}
         {tf(`unit_${place.price_unit}`)}
       </p>
+      {placeDayPrices && (
+        <p className="mt-1 text-[13px] text-text-muted">{placeDayPrices}</p>
+      )}
       <p className="mt-1 text-[13px] text-text-muted">{t("priceNote")}</p>
     </div>
   );
@@ -332,6 +395,64 @@ export default async function PlacePage({ params, searchParams }: Props) {
                       {tAmenities(amenity)}
                     </li>
                   ))}
+                </ul>
+              </section>
+            )}
+
+            {place.units.length > 0 && (
+              <section className={section}>
+                <h2 className={h2}>{t("units")}</h2>
+                <p className="mt-2 text-sm text-text-secondary">
+                  {t("unitsNote")}
+                </p>
+                <ul className="mt-5 divide-y divide-line border-y border-line">
+                  {place.units.map((unit) => {
+                    const status = unitStatus(unit.id);
+                    const price =
+                      status !== "full"
+                        ? stayEstimate(
+                            { ...place, units: [unit] },
+                            index,
+                            nights,
+                            guests,
+                          )
+                        : null;
+                    const prices = dayPrices(unit);
+                    return (
+                      <li
+                        key={unit.id}
+                        className="flex items-start justify-between gap-4 py-4"
+                      >
+                        <div className="min-w-0">
+                          <p className="font-medium">
+                            {(currentLocale === "kk" && unit.name_kk?.trim()) ||
+                              unit.name_ru}
+                          </p>
+                          <p className="mt-0.5 text-sm text-text-muted">
+                            {tf("upToGuests", { n: unit.capacity })}
+                            {prices && ` · ${prices}`}
+                          </p>
+                        </div>
+                        <div className="flex flex-none flex-col items-end gap-1.5">
+                          {features.availability && (
+                            <span className="flex items-center gap-1.5 text-[13px] text-text-secondary">
+                              <StatusDot status={status} />
+                              {tStatus(status)}
+                            </span>
+                          )}
+                          {price && (
+                            <span className="tabular text-[15px] text-text-muted">
+                              {estimateText(price, (chunks) => (
+                                <span className="font-medium text-text">
+                                  {chunks}
+                                </span>
+                              ))}
+                            </span>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
               </section>
             )}

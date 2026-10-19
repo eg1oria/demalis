@@ -15,10 +15,14 @@ import {
   PAGE_SIZE,
   PRICE_OPTIONS,
   SORT_OPTIONS,
+  parseRange,
+  rangeWhen,
   toggleAmenity,
   type WhenOption,
 } from "@/lib/catalog/filters";
-import { almatyToday, toIsoDate } from "@/lib/dates";
+import { addDays, almatyToday, toIsoDate } from "@/lib/dates";
+import { holidayStay, upcomingHolidays } from "@/lib/holidays";
+import { DateRangeInputs } from "@/components/site/DateRangeInputs";
 import { DIRECTIONS, PLACE_TYPES } from "@/lib/places/constants";
 
 /** Все фильтры каталога. Изменения применяются кнопкой «Показать варианты». */
@@ -54,10 +58,37 @@ export function FiltersSheet({
   const guests = draft.guests ?? 1;
   const locale = useLocale();
   const today = toIsoDate(almatyToday(new Date()));
-  const customDate =
-    draft.when && draft.when !== "this" && draft.when !== "next"
-      ? draft.when
+  const tHolidays = useTranslations("Holidays");
+  const tomorrow = toIsoDate(addDays(almatyToday(new Date()), 1));
+  const formatDay = (iso: string) =>
+    new Date(`${iso}T00:00:00Z`).toLocaleDateString(locale, {
+      day: "numeric",
+      month: "short",
+      timeZone: "UTC",
+    });
+  // Ближайшие праздники — кнопками («Новый год 31 дек. – 3 янв.»).
+  const holidays = upcomingHolidays(new Date()).map((h) => {
+    const stay = holidayStay(h);
+    return {
+      when: rangeWhen(stay.checkIn, stay.checkOut)!,
+      label: `${tHolidays(h.id)} ${formatDay(stay.checkIn)} – ${formatDay(stay.checkOut)}`,
+    };
+  });
+  const named =
+    !draft.when ||
+    draft.when === "this" ||
+    draft.when === "next" ||
+    draft.when === "weekdays" ||
+    holidays.some((h) => h.when === draft.when);
+  const range =
+    draft.when && !named
+      ? (parseRange(draft.when) ?? {
+          checkIn: draft.when,
+          checkOut: toIsoDate(addDays(new Date(`${draft.when}T00:00:00Z`), 1)),
+        })
       : null;
+  const [ownDates, setOwnDates] = useState(false);
+  const showRange = ownDates || range !== null;
 
   return (
     <div
@@ -91,48 +122,62 @@ export function FiltersSheet({
         <div className="flex flex-col gap-6 overflow-y-auto px-5 py-5">
           <Group title={t("when")}>
             <Choice
-              selected={!draft.when}
-              onClick={() => set({ when: undefined })}
+              selected={!draft.when && !ownDates}
+              onClick={() => {
+                setOwnDates(false);
+                set({ when: undefined });
+              }}
             >
               {t("when_any")}
             </Choice>
+            {(["this", "next", "weekdays"] as const).map((option) => (
+              <Choice
+                key={option}
+                selected={draft.when === option && !ownDates}
+                onClick={() => {
+                  setOwnDates(false);
+                  set({ when: option });
+                }}
+              >
+                {t(`when_${option}`)}
+              </Choice>
+            ))}
+            {holidays.map((h) => (
+              <Choice
+                key={h.when}
+                selected={draft.when === h.when && !ownDates}
+                onClick={() => {
+                  setOwnDates(false);
+                  set({ when: h.when });
+                }}
+              >
+                {h.label}
+              </Choice>
+            ))}
             <Choice
-              selected={draft.when === "this"}
-              onClick={() => set({ when: "this" })}
+              selected={showRange}
+              onClick={() => {
+                setOwnDates(true);
+                if (!range) set({ when: tomorrow as WhenOption });
+              }}
             >
-              {t("when_this")}
-            </Choice>
-            <Choice
-              selected={draft.when === "next"}
-              onClick={() => set({ when: "next" })}
-            >
-              {t("when_next")}
-            </Choice>
-            <label
-              className={`relative cursor-pointer ${chipClass(customDate !== null)}`}
-            >
-              {customDate
-                ? new Date(`${customDate}T00:00:00Z`).toLocaleDateString(
-                    locale,
-                    {
-                      day: "numeric",
-                      month: "short",
-                      timeZone: "UTC",
-                    },
-                  )
+              {showRange && range
+                ? `${formatDay(range.checkIn)} – ${formatDay(range.checkOut)}`
                 : t("when_date")}
-              <input
-                type="date"
-                min={today}
-                value={customDate ?? ""}
-                aria-label={t("when_date")}
-                onClick={(e) => e.currentTarget.showPicker?.()}
-                onChange={(e) =>
-                  e.target.value && set({ when: e.target.value as WhenOption })
-                }
-                className="absolute inset-0 cursor-pointer opacity-0"
-              />
-            </label>
+            </Choice>
+            {showRange && (
+              <div className="w-full pt-1">
+                <DateRangeInputs
+                  checkIn={range?.checkIn ?? null}
+                  checkOut={range?.checkOut ?? null}
+                  today={today}
+                  onChange={({ checkIn, checkOut }) => {
+                    const next = rangeWhen(checkIn, checkOut);
+                    if (next) set({ when: next });
+                  }}
+                />
+              </div>
+            )}
           </Group>
 
           <Group title={t("drive")}>

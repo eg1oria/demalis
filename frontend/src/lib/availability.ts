@@ -1,5 +1,4 @@
 import type { AvailabilityStatus } from "@/lib/places/constants";
-import { type IsoDate } from "./dates";
 
 /**
  * Что показываем гостю:
@@ -61,11 +60,15 @@ export function byNightStatus<T extends { status?: DisplayStatus }>(
 }
 
 /**
- * Ночь, по которой решаем «свободно / занято» для выбора дат:
- * для выходных — суббота (раздел 4 ТЗ), для конкретной даты — она сама.
+ * Статус на несколько ночей — худший из них (раздел 4 ТЗ изменён на Этапе 14:
+ * выходные — обе ночи, пт и сб): хоть одна занята → «Занято», хоть одна
+ * без данных → «Уточняйте», хоть одна «Мало мест» → «Мало мест».
  */
-export function keyNight(nights: IsoDate[]): IsoDate {
-  return nights[nights.length - 1];
+export function combineStatuses(statuses: DisplayStatus[]): DisplayStatus {
+  if (statuses.length === 0) return "unknown";
+  for (const status of ["full", "unknown", "stale", "limited"] as const)
+    if (statuses.includes(status)) return status;
+  return "free";
 }
 
 /** Сколько полных дней прошло с обновления (для подписи «обновлено N дней назад»). */

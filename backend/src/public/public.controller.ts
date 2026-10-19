@@ -83,6 +83,23 @@ export class PublicController {
     );
   }
 
+  /** Ночи from..to включительно (не больше 31). */
+  @Get('availability/nights')
+  nights(
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('place') place?: string,
+  ) {
+    const start = isoDateParam(from, 'from');
+    const end = isoDateParam(to, 'to');
+    const days = (Date.parse(end) - Date.parse(start)) / 864e5;
+    if (!(days >= 0 && days <= 31))
+      throw new BadRequestException({ error: 'Диапазон — до 31 ночи' });
+    if (place !== undefined && !isUuid(place))
+      throw new BadRequestException({ error: 'place: нужен uuid' });
+    return this.data.nights(start, end, place);
+  }
+
   @Get('availability/night/:date')
   night(@Param('date') date: string) {
     return this.data.night(isoDateParam(date, 'date'));

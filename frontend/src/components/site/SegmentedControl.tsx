@@ -21,10 +21,15 @@ export function SegmentedControl({
 }) {
   return (
     <div
-      className="grid gap-px overflow-hidden rounded-[10px] border border-line bg-line"
-      style={{
-        gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))`,
-      }}
+      className={`grid gap-px overflow-hidden rounded-[10px] border border-line bg-line ${
+        // Четыре варианта на телефоне не помещаются в ряд — сетка 2×2.
+        options.length > 3 ? "grid-cols-2 xl:grid-cols-4" : ""
+      }`}
+      style={
+        options.length > 3
+          ? undefined
+          : { gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }
+      }
     >
       {options.map((option) => {
         const selected = option.value === value;

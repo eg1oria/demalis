@@ -1,13 +1,17 @@
 import "server-only";
-import {
-  type DisplayStatus,
-  displayStatus,
-  isAvailable,
-  keyNight,
-} from "@/lib/availability";
+import { type DisplayStatus, isAvailable } from "@/lib/availability";
 import { almatyToday, type IsoDate, toIsoDate } from "@/lib/dates";
 import type { AvailabilityStatus } from "@/lib/places/constants";
 import { planFeatures, promote } from "@/lib/plans";
+import {
+  indexNights,
+  knownPlaces,
+  type NightsResponse,
+  type StayEstimate,
+  type StayIndex,
+  stayEstimate,
+  stayStatus,
+} from "@/lib/stay";
 import { api, apiOrNull, query } from "@/lib/api/client";
 import type { Tables } from "@/lib/api/types";
 import { getUpcomingWeekend } from "@/lib/weekend";
@@ -29,6 +33,9 @@ export type PlaceCardData = Pick<
   | "direction"
   | "drive_minutes"
   | "price_from"
+  | "price_weekday"
+  | "price_weekend"
+  | "price_holiday"
   | "price_unit"
   | "capacity_max"
   | "photos"
@@ -47,10 +54,12 @@ export type PlaceCardData = Pick<
   | "pro_until"
   | "featured_until"
 > & {
-  /** Статус на выбранную ночь; нет — даты не выбраны. */
+  /** Домики (Этап 14): вместимость и цены; пусто — объект целиком. */
+  units: UnitCardData[];
+  /** Статус на выбранные ночи; нет — даты не выбраны. */
   status?: DisplayStatus;
-  /** Цена владельца за выбранную ночь (праздники), если на неё есть места. */
-  nightPrice?: { night: IsoDate; price: number };
+  /** Примерная цена за выбранные ночи (цены по дням, праздники, домики). */
+  stayPrice?: StayEstimate;
   /** Плашка «Проверено» (тариф Pro). */
   verified?: boolean;
   /** Продвижение в первом экране «рекомендуемых» — пометка «Реклама». */
@@ -60,7 +69,18 @@ export type PlaceCardData = Pick<
 /** Поля карточки (CARD_SELECT в backend/src/common/place-data.ts). */
 type PlaceCardRow = Omit<
   PlaceCardData,
-  "status" | "verified" | "promoted" | "nightPrice"
+  "status" | "verified" | "promoted" | "stayPrice"
+>;
+
+export type UnitCardData = Pick<
+  Tables<"units">,
+  | "id"
+  | "name_ru"
+  | "name_kk"
+  | "capacity"
+  | "price_weekday"
+  | "price_weekend"
+  | "price_holiday"
 >;
 
 export type CatalogResult = {
@@ -69,8 +89,8 @@ export type CatalogResult = {
   /** Все найденные — для карты. */
   all: PlaceCardData[];
   total: number;
-  /** Ночь, по которой считали статус (суббота или выбранная дата). */
-  night: IsoDate | null;
+  /** Ночи, по которым считали статус (выходные, будни, диапазон); null — без дат. */
+  nights: IsoDate[] | null;
 };
 
 export async function findPlaces(
@@ -97,26 +117,35 @@ export async function findPlaces(
     ...place,
     verified: planFeatures(place, today).verified,
   }));
-  let night: IsoDate | null = null;
+  let nights: IsoDate[] | null = null;
 
   if (filters.when) {
-    night = keyNight(resolveWhen(filters.when, now).nights);
-    const { statuses, prices } = await nightData(night, now);
+    nights = resolveWhen(filters.when, now).nights;
+    const index = await stayIndex(nights, now);
     all = all.map((place) => {
-      const status = placeStatus(place, statuses, today);
-      const price = prices.get(place.id);
-      return {
-        ...place,
-        status,
-        ...(price &&
-          isAvailable(status) && { nightPrice: { night: night!, price } }),
-      };
+      const status = placeStayStatus(
+        place,
+        index,
+        nights!,
+        today,
+        filters.guests,
+      );
+      const price =
+        status !== "full"
+          ? stayEstimate(place, index, nights!, filters.guests)
+          : null;
+      return { ...place, status, ...(price && { stayPrice: price }) };
     });
     if (onlyFree(filters)) all = all.filter((p) => isAvailable(p.status!));
   }
   if (filters.sort === "recommended") all = promote(all, today);
 
-  return { places: all.slice(0, filters.limit), all, total: all.length, night };
+  return {
+    places: all.slice(0, filters.limit),
+    all,
+    total: all.length,
+    nights,
+  };
 }
 
 /**
@@ -132,51 +161,48 @@ export function placeStatus(
   return statuses.get(place.id) ?? "unknown";
 }
 
-/** Статусы всех опубликованных объектов на одну ночь (RLS не отдаст черновики). */
-export async function statusesForNight(
-  night: IsoDate,
+function placeStayStatus(
+  place: Pick<Tables<"places">, "id" | "plan" | "pro_until">,
+  index: StayIndex,
+  nights: IsoDate[],
+  today: IsoDate,
+  guests?: number,
+): DisplayStatus {
+  if (!planFeatures(place, today).availability) return "unknown";
+  return stayStatus(index, place.id, nights, guests);
+}
+
+/** Занятость на ночи (по порядку, подряд); placeId — только один объект. */
+export async function stayIndex(
+  nights: IsoDate[],
+  now: Date,
+  placeId?: string,
+): Promise<StayIndex> {
+  const response = await api<NightsResponse>(
+    `/public/availability/nights${query({
+      from: nights[0],
+      to: nights[nights.length - 1],
+      place: placeId,
+    })}`,
+  );
+  return indexNights(response, now);
+}
+
+/** Статусы всех опубликованных объектов на ночи (худший из ночей). */
+export async function statusesForStay(
+  nights: IsoDate[],
   now: Date,
 ): Promise<Map<string, DisplayStatus>> {
-  return (await nightData(night, now)).statuses;
-}
-
-/** Статусы и цены владельцев (праздники) на одну ночь. */
-async function nightData(
-  night: IsoDate,
-  now: Date,
-): Promise<{
-  statuses: Map<string, DisplayStatus>;
-  prices: Map<string, number>;
-}> {
-  const { rows, freshness } = await api<{
-    rows: {
-      place_id: string;
-      status: AvailabilityStatus;
-      price: number | null;
-    }[];
-    freshness: { place_id: string; last_updated_at: string | null }[];
-  }>(`/public/availability/night/${night}`);
-
-  const lastUpdated = new Map(
-    freshness.map((r) => [r.place_id, r.last_updated_at] as const),
+  const index = await stayIndex(nights, now);
+  return new Map(
+    knownPlaces(index).map((id) => [id, stayStatus(index, id, nights)]),
   );
-  const statuses = new Map<string, DisplayStatus>();
-  const prices = new Map<string, number>();
-  for (const [placeId, updatedAt] of lastUpdated) {
-    if (placeId) statuses.set(placeId, displayStatus(null, updatedAt, now));
-  }
-  for (const row of rows) {
-    statuses.set(
-      row.place_id,
-      displayStatus(row.status, lastUpdated.get(row.place_id), now),
-    );
-    if (row.price) prices.set(row.place_id, row.price);
-  }
-  return { statuses, prices };
 }
+
+export type PlaceWithUnits = Tables<"places"> & { units: UnitCardData[] };
 
 export async function getPlaceBySlug(slug: string) {
-  return apiOrNull<Tables<"places">>(
+  return apiOrNull<PlaceWithUnits>(
     `/public/places/by-slug/${encodeURIComponent(slug)}`,
   );
 }
@@ -224,10 +250,7 @@ export async function findPlacesByIds(
   );
 
   const today = toIsoDate(almatyToday(now));
-  const statuses = await statusesForNight(
-    getUpcomingWeekend(now).saturday,
-    now,
-  );
+  const statuses = await statusesForStay(getUpcomingWeekend(now).nights, now);
   const order = new Map(ids.map((id, i) => [id, i]));
   return data
     .map((place) => ({

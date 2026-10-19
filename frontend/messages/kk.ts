@@ -158,6 +158,8 @@ const kk: Messages = {
     priceFrom: "{price} бастап",
     priceFromRich: "<b>{price}</b> <muted>бастап</muted>",
     nightPriceRich: "<muted>{date}</muted> <b>{price}</b>",
+    // TODO: проверить носителю
+    stayPriceRich: "<muted>{n} түн ≈</muted> <b>{price}</b>",
     perNight: "/ түн",
     perPerson: "/ адам",
     unit_per_night_unit: "бір үй не бөлме үшін, бір түн",
@@ -170,7 +172,7 @@ const kk: Messages = {
   // TODO: проверить носителю
   HomePage: {
     showAll: "Барлық нұсқаларды көру", // TODO: проверить носителю
-    freeTitle: "Осы сенбіде бос", // TODO: проверить носителю
+    freeTitle: "Осы демалыста бос", // TODO: проверить носителю
     all: "Барлығы", // TODO: проверить носителю
     eyebrow: "Қала сыртындағы демалыс · Алматы",
     titleLine1: "Демалыс күндері",
@@ -179,7 +181,8 @@ const kk: Messages = {
     when: "Қашан",
     thisWeekend: "Осы демалыс",
     nextWeekend: "Келесі",
-    ownDate: "Өз күнім",
+    weekdays: "Жұмыс күндері", // TODO: проверить носителю
+    ownDate: "Өз күндерім",
     pickDate: "Таңдау",
     guests: "Қонақтар",
     fewerGuests: "Қонақ азырақ",
@@ -348,6 +351,18 @@ const kk: Messages = {
     legendUnknown: "Нақтылаңыз",
   },
   // TODO: проверить носителю
+  // TODO: проверить носителю
+  Holidays: {
+    new_year: "Жаңа жыл",
+    march8: "8 Наурыз",
+    nauryz: "Наурыз мейрамы",
+    may1: "1 Мамыр",
+    may9: "9 Мамыр",
+    capital: "Астана күні",
+    constitution: "Конституция күні",
+    republic: "Республика күні",
+    independence: "Тәуелсіздік күні",
+  },
   Catalog: {
     back: "Артқа",
     allFilters: "Барлық сүзгілер",
@@ -367,16 +382,21 @@ const kk: Messages = {
     when_any: "Кез келген күн",
     when_this: "Осы демалыс",
     when_next: "Келесі демалыс",
-    when_date: "Өз күнім",
+    when_date: "Өз күндерім",
+    // TODO: проверить носителю
+    when_weekdays: "Жұмыс күндері",
+    checkIn: "Келу",
+    checkOut: "Кету",
     onlyFree: "Тек бостары",
-    freeOnNight: "{date} түні бос",
-    statusOnNight: "{date} түнгі бос орын",
+    // TODO: проверить носителю
+    freeOnNight: "барлық түн бос: {date}",
+    statusOnNight: "бос орындар: {date}",
     list: "Тізім",
     map: "Карта",
     view: "Көрініс",
-    mapFree: "{date} түні {count} бос",
+    mapFree: "{date}: {count} бос",
     mapMissing: "{count} нысанның координаты жоқ — тек тізімде",
-    freeOn: "{date} түні: {status}",
+    freeOn: "{date}: {status}",
     filtersTitle: "Сүзгілер",
     drive: "Жол уақыты",
     drive_any: "Кез келген",
@@ -424,8 +444,18 @@ const kk: Messages = {
     location: "Қалай жетуге болады",
     openMap: "Картадан ашу",
     similar: "Жақын маңдағы ұқсастар",
-    statusThisSaturday: "Осы сенбіде: {status}",
-    statusOnNight: "{date} түні: {status}",
+    // TODO: проверить носителю
+    statusThisWeekend: "Осы демалыста: {status}",
+    statusOnNight: "{date}: {status}",
+    // TODO: проверить носителю — блок ниже
+    units: "Үйлер",
+    unitsNote:
+      "Баға — бір үйге бір түнге. Күйі мен сомасы — таңдалған күндерге.",
+    dayPrices: "Түнгі бағалар",
+    priceWeekday: "Жұмыс күндері",
+    priceWeekend: "Жм және сн",
+    priceHoliday: "Мерекелер",
+    stayFor: "{dates} үшін",
     statusUpdated: "{date} · иесі {ago} жаңартты",
     statusAsk: "Иесіне жазыңыз — бос орын барын айтады.",
     ago: "{days, plural, =0 {бүгін} =1 {кеше} other {# күн бұрын}}",

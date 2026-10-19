@@ -8,6 +8,7 @@ import { placeName } from '../shared/places/present';
 import { db } from '../prisma/prisma';
 import { dbDate } from '../prisma/dates';
 import { createBotApi } from '../telegram/api';
+import { saveDays, saveNightPrice } from '../units/units';
 import { buildCallback } from './callbacks';
 import { BOT_TEXTS, type BotLang, isBotLang } from './texts';
 
@@ -93,19 +94,6 @@ export async function setAwaiting(ownerId: string, value: string | null) {
     where: { id: ownerId },
     data: { awaiting_input: value },
   });
-}
-
-/** Цена за ночь; строки занятости нет — не создаём (сначала статус). */
-export async function saveNightPrice(
-  placeId: string,
-  night: IsoDate,
-  price: number | null,
-): Promise<boolean> {
-  const { count } = await db().availability.updateMany({
-    where: { place_id: placeId, date: dbDate(night) },
-    data: { price },
-  });
-  return count > 0;
 }
 
 /**
@@ -207,15 +195,6 @@ export async function setHolidayNight(
   status: AvailabilityStatus | null,
   price: number | null,
 ): Promise<void> {
-  const key = { place_id: placeId, date: dbDate(night) };
-  if (!status) {
-    await db().availability.deleteMany({ where: key });
-    return;
-  }
-  const now = new Date();
-  await db().availability.upsert({
-    where: { place_id_date: key },
-    create: { ...key, status, price, updated_at: now },
-    update: { status, price, updated_at: now },
-  });
+  await saveDays(placeId, null, [{ date: night, status }]);
+  if (status) await saveNightPrice(placeId, night, price);
 }

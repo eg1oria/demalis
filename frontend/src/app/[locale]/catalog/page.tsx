@@ -19,7 +19,7 @@ import {
 } from "@/lib/catalog/filters";
 import { findPlaces } from "@/lib/catalog/query";
 import { pageMetadata } from "@/lib/seo";
-import { formatStay, resolveWhen } from "@/lib/when";
+import { formatStay, resolveWhen, whenTitleKey } from "@/lib/when";
 
 export async function generateMetadata({
   params,
@@ -50,25 +50,22 @@ export default async function CatalogPage({
   const now = new Date();
 
   const filters = parseFilters(await searchParams);
-  const { places, all, total, night } = await findPlaces(filters, now);
+  const { places, all, total, nights } = await findPlaces(filters, now);
 
   // «Эти выходные · 2–4 окт.» для сводки в верхней панели.
-  let whenLabel: string | null = null;
-  if (filters.when) {
-    const stay = formatStay(resolveWhen(filters.when, now), currentLocale);
-    whenLabel =
-      filters.when === "this" || filters.when === "next"
-        ? `${t(`when_${filters.when}`)} · ${stay}`
-        : stay;
-  }
-  // «3 октября» — ночь, по которой считаем занятость.
-  const nightLabel = night
-    ? new Date(`${night}T00:00:00Z`).toLocaleDateString(currentLocale, {
-        day: "numeric",
-        month: "long",
-        timeZone: "UTC",
-      })
+  const stayLabel = filters.when
+    ? formatStay(resolveWhen(filters.when, now), currentLocale)
     : null;
+  const titleKey = filters.when ? whenTitleKey(filters.when) : null;
+  const th = await getTranslations("Holidays");
+  const title = !titleKey
+    ? null
+    : titleKey.ns === "Catalog"
+      ? t(titleKey.key as Parameters<typeof t>[0])
+      : th(titleKey.key as Parameters<typeof th>[0]);
+  const whenLabel = title ? `${title} · ${stayLabel}` : stayLabel;
+  // «2–4 окт.» — ночи, по которым считаем занятость.
+  const nightLabel = nights ? stayLabel : null;
 
   // Гости и даты пригодятся на странице объекта (календарь и текст WhatsApp).
   const placeQuery: Record<string, string> = {};

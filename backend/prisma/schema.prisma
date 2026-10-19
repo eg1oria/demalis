@@ -132,6 +132,10 @@ model Place {
   lng               Decimal?       @db.Decimal(9, 6)
   drive_minutes     Int?
   price_from        Int?
+  /// Цены по дням, ₸ за ночь: будни (вс–чт), выходные (пт и сб), праздники.
+  price_weekday     Int?
+  price_weekend     Int?
+  price_holiday     Int?
   price_unit        PriceUnit      @default(per_night_unit)
   capacity_max      Int?
   has_banya         Boolean        @default(false)
@@ -166,6 +170,7 @@ model Place {
   leads        Lead[]
   events       Event[]
   payments     Payment[]
+  units        Unit[]
 
   @@index([status])
   @@index([owner_id])
@@ -174,18 +179,57 @@ model Place {
 
 /// Нет записи на дату — статус «неизвестно».
 model Availability {
-  place_id   String             @db.Uuid
-  date       DateTime           @db.Date
-  status     AvailabilityStatus
+  place_id      String             @db.Uuid
+  date          DateTime           @db.Date
+  status        AvailabilityStatus
   /// Цена за эту ночь, ₸ (праздники). null — обычная цена объекта.
-  price      Int?
-  updated_at DateTime           @default(now()) @updatedAt @db.Timestamptz(6)
+  price         Int?
+  /// У объекта с домиками: сколько гостей помещается в свободных домиках.
+  /// Строку тогда считает бэкенд из unit_availability (bot/units.ts).
+  free_capacity Int?
+  updated_at    DateTime           @default(now()) @updatedAt @db.Timestamptz(6)
 
   place Place @relation(fields: [place_id], references: [id], onDelete: Cascade)
 
   @@id([place_id, date])
   @@index([date])
   @@map("availability")
+}
+
+/// Домик или номер внутри объекта: своя вместимость, цены и занятость.
+model Unit {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  place_id      String   @db.Uuid
+  name_ru       String
+  name_kk       String?
+  capacity      Int
+  price_weekday Int?
+  price_weekend Int?
+  price_holiday Int?
+  /// Порядок в списке и в боте: меньше — выше.
+  sort_order    Int      @default(100)
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+
+  place        Place              @relation(fields: [place_id], references: [id], onDelete: Cascade)
+  availability UnitAvailability[]
+
+  @@index([place_id])
+  @@map("units")
+}
+
+/// Занятость домика на ночь. Нет записи — «неизвестно».
+model UnitAvailability {
+  unit_id    String             @db.Uuid
+  date       DateTime           @db.Date
+  status     AvailabilityStatus
+  price      Int?
+  updated_at DateTime           @default(now()) @updatedAt @db.Timestamptz(6)
+
+  unit Unit @relation(fields: [unit_id], references: [id], onDelete: Cascade)
+
+  @@id([unit_id, date])
+  @@index([date])
+  @@map("unit_availability")
 }
 
 model Lead {
@@ -234,20 +278,20 @@ model LeadRateLimit {
 
 /// SEO-подборка: сохранённый набор фильтров каталога + тексты ru/kk.
 model Collection {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  slug       String   @unique
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug       String    @unique
   title_ru   String
   title_kk   String?
   intro_ru   String?
   intro_kk   String?
-  filters    String   @default("")
+  filters    String    @default("")
   /// Подборка на одну ночь (Новый год): статусы и цены на эту дату.
   night      DateTime? @db.Date
   /// Порядок на главной и в списках: меньше — выше.
-  sort_order Int      @default(100)
-  published  Boolean  @default(true)
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+  sort_order Int       @default(100)
+  published  Boolean   @default(true)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
 
   @@map("collections")
 }

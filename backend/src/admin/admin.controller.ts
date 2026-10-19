@@ -15,10 +15,12 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AdminGuard } from '../auth/admin.guard';
+import { isUuid } from '../common/uuid';
 import { parseMonth } from '../shared/dates';
 import type { RawPlaceInput } from '../shared/places/validate';
 import { AdminService } from './admin.service';
 import { AdminPlacesService } from './places.service';
+import { AdminUnitsService } from './units.service';
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const uuid = new ParseUUIDPipe({
@@ -46,6 +48,7 @@ export class AdminController {
   constructor(
     private readonly admin: AdminService,
     private readonly places: AdminPlacesService,
+    private readonly units: AdminUnitsService,
   ) {}
 
   // ── Объекты ─────────────────────────────────────────────────────────────
@@ -90,11 +93,13 @@ export class AdminController {
     @Param('id', uuid) id: string,
     @Query('from') from?: string,
     @Query('to') to?: string,
+    @Query('unit') unit?: string,
   ) {
     return this.places.availability(
       id,
       isoDateParam(from, 'from'),
       isoDateParam(to, 'to'),
+      unit && isUuid(unit) ? unit : undefined,
     );
   }
 
@@ -102,9 +107,44 @@ export class AdminController {
   setAvailability(
     @Param('id', uuid) id: string,
     @Param('date') date: string,
-    @Body() body: { status?: unknown },
+    @Body() body: { status?: unknown; unit_id?: unknown },
   ) {
-    return this.places.setAvailability(id, date, body.status ?? null);
+    return this.places.setAvailability(
+      id,
+      date,
+      body.status ?? null,
+      isUuid(body.unit_id) ? body.unit_id : null,
+    );
+  }
+
+  // ── Домики ──────────────────────────────────────────────────────────────
+
+  @Get('places/:id/units')
+  placeUnits(@Param('id', uuid) id: string) {
+    return this.units.list(id);
+  }
+
+  @Post('places/:id/units')
+  @HttpCode(200)
+  createUnit(
+    @Param('id', uuid) id: string,
+    @Body() body: Record<string, unknown>,
+  ) {
+    return this.units.create(id, body);
+  }
+
+  @Patch('units/:id')
+  updateUnit(
+    @Param('id', uuid) id: string,
+    @Body() body: Record<string, unknown>,
+  ) {
+    return this.units.update(id, body);
+  }
+
+  @Delete('units/:id')
+  @HttpCode(204)
+  removeUnit(@Param('id', uuid) id: string) {
+    return this.units.remove(id);
   }
 
   @Get('places/:id/payments')

@@ -6,6 +6,7 @@ import {
   type DraftStatus,
   draftDates,
   encodeDraft,
+  type UnitIndex,
 } from './callbacks';
 import { BOT_TEXTS, type BotLang } from './texts';
 
@@ -33,6 +34,7 @@ export function languageKeyboard(): InlineKeyboard {
 /** 14 дней по две кнопки в ряд + «Готово». Черновик — в данных кнопок. */
 export function datesKeyboard(
   placeId: string,
+  unit: UnitIndex,
   start: IsoDate,
   statuses: DraftStatus[],
   lang: BotLang,
@@ -42,13 +44,29 @@ export function datesKeyboard(
   draftDates(start).forEach((date, index) => {
     keyboard.text(
       dayLabel(date, statuses[index], lang),
-      buildCallback({ kind: 'toggle', placeId, start, draft, index }),
+      buildCallback({ kind: 'toggle', placeId, unit, start, draft, index }),
     );
     if (index % 2 === 1) keyboard.row();
   });
   return keyboard.text(
     BOT_TEXTS[lang].done,
-    buildCallback({ kind: 'save', placeId, start, draft }),
+    buildCallback({ kind: 'save', placeId, unit, start, draft }),
+  );
+}
+
+/** Какой домик отмечать: каждый отдельно или все сразу. */
+export function unitsKeyboard(
+  placeId: string,
+  names: string[],
+  lang: BotLang,
+): InlineKeyboard {
+  const keyboard = new InlineKeyboard();
+  names.forEach((name, unit) => {
+    keyboard.text(name, buildCallback({ kind: 'unit', placeId, unit })).row();
+  });
+  return keyboard.text(
+    BOT_TEXTS[lang].allUnits,
+    buildCallback({ kind: 'unit', placeId, unit: null }),
   );
 }
 

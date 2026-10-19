@@ -1,6 +1,7 @@
 import type { Prisma } from '../generated/prisma/client';
 import { dbDateOrNull } from '../prisma/dates';
 import type { PlaceInput } from '../shared/places/validate';
+import { UNIT_ORDER } from '../units/units';
 
 /** Проверенные поля объекта → данные для Prisma (даты — в Date). */
 export function placeData(
@@ -13,6 +14,17 @@ export function placeData(
   };
 }
 
+/** Домик для сайта: вместимость и цены (цену и места на даты считает фронтенд). */
+export const UNIT_SELECT = {
+  id: true,
+  name_ru: true,
+  name_kk: true,
+  capacity: true,
+  price_weekday: true,
+  price_weekend: true,
+  price_holiday: true,
+} as const satisfies Prisma.UnitSelect;
+
 /** Поля для карточки в списке и маркера на карте. */
 export const CARD_SELECT = {
   id: true,
@@ -23,6 +35,9 @@ export const CARD_SELECT = {
   direction: true,
   drive_minutes: true,
   price_from: true,
+  price_weekday: true,
+  price_weekend: true,
+  price_holiday: true,
   price_unit: true,
   capacity_max: true,
   photos: true,
@@ -40,4 +55,5 @@ export const CARD_SELECT = {
   plan: true,
   pro_until: true,
   featured_until: true,
+  units: { select: UNIT_SELECT, orderBy: [...UNIT_ORDER] },
 } as const satisfies Prisma.PlaceSelect;

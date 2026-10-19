@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PaymentsSection } from "@/components/admin/PaymentsSection";
 import { PlaceForm } from "@/components/admin/PlaceForm";
+import { UnitsSection } from "@/components/admin/UnitsSection";
 import { requireAdminPage } from "@/lib/admin/auth";
 import { apiOrNull } from "@/lib/api/client";
 import type { Tables } from "@/lib/api/types";
@@ -21,9 +22,12 @@ export default async function EditPlacePage({
   const { saved } = await searchParams;
   if (!UUID.test(id)) notFound();
 
-  const [place, owners] = await Promise.all([
+  const [place, owners, units] = await Promise.all([
     apiOrNull<Tables<"places">>(`/admin/places/${id}`, { admin: true }),
     listOwners(),
+    apiOrNull<Tables<"units">[]>(`/admin/places/${id}/units`, {
+      admin: true,
+    }),
   ]);
   if (!place) notFound();
 
@@ -53,6 +57,7 @@ export default async function EditPlacePage({
       )}
       {/* key: после сохранения форма перечитывает свежие данные */}
       <PlaceForm key={place.updated_at} place={place} owners={owners} />
+      <UnitsSection placeId={place.id} units={units ?? []} />
       <PaymentsSection placeId={place.id} />
     </div>
   );

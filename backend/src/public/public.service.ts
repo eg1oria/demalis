@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { type Prisma, PrismaClient } from '../generated/prisma/client';
-import { CARD_SELECT } from '../common/place-data';
+import { CARD_SELECT, UNIT_SELECT } from '../common/place-data';
+import { UNIT_ORDER } from '../units/units';
 import { dbDate, isoDate } from '../prisma/dates';
 import { AMENITIES, type Amenity } from '../shared/places/constants';
 
@@ -84,7 +85,10 @@ export class PublicService {
   }
 
   placeBySlug(slug: string) {
-    return this.prisma.place.findFirst({ where: { ...PUBLISHED, slug } });
+    return this.prisma.place.findFirst({
+      where: { ...PUBLISHED, slug },
+      include: { units: { select: UNIT_SELECT, orderBy: [...UNIT_ORDER] } },
+    });
   }
 
   placeById(id: string) {
@@ -129,6 +133,39 @@ export class PublicService {
       this.lastUpdated(),
     ]);
     return { rows, freshness };
+  }
+
+  /**
+   * Занятость на несколько ночей (from..to включительно): строки объектов,
+   * строки домиков и свежесть. placeId — только один объект (его страница).
+   */
+  async nights(from: string, to: string, placeId?: string) {
+    const date = { gte: dbDate(from), lte: dbDate(to) };
+    const [rows, unitRows, freshness] = await Promise.all([
+      this.prisma.availability.findMany({
+        where: {
+          date,
+          place: PUBLISHED,
+          ...(placeId ? { place_id: placeId } : {}),
+        },
+        select: {
+          place_id: true,
+          date: true,
+          status: true,
+          price: true,
+          free_capacity: true,
+        },
+      }),
+      this.prisma.unitAvailability.findMany({
+        where: {
+          date,
+          unit: { place: PUBLISHED, ...(placeId ? { place_id: placeId } : {}) },
+        },
+        select: { unit_id: true, date: true, status: true, price: true },
+      }),
+      this.lastUpdated(placeId),
+    ]);
+    return { rows, unitRows, freshness };
   }
 
   /** Занятость объекта на период + когда владелец последний раз обновлял. */

@@ -17,6 +17,7 @@ import {
 import { PLAN_FEATURES } from '../shared/pricing';
 import { uniqueSlug } from '../shared/slug';
 import { PHOTO_PATH } from '../photos/photos.service';
+import { saveDays, syncCapacity } from '../units/units';
 
 export type ImportRowResult = {
   line: number;
@@ -148,6 +149,8 @@ export class AdminPlacesService {
             select: { id: true },
           })
         : await this.prisma.place.create({ data, select: { id: true } });
+      // С домиками вместимость объекта — сумма их мест, а не поле формы.
+      await syncCapacity(saved.id);
       return saved;
     } catch (e) {
       return {
@@ -206,16 +209,24 @@ export class AdminPlacesService {
     return results;
   }
 
-  async availability(id: string, from: string, to: string) {
+  /** Сетка занятости: объекта или одного домика (unitId). */
+  async availability(id: string, from: string, to: string, unitId?: string) {
     const place = await this.prisma.place.findUnique({
       where: { id },
       select: { id: true, name_ru: true },
     });
     if (!place) throw new NotFoundException({ error: 'Объект не найден' });
-    const rows = await this.prisma.availability.findMany({
-      where: { place_id: id, date: { gte: dbDate(from), lte: dbDate(to) } },
-      select: { date: true, status: true, updated_at: true },
-    });
+    const date = { gte: dbDate(from), lte: dbDate(to) };
+    const select = { date: true, status: true, updated_at: true } as const;
+    const rows = unitId
+      ? await this.prisma.unitAvailability.findMany({
+          where: { unit_id: unitId, unit: { place_id: id }, date },
+          select,
+        })
+      : await this.prisma.availability.findMany({
+          where: { place_id: id, date },
+          select,
+        });
     return { place, rows };
   }
 
@@ -223,6 +234,7 @@ export class AdminPlacesService {
     placeId: string,
     date: string,
     status: unknown,
+    unitId: string | null = null,
   ): Promise<{ error?: string; updatedAt?: Date }> {
     if (!nextDays(new Date(), AVAILABILITY_DAYS).includes(date))
       return { error: 'Дата вне диапазона 60 дней' };
@@ -231,24 +243,16 @@ export class AdminPlacesService {
       !(typeof status === 'string' && status in AVAILABILITY_STATUSES)
     )
       return { error: 'Неизвестный статус' };
-
-    const key = { place_id_date: { place_id: placeId, date: dbDate(date) } };
-    if (status === null) {
-      await this.prisma.availability.deleteMany({ where: key.place_id_date });
-      return {};
+    if (unitId) {
+      const unit = await this.prisma.unit.findFirst({
+        where: { id: unitId, place_id: placeId },
+        select: { id: true },
+      });
+      if (!unit) return { error: 'Домик не найден' };
     }
-    const now = new Date();
-    const row = await this.prisma.availability.upsert({
-      where: key,
-      create: {
-        place_id: placeId,
-        date: dbDate(date),
-        status: status as AvailabilityStatus,
-        updated_at: now,
-      },
-      update: { status: status as AvailabilityStatus, updated_at: now },
-      select: { updated_at: true },
-    });
-    return { updatedAt: row.updated_at };
+    await saveDays(placeId, unitId, [
+      { date, status: status as AvailabilityStatus | null },
+    ]);
+    return status === null ? {} : { updatedAt: new Date() };
   }
 }
