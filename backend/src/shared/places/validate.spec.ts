@@ -118,6 +118,21 @@ describe('validatePlaceInput', () => {
     }
   });
 
+  it('видео: только ссылки, которые можно встроить', () => {
+    expect(
+      validatePlaceInput({
+        ...base,
+        video_url: 'https://www.instagram.com/reel/C1a2B3c4D5e/',
+      }).ok,
+    ).toBe(true);
+    expect(
+      validatePlaceInput({
+        ...base,
+        video_url: 'https://vm.tiktok.com/ZMabc123/',
+      }).ok,
+    ).toBe(false);
+  });
+
   it('slug из формы проверяется', () => {
     const result = validatePlaceInput({ ...base, slug: 'Дом у реки' });
     expect(result.ok).toBe(false);

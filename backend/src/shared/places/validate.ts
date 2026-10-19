@@ -1,6 +1,7 @@
 // Копия frontend/src/lib/places/validate.ts — менять вместе.
 import { normalizeKzPhone } from '../phone';
 import { isValidSlug, slugify } from '../slug';
+import { parseVideo } from '../video';
 import {
   AMENITIES,
   type Amenity,
@@ -166,6 +167,16 @@ export function validatePlaceInput(raw: RawPlaceInput): ValidationResult {
     return fail(field, 'нужна ссылка, начинающаяся с https://');
   };
 
+  /** Видео встраивается на страницу, поэтому ссылка должна разбираться. */
+  const video = (): string | null => {
+    const value = url('video_url');
+    if (!value || parseVideo(value)) return value;
+    return fail(
+      'video_url',
+      'нужна ссылка на Reels, TikTok (tiktok.com/@…/video/…) или YouTube',
+    );
+  };
+
   const instagram = (): string | null => {
     const value = text('instagram_url');
     if (value && /^@[\w.]+$/.test(value))
@@ -237,7 +248,7 @@ export function validatePlaceInput(raw: RawPlaceInput): ValidationResult {
     description_kk: text('description_kk'),
     whatsapp_phone,
     instagram_url: instagram(),
-    video_url: url('video_url'),
+    video_url: video(),
     status: oneOf('status', PLACE_STATUSES, 'draft'),
     plan: oneOf('plan', PLANS, 'free'),
     pro_until: date('pro_until'),

@@ -19,6 +19,7 @@
     "db:reset": "prisma migrate reset",
     "db:studio": "prisma studio",
     "seed": "tsx scripts/seed.ts",
+    "demo": "tsx scripts/demo.ts",
     "bot:webhook": "tsx scripts/set-webhook.ts",
     "lint": "oxlint --type-aware src/ test/",
     "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",

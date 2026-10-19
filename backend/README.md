@@ -33,6 +33,7 @@ npm run start:dev             # http://localhost:4000
 | `npm run db:reset`    | Пересоздать базу из миграций (данные стираются)              |
 | `npm run db:studio`   | Просмотр базы в браузере (Prisma Studio)                     |
 | `npm run seed`        | Тестовые объекты `[ТЕСТ]`                                    |
+| `npm run demo`        | Демо поверх `[ТЕСТ]`: видео, отзывы (ничего не удаляет)      |
 | `npm run bot:webhook` | Подключить Telegram-бота к `PUBLIC_API_URL/telegram/webhook` |
 
 ## Устройство

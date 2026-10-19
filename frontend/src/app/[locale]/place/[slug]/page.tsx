@@ -26,6 +26,7 @@ import { LeadForm } from "@/components/place/LeadForm";
 import { ShareButton } from "@/components/place/ShareButton";
 import { StatusBlock } from "@/components/place/StatusBlock";
 import { TrackedPhoneLink } from "@/components/place/TrackedPhoneLink";
+import { VideoEmbed } from "@/components/place/VideoEmbed";
 import { ViewTracker } from "@/components/place/ViewTracker";
 import type { Locale } from "@/i18n/routing";
 import { parseFilters } from "@/lib/catalog/filters";
@@ -62,6 +63,7 @@ import {
   lodgingJsonLd,
   pageMetadata,
 } from "@/lib/seo";
+import { parseVideo } from "@/lib/video";
 import { formatStay, resolveWhen } from "@/lib/when";
 
 type Props = PageProps<"/[locale]/place/[slug]">;
@@ -188,6 +190,9 @@ export default async function PlacePage({ params, searchParams }: Props) {
   const description = placeDescription(place, currentLocale);
   const photos = visiblePhotos(place, features.photos).map(photoUrl);
   const amenities = placeAmenities(place);
+  // Видео — в тарифе Pro. Ссылку, которую нельзя встроить, показываем кнопкой.
+  const videoUrl = features.video ? place.video_url : null;
+  const video = parseVideo(videoUrl);
 
   const drive = (minutes: number) => {
     const { h, m } = splitMinutes(minutes);
@@ -466,6 +471,19 @@ export default async function PlacePage({ params, searchParams }: Props) {
               </section>
             )}
 
+            {video && (
+              <section className={section}>
+                <h2 className={h2}>{t("videoSection")}</h2>
+                <div className="mt-5">
+                  <VideoEmbed
+                    video={video}
+                    fallbackPoster={photos[0]}
+                    title={name}
+                  />
+                </div>
+              </section>
+            )}
+
             {features.availability && (
               <section className={section}>
                 <div className="flex items-baseline justify-between gap-3">
@@ -542,9 +560,9 @@ export default async function PlacePage({ params, searchParams }: Props) {
                     {t("instagram")}
                   </TrackedLink>
                 )}
-                {features.video && place.video_url && (
+                {videoUrl && !video && (
                   <a
-                    href={place.video_url}
+                    href={videoUrl}
                     target="_blank"
                     rel="noopener"
                     className={contactClass}

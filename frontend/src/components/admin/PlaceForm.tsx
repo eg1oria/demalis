@@ -216,7 +216,14 @@ export function PlaceForm({
           required: true,
         })}
         {text("instagram_url", "Instagram (ссылка или @ник)")}
-        {text("video_url", "Видео (Reels / TikTok / YouTube)", { type: "url" })}
+        {text(
+          "video_url",
+          "Видео (Reels / TikTok / YouTube) — на странице с Pro",
+          {
+            type: "url",
+            placeholder: "https://www.instagram.com/reel/…",
+          },
+        )}
       </Section>
 
       <Section title="Фото">

@@ -18,6 +18,7 @@ import {
 } from '../src/shared/places/constants';
 import type { PlaceInput } from '../src/shared/places/validate';
 import { slugify } from '../src/shared/slug';
+import { DEMO_VIDEOS } from './demo-data';
 
 type Seed = Partial<PlaceInput> &
   Pick<
@@ -89,7 +90,10 @@ async function main() {
   const places = [];
   for (const [i, p] of PLACES.entries()) {
     const name_ru = `[ТЕСТ] ${p.name_ru}`;
-    const pro = PRO.has(p.name_ru);
+    const slug = slugify(name_ru);
+    // Объект с видео — Pro: видео на странице есть только в этом тарифе.
+    const video_url = DEMO_VIDEOS[slug] ?? null;
+    const pro = PRO.has(p.name_ru) || video_url !== null;
     places.push(
       await prisma.place.create({
         data: {
@@ -99,7 +103,8 @@ async function main() {
           pro_until: pro ? dbDate(inDays(60)) : null,
           featured_until: FEATURED.has(p.name_ru) ? dbDate(inDays(30)) : null,
           name_ru,
-          slug: slugify(name_ru),
+          slug,
+          video_url,
           whatsapp_phone: `+7701000${String(i + 1).padStart(4, '0')}`,
           address_text: 'Тестовый адрес',
           description_ru: 'Тестовый объект для проверки сайта. Не настоящий.',
