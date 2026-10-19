@@ -1,0 +1,58 @@
+# Сборка
+/dist
+/build
+/tmp
+/out-tsc
+*.tsbuildinfo
+
+# Зависимости
+node_modules/
+
+# Переменные окружения
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.test
+!.env.example
+
+# Логи
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Тесты и покрытие
+/coverage
+/.nyc_output
+.jest-cache/
+
+# IDE
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# ОС
+.DS_Store
+Thumbs.db
+
+# Кэш
+.cache/
+.eslintcache
+.temp/
+
+# Загружаемые файлы (если храните локально)
+/uploads
