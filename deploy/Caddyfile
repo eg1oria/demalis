@@ -1,0 +1,5 @@
+# https для бэкенда: Caddy сам получает и продлевает сертификат Let's Encrypt.
+# Адрес берётся из PUBLIC_API_URL в backend/.env (например https://api.example.kz).
+{$PUBLIC_API_URL:localhost}
+
+reverse_proxy backend:4000

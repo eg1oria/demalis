@@ -59,4 +59,23 @@ scripts/                   seed, webhook бота, импорт из Supabase
 
 ## Сервер
 
-Бэкенду нужен постоянно работающий процесс и диск для `uploads/` (Vercel для этого не подходит): VPS с Docker, Railway, Render и т. п. Перед запуском — `npm run db:deploy`. Если запущено несколько экземпляров, ежедневные задачи оставь только на одном (`CRON_ENABLED=false` на остальных).
+Бэкенду нужен постоянно работающий процесс и диск для `uploads/` (Vercel для этого не подходит) — VPS с Docker. Пошаговая инструкция для владельца — `frontend/docs/SETUP.md`, раздел 1.
+
+```
+Dockerfile                    образ: npm ci → prisma generate → nest build; запуск node dist/main
+../docker-compose.prod.yml    postgres:17 + бэкенд + Caddy (https), настройки — из backend/.env
+../deploy/Caddyfile           Caddy проксирует PUBLIC_API_URL → backend:4000, сам выпускает сертификат
+```
+
+```bash
+# на сервере, в корне репозитория
+docker compose -f docker-compose.prod.yml up -d --build    # первый запуск и каждое обновление
+docker compose -f docker-compose.prod.yml logs -f backend  # логи
+curl http://127.0.0.1:4000/health                          # {"ok":true}
+```
+
+- Миграции (`prisma migrate deploy`) образ применяет сам при каждом старте.
+- Тома: `postgres-data` — база, `uploads` — фото, `caddy-data` — сертификаты. Порт базы наружу не открыт; бэкенд опубликован только на `127.0.0.1:4000`, снаружи — через Caddy (80/443).
+- В образе `NODE_ENV=production`: «Войти без письма» отключён.
+- В образе нет `tsx` и dev-зависимостей, поэтому `npm run seed` и `import:supabase` там не работают. Webhook бота: `docker compose -f docker-compose.prod.yml exec backend node --no-warnings scripts/set-webhook.ts`.
+- Если запущено несколько экземпляров, ежедневные задачи оставь только на одном (`CRON_ENABLED=false` на остальных).

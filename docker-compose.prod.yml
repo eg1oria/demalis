@@ -1,0 +1,79 @@
+# Бэкенд на сервере: база, API и https. Пошагово — frontend/docs/SETUP.md, раздел 1.
+# Запуск (из корня репозитория): docker compose -f docker-compose.prod.yml up -d --build
+# Все настройки — в backend/.env (шаблон backend/.env.example).
+name: demalis-prod
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    # Отсюда берётся POSTGRES_PASSWORD (тот же, что в DATABASE_URL).
+    env_file: backend/.env
+    environment:
+      POSTGRES_USER: demalis
+      POSTGRES_DB: demalis
+    # Порт наружу не публикуется: база видна только бэкенду.
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U demalis -d demalis"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    logging: *logging
+
+  backend:
+    build: backend
+    restart: unless-stopped
+    env_file: backend/.env
+    environment:
+      # Запросы приходят через Caddy — IP посетителя из X-Forwarded-For.
+      TRUST_PROXY: "1"
+      UPLOADS_DIR: /app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - uploads:/app/uploads
+    # Только для проверок с самого сервера: curl http://127.0.0.1:4000/health
+    ports:
+      - "127.0.0.1:4000:4000"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:4000/health').then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+    logging: *logging
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    env_file: backend/.env
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    logging: *logging
+
+volumes:
+  postgres-data:
+  uploads:
+  caddy-data:
+  caddy-config:

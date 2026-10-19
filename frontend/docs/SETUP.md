@@ -8,29 +8,73 @@
 
 ## 1. Бэкенд (база данных, вход в админку, хранение фото)
 
-Бэкенду нужен постоянно работающий сервер с диском: фото лежат в папке `uploads/`, а бот и ежедневные задачи работают внутри процесса. Vercel для этого не подходит. Подойдёт VPS (например, PS.kz, Hoster.kz, Hetzner) с Docker или сервисы вроде Railway / Render с постоянным диском.
+Бэкенду нужен постоянно работающий сервер с диском: фото лежат в папке `uploads/`, а бот и ежедневные задачи работают внутри процесса. Vercel для этого не подходит. Бэкенд запускается в Docker одной командой: база PostgreSQL 17, сам бэкенд и Caddy (выдаёт https-сертификат) — всё описано в `docker-compose.prod.yml`.
 
-1. **PostgreSQL 17.** На VPS — контейнер `postgres:17` (как в `docker-compose.yml`) или управляемая база у хостинга. Строка подключения → `DATABASE_URL`.
-2. **Почта для входа в админку.** Нужен SMTP: бесплатный тариф [Resend](https://resend.com) или [Brevo](https://www.brevo.com) подойдёт. Строка вида `smtps://логин:пароль@smtp.сервис:465` → `SMTP_URL`, адрес отправителя → `MAIL_FROM`.
-3. **Секреты.** Сгенерируй три длинные случайные строки (`openssl rand -hex 32`) → `JWT_SECRET`, `RATE_LIMIT_SECRET`, `INTERNAL_API_SECRET`. Последний впиши и на Vercel (раздел 2).
-4. **Остальное** — по `backend/.env.example`: `SITE_URL` (адрес сайта), `PUBLIC_API_URL` (https-адрес бэкенда, например `https://api.<домен>`), `ADMIN_EMAILS` (email админов через запятую).
-5. **Запуск:**
+**1. Сервер.** VPS с Ubuntu 24.04, от 2 ГБ памяти и 20 ГБ диска. Сервер лучше взять в Казахстане (например, PS.kz, Hoster.kz): по закону РК персональные данные — имена и телефоны из заявок — хранятся на территории страны. Хостинг пришлёт IP-адрес и пароль `root`. Подключись (`ssh root@<IP>`) и поставь Docker:
 
 ```bash
-cd backend
-npm ci
-npm run build
-npm run db:deploy      # таблицы в базе (и после каждого обновления)
-npm run start:prod     # слушает PORT (по умолчанию 4000)
+curl -fsSL https://get.docker.com | sh
 ```
 
-Перед бэкендом поставь nginx/Caddy с https и включи `TRUST_PROXY=1`. Папку `uploads/` (или `UPLOADS_DIR`) не забудь включить в резервные копии вместе с базой.
+Если у хостинга есть файрвол, открой порты 22, 80 и 443.
+
+**2. Домен.** В панели регистратора домена добавь A-запись `api` → IP сервера. Адрес бэкенда будет `https://api.<домен>`. Подожди, пока `ping api.<домен>` начнёт показывать этот IP (обычно минуты, иногда до суток).
+
+**3. Почта для входа в админку.** Нужен SMTP: бесплатный тариф [Resend](https://resend.com) или [Brevo](https://www.brevo.com) подойдёт. Строка вида `smtps://логин:пароль@smtp.сервис:465` → `SMTP_URL`, адрес отправителя → `MAIL_FROM`.
+
+**4. Код и настройки.** На сервере:
+
+```bash
+git clone https://github.com/<аккаунт>/demalis.git   # приватный репозиторий: GitHub попросит логин и токен
+cd demalis
+cp backend/.env.example backend/.env
+nano backend/.env
+```
+
+Что вписать в `backend/.env` (случайные строки — `openssl rand -hex 32`, выполни команду несколько раз):
+
+- `POSTGRES_PASSWORD` — пароль базы (`openssl rand -hex 24`), и он же в `DATABASE_URL=postgresql://demalis:<пароль>@postgres:5432/demalis`;
+- `JWT_SECRET`, `RATE_LIMIT_SECRET`, `INTERNAL_API_SECRET` — три разные случайные строки; `INTERNAL_API_SECRET` впиши и на Vercel (раздел 2);
+- `SITE_URL` — адрес сайта, `PUBLIC_API_URL` — `https://api.<домен>`, `ADMIN_EMAILS` — email админов через запятую;
+- `SMTP_URL`, `MAIL_FROM` — из п. 3;
+- Telegram и `CRON_SECRET` — по разделам 2а–2б (можно позже).
+
+**5. Запуск:**
+
+```bash
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+Первая сборка занимает несколько минут. Таблицы в базе создаются сами при старте. Проверка: `https://api.<домен>/health` в браузере отвечает `{"ok":true}`. Если нет — смотри логи: `docker compose -f docker-compose.prod.yml logs backend caddy`.
+
+**6. Telegram-бот** (когда заполнены ключи из разделов 2а–2б):
+
+```bash
+docker compose -f docker-compose.prod.yml exec backend node --no-warnings scripts/set-webhook.ts
+```
+
+**Обновление** после изменений в коде:
+
+```bash
+cd demalis
+git pull
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+После правки `backend/.env` — та же команда `up -d` (без `git pull`).
+
+**Резервные копии** базы и фото (храни копии не только на этом сервере):
+
+```bash
+docker compose -f docker-compose.prod.yml exec -T postgres pg_dump -U demalis demalis | gzip > db-$(date +%F).sql.gz
+docker compose -f docker-compose.prod.yml cp backend:/app/uploads ./uploads-$(date +%F)
+```
 
 > ⚠️ **`JWT_SECRET` даёт вход в админку.** Никому не показывай, не добавляй префикс `NEXT_PUBLIC_`.
 >
 > Кнопка «Войти без письма» работает только при локальной разработке (`npm run dev` и бэкенд на этом компьютере). На сервере вход — только по ссылке из письма.
 
-Тестовые объекты можно залить командой `npm run seed` в `backend/`. Удаляются они повторным запуском или вручную (у всех в названии `[ТЕСТ]`).
+Тестовые объекты `[ТЕСТ]` (`npm run seed` в `backend/`) заливаются только локально — на сервер они не попадают.
 
 ---
 
@@ -98,21 +142,21 @@ https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook?url=<PUBLIC_API_URL>
 
 ## Куда какой ключ
 
-| Переменная                        | Где           | Где взять                                     | Этап |
-| --------------------------------- | ------------- | --------------------------------------------- | ---- |
-| `NEXT_PUBLIC_SITE_NAME`           | сайт          | Название сайта, по умолчанию «Демалыс»        | 0    |
-| `API_URL`, `NEXT_PUBLIC_API_URL`  | сайт          | Адрес бэкенда, см. раздел 1                   | 12   |
-| `INTERNAL_API_SECRET`             | сайт и бэкенд | Одна и та же случайная строка, см. раздел 1   | 12   |
-| `ADMIN_EMAILS`                    | сайт и бэкенд | Твои email через запятую                      | 1    |
-| `DATABASE_URL`                    | бэкенд        | PostgreSQL, см. раздел 1                      | 12   |
-| `JWT_SECRET`, `RATE_LIMIT_SECRET` | бэкенд        | Случайные строки, см. раздел 1                | 12   |
-| `SMTP_URL`, `MAIL_FROM`           | бэкенд        | Почтовый сервис, см. раздел 1                 | 12   |
-| `SITE_URL`, `PUBLIC_API_URL`      | бэкенд        | Адреса сайта и бэкенда                        | 12   |
-| `TELEGRAM_BOT_TOKEN`              | бэкенд        | @BotFather в Telegram, см. раздел 2а          | 4–5  |
-| `TELEGRAM_WEBHOOK_SECRET`         | бэкенд        | Любая длинная случайная строка, см. раздел 2б | 5    |
-| `CRON_SECRET`                     | бэкенд        | Любая длинная случайная строка, см. раздел 2б | 5    |
-| `ADMIN_TELEGRAM_CHAT_ID`          | бэкенд        | См. раздел 2а                                 | 4    |
-| `NEXT_PUBLIC_SITE_URL`            | сайт          | Адрес сайта на Vercel или свой домен          | 6    |
-| `NEXT_PUBLIC_YANDEX_METRIKA_ID`   | сайт          | Яндекс Метрика, см. `docs/SEO.md`             | 6    |
-| `YANDEX_VERIFICATION`             | сайт          | Яндекс Вебмастер, см. `docs/SEO.md`           | 6    |
-| `GOOGLE_SITE_VERIFICATION`        | сайт          | Google Search Console, см. `docs/SEO.md`      | 6    |
+| Переменная                          | Где           | Где взять                                     | Этап |
+| ----------------------------------- | ------------- | --------------------------------------------- | ---- |
+| `NEXT_PUBLIC_SITE_NAME`             | сайт          | Название сайта, по умолчанию «Демалыс»        | 0    |
+| `API_URL`, `NEXT_PUBLIC_API_URL`    | сайт          | Адрес бэкенда, см. раздел 1                   | 12   |
+| `INTERNAL_API_SECRET`               | сайт и бэкенд | Одна и та же случайная строка, см. раздел 1   | 12   |
+| `ADMIN_EMAILS`                      | сайт и бэкенд | Твои email через запятую                      | 1    |
+| `DATABASE_URL`, `POSTGRES_PASSWORD` | бэкенд        | Пароль базы, см. раздел 1                     | 12   |
+| `JWT_SECRET`, `RATE_LIMIT_SECRET`   | бэкенд        | Случайные строки, см. раздел 1                | 12   |
+| `SMTP_URL`, `MAIL_FROM`             | бэкенд        | Почтовый сервис, см. раздел 1                 | 12   |
+| `SITE_URL`, `PUBLIC_API_URL`        | бэкенд        | Адреса сайта и бэкенда                        | 12   |
+| `TELEGRAM_BOT_TOKEN`                | бэкенд        | @BotFather в Telegram, см. раздел 2а          | 4–5  |
+| `TELEGRAM_WEBHOOK_SECRET`           | бэкенд        | Любая длинная случайная строка, см. раздел 2б | 5    |
+| `CRON_SECRET`                       | бэкенд        | Любая длинная случайная строка, см. раздел 2б | 5    |
+| `ADMIN_TELEGRAM_CHAT_ID`            | бэкенд        | См. раздел 2а                                 | 4    |
+| `NEXT_PUBLIC_SITE_URL`              | сайт          | Адрес сайта на Vercel или свой домен          | 6    |
+| `NEXT_PUBLIC_YANDEX_METRIKA_ID`     | сайт          | Яндекс Метрика, см. `docs/SEO.md`             | 6    |
+| `YANDEX_VERIFICATION`               | сайт          | Яндекс Вебмастер, см. `docs/SEO.md`           | 6    |
+| `GOOGLE_SITE_VERIFICATION`          | сайт          | Google Search Console, см. `docs/SEO.md`      | 6    |
