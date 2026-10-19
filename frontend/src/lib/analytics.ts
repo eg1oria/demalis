@@ -9,6 +9,7 @@ export type AnalyticsEvent =
   | "click_call" // «Позвонить» владельцу
   | "click_instagram"
   | "owner_request" // владелец отправил форму «Добавить объект»
+  | "group_request" // «Подберём за вас» для компании от 15 человек
   | "contact_whatsapp" // страница «Контакты»
   | "contact_telegram"
   | "contact_email"

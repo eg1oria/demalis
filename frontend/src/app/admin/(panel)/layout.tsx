@@ -50,6 +50,12 @@ export default async function PanelLayout({ children }: LayoutProps<"/admin">) {
               Заявки
             </Link>
             <Link
+              href="/admin/groups"
+              className="flex h-11 items-center px-2 whitespace-nowrap"
+            >
+              Подбор
+            </Link>
+            <Link
               href="/admin/stats"
               className="flex h-11 items-center px-2 whitespace-nowrap"
             >

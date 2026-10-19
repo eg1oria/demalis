@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
 import { Header } from "@/components/Header";
 import { CollectionTiles } from "@/components/site/CollectionTiles";
+import { GroupBlock } from "@/components/site/GroupBlock";
 import { OwnersBlock } from "@/components/site/OwnersBlock";
 import { PlaceCard } from "@/components/site/PlaceCard";
 import { QuickChips } from "@/components/site/QuickChips";
@@ -144,6 +145,10 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
             </div>
           </section>
         )}
+
+        <section className={`${container} mt-16 md:mt-24`}>
+          <GroupBlock today={toIsoDate(almatyToday(now))} />
+        </section>
 
         <section className={`${container} mt-16 md:mt-24`}>
           <OwnersBlock />

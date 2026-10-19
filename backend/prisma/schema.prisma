@@ -98,6 +98,26 @@ enum PaymentKind {
   @@map("payment_kind")
 }
 
+/// Повод заявки «Подберём за вас».
+enum GroupOccasion {
+  corporate
+  birthday
+  wedding
+  other
+
+  @@map("group_occasion")
+}
+
+enum GroupStatus {
+  new
+  in_progress
+  offered
+  won
+  lost
+
+  @@map("group_status")
+}
+
 // ── Таблицы ───────────────────────────────────────────────────────────────
 
 model Owner {
@@ -324,4 +344,29 @@ model LoginToken {
 
   @@index([email, created_at])
   @@map("login_tokens")
+}
+
+/// «Подберём за вас»: большая компания (15+), варианты подбирает админ.
+model GroupRequest {
+  id         String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String
+  phone      String
+  occasion   GroupOccasion
+  guests     Int
+  /// Даты могут быть ещё не решены.
+  date_from  DateTime?       @db.Date
+  date_to    DateTime?       @db.Date
+  /// Бюджет на всю компанию, ₸.
+  budget     Int?
+  /// null — любое направление.
+  direction  PlaceDirection?
+  /// Пожелания — ключи удобств (has_banya, has_pool…).
+  amenities  String[]        @default([])
+  comment    String?
+  status     GroupStatus     @default(new)
+  admin_note String?
+  created_at DateTime        @default(now()) @db.Timestamptz(6)
+
+  @@index([created_at])
+  @@map("group_requests")
 }

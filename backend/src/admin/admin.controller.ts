@@ -256,6 +256,25 @@ export class AdminController {
     return this.admin.updateLead(id, body);
   }
 
+  // ── Подбор для компаний ─────────────────────────────────────────────────
+
+  @Get('group-requests')
+  groupRequests(
+    @Query('status') status?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const take = Math.min(Math.max(Number(limit) || 200, 1), 1000);
+    return this.admin.groupRequests(status, take);
+  }
+
+  @Patch('group-requests/:id')
+  updateGroupRequest(
+    @Param('id', uuid) id: string,
+    @Body() body: { status?: unknown; admin_note?: unknown },
+  ) {
+    return this.admin.updateGroupRequest(id, body);
+  }
+
   // ── Подборки ────────────────────────────────────────────────────────────
 
   @Get('collections')

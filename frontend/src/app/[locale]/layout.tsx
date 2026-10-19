@@ -33,6 +33,7 @@ const CLIENT_NAMESPACES = [
   "LeadForm",
   "Collections",
   "OwnerForm",
+  "GroupForm",
   "Plans",
   "Favorites",
   "Consent",

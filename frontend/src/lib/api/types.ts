@@ -5,6 +5,8 @@
 export type DbEnums = {
   availability_status: "free" | "limited" | "full";
   event_type: "view" | "whatsapp_click" | "phone_click" | "instagram_click";
+  group_occasion: "corporate" | "birthday" | "wedding" | "other";
+  group_status: "new" | "in_progress" | "offered" | "won" | "lost";
   lead_status:
     "new" | "sent_to_owner" | "confirmed" | "cancelled" | "no_answer";
   payment_kind:
@@ -59,6 +61,22 @@ export type DbTables = {
     id: number;
     place_id: string;
     type: Enums<"event_type">;
+  };
+  group_requests: {
+    admin_note: string | null;
+    amenities: string[];
+    budget: number | null;
+    comment: string | null;
+    created_at: string;
+    date_from: string | null;
+    date_to: string | null;
+    direction: Enums<"place_direction"> | null;
+    guests: number;
+    id: string;
+    name: string;
+    occasion: Enums<"group_occasion">;
+    phone: string;
+    status: Enums<"group_status">;
   };
   leads: {
     billable: boolean;

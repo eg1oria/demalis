@@ -28,6 +28,7 @@ import {
   AVAILABILITY_STATUSES,
   type AvailabilityStatus,
 } from '../shared/places/constants';
+import { GROUP_STATUSES } from '../shared/groups/validate';
 import { LEAD_STATUSES } from '../shared/leads/constants';
 import { validatePayment } from '../shared/payments/validate';
 import { normalizeKzPhone } from '../shared/phone';
@@ -196,6 +197,40 @@ export class AdminService {
     if (typeof body.billable === 'boolean') data.billable = body.billable;
     if (Object.keys(data).length === 0) return { error: 'Нечего менять' };
     await this.prisma.lead.update({ where: { id }, data });
+    return {};
+  }
+
+  // ── Подбор для компаний ─────────────────────────────────────────────────
+
+  groupRequests(status: string | undefined, limit: number) {
+    return this.prisma.groupRequest.findMany({
+      where:
+        status && status in GROUP_STATUSES
+          ? { status: status as keyof typeof GROUP_STATUSES }
+          : {},
+      orderBy: { created_at: 'desc' },
+      take: limit,
+    });
+  }
+
+  async updateGroupRequest(
+    id: string,
+    body: { status?: unknown; admin_note?: unknown },
+  ) {
+    const data: Prisma.GroupRequestUpdateInput = {};
+    if (typeof body.status === 'string' && body.status in GROUP_STATUSES)
+      data.status = body.status as keyof typeof GROUP_STATUSES;
+    if (typeof body.admin_note === 'string') {
+      const note = body.admin_note.trim();
+      if (note.length > 2000) return { error: 'Заметка — до 2000 символов' };
+      data.admin_note = note || null;
+    }
+    if (Object.keys(data).length === 0) return { error: 'Нечего менять' };
+    const { count } = await this.prisma.groupRequest.updateMany({
+      where: { id },
+      data,
+    });
+    if (!count) throw new NotFoundException({ error: 'Не найдено' });
     return {};
   }
 

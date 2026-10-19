@@ -7,7 +7,7 @@ import { createHmac } from 'node:crypto';
 export function rateLimitKey(
   ip: string,
   secret: string,
-  scope: 'lead' | 'owner' = 'lead',
+  scope: 'lead' | 'owner' | 'group' | 'review' = 'lead',
 ): string {
   return createHmac('sha256', secret).update(`${scope}:${ip}`).digest('hex');
 }

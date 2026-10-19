@@ -5,7 +5,7 @@ import { runInBackground } from '../common/notify';
 import { hitRateLimit } from '../common/rate-limit';
 import { siteUrl } from '../common/site';
 import { notifyOwnerAboutLead } from '../bot/notify';
-import { dbDate } from '../prisma/dates';
+import { dbDate, dbDateOrNull } from '../prisma/dates';
 import { almatyToday, toIsoDate } from '../shared/dates';
 import { HONEYPOT_FIELD, LEAD_RATE_LIMIT } from '../shared/leads/constants';
 import { leadTelegramMessage } from '../shared/leads/message';
@@ -15,6 +15,12 @@ import {
   type RawLeadInput,
   validateLead,
 } from '../shared/leads/validate';
+import { groupRequestTelegramMessage } from '../shared/groups/message';
+import {
+  type GroupErrorCode,
+  type GroupField,
+  validateGroupRequest,
+} from '../shared/groups/validate';
 import { ownerRequestTelegramMessage } from '../shared/owners/message';
 import {
   type OwnerRequestError,
@@ -46,6 +52,14 @@ export type OwnerRequestResult =
     }
   | { status: 'sent' };
 
+export type GroupRequestResult =
+  | {
+      status: 'error';
+      errors?: Partial<Record<GroupField, GroupErrorCode>>;
+      form?: 'rateLimit' | 'server';
+    }
+  | { status: 'sent' };
+
 const LEAD_FIELDS: LeadField[] = [
   'name',
   'phone',
@@ -61,6 +75,20 @@ const OWNER_FIELDS: OwnerRequestField[] = [
   'instagram',
   'direction',
   'type',
+  'consent',
+];
+
+const GROUP_FIELDS: GroupField[] = [
+  'name',
+  'phone',
+  'occasion',
+  'guests',
+  'dateFrom',
+  'dateTo',
+  'budget',
+  'direction',
+  'amenities',
+  'comment',
   'consent',
 ];
 
@@ -80,7 +108,7 @@ function rateSecret(): string {
   return secret;
 }
 
-/** Формы с сайта: заявка гостя и заявка владельца «Добавить объект». */
+/** Формы с сайта: заявка гостя, «Подберём за вас» и заявка владельца «Добавить объект». */
 @Injectable()
 export class FormsService {
   constructor(private readonly prisma: PrismaClient) {}
@@ -147,6 +175,50 @@ export class FormsService {
       dates: { checkIn: lead.date_from, checkOut: lead.date_to },
       guests: lead.guests,
     };
+  }
+
+  /** «Подберём за вас»: сохраняем заявку большой компании и пишем админу. */
+  async submitGroupRequest(
+    body: Record<string, unknown>,
+    ip: string,
+  ): Promise<GroupRequestResult> {
+    if (str(body[HONEYPOT_FIELD]).trim()) return { status: 'sent' };
+
+    const result = validateGroupRequest(
+      pick(body, GROUP_FIELDS),
+      toIsoDate(almatyToday(new Date())),
+    );
+    if (!result.ok) return { status: 'error', errors: result.errors };
+    const request = result.data;
+
+    const allowed = await hitRateLimit(
+      this.prisma,
+      rateLimitKey(ip, rateSecret(), 'group'),
+      LEAD_RATE_LIMIT.max,
+      LEAD_RATE_LIMIT.window,
+    );
+    if (!allowed) return { status: 'error', form: 'rateLimit' };
+
+    await this.prisma.groupRequest.create({
+      data: {
+        ...request,
+        date_from: dbDateOrNull(request.date_from),
+        date_to: dbDateOrNull(request.date_to),
+      },
+      select: { id: true },
+    });
+
+    runInBackground('submitGroupRequest telegram', () => {
+      const site = siteUrl();
+      return sendTelegramMessage(
+        process.env.ADMIN_TELEGRAM_CHAT_ID,
+        groupRequestTelegramMessage(
+          request,
+          site ? `${site}/admin/groups` : null,
+        ),
+      );
+    });
+    return { status: 'sent' };
   }
 
   /** Свободный slug: занятые с тем же началом + «-2», «-3»… */

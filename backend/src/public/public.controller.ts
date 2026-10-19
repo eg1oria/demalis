@@ -136,6 +136,12 @@ export class PublicController {
     return this.forms.submitLead(body, clientIp(req));
   }
 
+  @Post('group-requests')
+  @HttpCode(200)
+  groupRequest(@Body() body: Record<string, unknown>, @Req() req: Request) {
+    return this.forms.submitGroupRequest(body, clientIp(req));
+  }
+
   @Post('owner-requests')
   @HttpCode(200)
   ownerRequest(@Body() body: Record<string, unknown>, @Req() req: Request) {
