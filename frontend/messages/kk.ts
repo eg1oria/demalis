@@ -157,6 +157,7 @@ const kk: Messages = {
     hoursMinutes: "{h} сағ {m} мин",
     priceFrom: "{price} бастап",
     priceFromRich: "<b>{price}</b> <muted>бастап</muted>",
+    nightPriceRich: "<muted>{date}</muted> <b>{price}</b>",
     perNight: "/ түн",
     perPerson: "/ адам",
     unit_per_night_unit: "бір үй не бөлме үшін, бір түн",
@@ -253,6 +254,11 @@ const kk: Messages = {
       "20 фотоға дейін және бейне|Орын тексерілгеннен кейін «Тексерілген» белгісі|Боттағы статистика және еске салулар",
     plan_promo: "Жарнамалау",
     plan_promo_features: "Каталог пен іріктемелердің басында|«Жарнама» белгісі",
+    // TODO: проверить носителю
+    plan_promo_holiday: "Мерекелік жарнамалау",
+    // TODO: проверить носителю
+    plan_promo_holiday_features:
+      "Жаңа жыл және басқа мерекелер|Мерекелік іріктемелер мен каталогтың басында|«Жарнама» белгісі",
     plan_video: "Бейне шолу",
     plan_video_features:
       "Орныңыз туралы бейне түсіру|Сайтта және әлеуметтік желілерде жариялау",

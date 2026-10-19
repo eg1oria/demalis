@@ -49,6 +49,8 @@ export type PlaceCardData = Pick<
 > & {
   /** Статус на выбранную ночь; нет — даты не выбраны. */
   status?: DisplayStatus;
+  /** Цена владельца за выбранную ночь (праздники), если на неё есть места. */
+  nightPrice?: { night: IsoDate; price: number };
   /** Плашка «Проверено» (тариф Pro). */
   verified?: boolean;
   /** Продвижение в первом экране «рекомендуемых» — пометка «Реклама». */
@@ -56,7 +58,10 @@ export type PlaceCardData = Pick<
 };
 
 /** Поля карточки (CARD_SELECT в backend/src/common/place-data.ts). */
-type PlaceCardRow = Omit<PlaceCardData, "status" | "verified" | "promoted">;
+type PlaceCardRow = Omit<
+  PlaceCardData,
+  "status" | "verified" | "promoted" | "nightPrice"
+>;
 
 export type CatalogResult = {
   /** Страница списка (с учётом «Показать ещё»). */
@@ -96,11 +101,17 @@ export async function findPlaces(
 
   if (filters.when) {
     night = keyNight(resolveWhen(filters.when, now).nights);
-    const statuses = await statusesForNight(night, now);
-    all = all.map((place) => ({
-      ...place,
-      status: placeStatus(place, statuses, today),
-    }));
+    const { statuses, prices } = await nightData(night, now);
+    all = all.map((place) => {
+      const status = placeStatus(place, statuses, today);
+      const price = prices.get(place.id);
+      return {
+        ...place,
+        status,
+        ...(price &&
+          isAvailable(status) && { nightPrice: { night: night!, price } }),
+      };
+    });
     if (onlyFree(filters)) all = all.filter((p) => isAvailable(p.status!));
   }
   if (filters.sort === "recommended") all = promote(all, today);
@@ -126,25 +137,42 @@ export async function statusesForNight(
   night: IsoDate,
   now: Date,
 ): Promise<Map<string, DisplayStatus>> {
+  return (await nightData(night, now)).statuses;
+}
+
+/** Статусы и цены владельцев (праздники) на одну ночь. */
+async function nightData(
+  night: IsoDate,
+  now: Date,
+): Promise<{
+  statuses: Map<string, DisplayStatus>;
+  prices: Map<string, number>;
+}> {
   const { rows, freshness } = await api<{
-    rows: { place_id: string; status: AvailabilityStatus }[];
+    rows: {
+      place_id: string;
+      status: AvailabilityStatus;
+      price: number | null;
+    }[];
     freshness: { place_id: string; last_updated_at: string | null }[];
   }>(`/public/availability/night/${night}`);
 
   const lastUpdated = new Map(
     freshness.map((r) => [r.place_id, r.last_updated_at] as const),
   );
-  const result = new Map<string, DisplayStatus>();
+  const statuses = new Map<string, DisplayStatus>();
+  const prices = new Map<string, number>();
   for (const [placeId, updatedAt] of lastUpdated) {
-    if (placeId) result.set(placeId, displayStatus(null, updatedAt, now));
+    if (placeId) statuses.set(placeId, displayStatus(null, updatedAt, now));
   }
   for (const row of rows) {
-    result.set(
+    statuses.set(
       row.place_id,
       displayStatus(row.status, lastUpdated.get(row.place_id), now),
     );
+    if (row.price) prices.set(row.place_id, row.price);
   }
-  return result;
+  return { statuses, prices };
 }
 
 export async function getPlaceBySlug(slug: string) {

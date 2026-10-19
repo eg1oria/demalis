@@ -25,6 +25,14 @@ export function toIsoDate(date: Date): IsoDate {
   return date.toISOString().slice(0, 10);
 }
 
+/** Настоящая календарная дата YYYY-MM-DD (не 2026-02-30). */
+export function isIsoDate(value: unknown): value is IsoDate {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value))
+    return false;
+  const date = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(date.getTime()) && toIsoDate(date) === value;
+}
+
 /** N календарных дней подряд начиная с сегодняшнего (по Алматы). */
 export function nextDays(now: Date, count: number): IsoDate[] {
   const today = almatyToday(now);

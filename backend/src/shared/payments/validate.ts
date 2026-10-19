@@ -7,6 +7,7 @@ export type PaymentKind = Enums<'payment_kind'>;
 export const PAYMENT_KINDS: Record<PaymentKind, string> = {
   pro: 'Pro',
   promotion: 'Продвижение',
+  promotion_holiday: 'Продвижение (праздники)',
   video: 'Видео-обзор',
   leads: 'Платные заявки',
   other: 'Другое',

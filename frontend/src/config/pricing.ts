@@ -4,6 +4,7 @@ export const PRICING = [
   { id: "free", price: 0, period: null },
   { id: "pro", price: 15000, period: "month" },
   { id: "promo", price: 20000, period: "week" },
+  { id: "promo_holiday", price: 30000, period: "week" },
   { id: "video", price: 40000, period: "once" },
 ] as const;
 

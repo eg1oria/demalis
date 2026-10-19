@@ -93,7 +93,16 @@ export type Callback =
       index: number;
     }
   | { kind: 'save'; placeId: string; start: IsoDate; draft: string }
-  | { kind: 'lead'; leadId: string; action: 'contacted' | 'noAnswer' };
+  | { kind: 'lead'; leadId: string; action: 'contacted' | 'noAnswer' }
+  /** Опрос про праздничную ночь: статус объекта на эту ночь. */
+  | {
+      kind: 'holiday';
+      placeId: string;
+      night: IsoDate;
+      status: AvailabilityStatus;
+    }
+  /** «Пропустить» вместо цены за праздничную ночь. */
+  | { kind: 'holidaySkip'; placeId: string; night: IsoDate };
 
 export function buildCallback(cb: Callback): string {
   switch (cb.kind) {
@@ -109,6 +118,10 @@ export function buildCallback(cb: Callback): string {
       return `s:${packId(cb.placeId)}:${packDate(cb.start)}:${cb.draft}`;
     case 'lead':
       return `lead:${packId(cb.leadId)}:${cb.action === 'contacted' ? 'c' : 'n'}`;
+    case 'holiday':
+      return `hs:${packId(cb.placeId)}:${packDate(cb.night)}:${TO_CHAR[cb.status]}`;
+    case 'holidaySkip':
+      return `hp:${packId(cb.placeId)}:${packDate(cb.night)}`;
   }
 }
 
@@ -153,6 +166,17 @@ export function parseCallback(data: string): Callback | null {
       leadId,
       action: parts[1] === 'c' ? 'contacted' : 'noAnswer',
     };
+  }
+  if (
+    (kind === 'hs' && parts.length === 3) ||
+    (kind === 'hp' && parts.length === 2)
+  ) {
+    const placeId = id(parts[0]);
+    const night = unpackDate(parts[1]);
+    if (!placeId || !night) return null;
+    if (kind === 'hp') return { kind: 'holidaySkip', placeId, night };
+    const status = FROM_CHAR[parts[2]];
+    return status ? { kind: 'holiday', placeId, night, status } : null;
   }
   return null;
 }

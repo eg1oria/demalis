@@ -81,6 +81,19 @@ export function CollectionForm({
           целиком или часть после «?». Даты не сохраняются — их выбирает гость.
         </span>
       </label>
+      <label className={labelClass}>
+        Ночь (необязательно)
+        <input
+          name="night"
+          type="date"
+          defaultValue={collection?.night ?? ""}
+          className={inputClass}
+        />
+        <span className="text-xs text-text-muted">
+          Для праздников: подборка покажет статусы и цены владельцев на эту ночь
+          (заезд), свободные — первыми. После этой даты — обычная подборка.
+        </span>
+      </label>
       <div className="grid gap-3 sm:grid-cols-2">
         <label className={labelClass}>
           Адрес (slug)

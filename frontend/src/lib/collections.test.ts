@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   collectionIntro,
+  collectionNight,
   collectionTitle,
   normalizeCollectionFilters,
 } from "./collections";
@@ -34,5 +35,19 @@ describe("перевод подборки", () => {
     expect(
       collectionIntro({ intro_ru: null, intro_kk: null }, "ru"),
     ).toBeNull();
+  });
+});
+
+describe("collectionNight", () => {
+  // В Алматы уже 31 декабря (UTC+5).
+  const now = new Date("2026-12-30T20:00:00Z");
+
+  it("ночь праздника, пока она не прошла", () => {
+    expect(collectionNight({ night: "2026-12-31" }, now)).toBe("2026-12-31");
+  });
+
+  it("прошедшая ночь и обычная подборка — null", () => {
+    expect(collectionNight({ night: "2026-12-30" }, now)).toBeNull();
+    expect(collectionNight({ night: null }, now)).toBeNull();
   });
 });

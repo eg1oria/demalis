@@ -32,6 +32,12 @@ export default async function PanelLayout({ children }: LayoutProps<"/admin">) {
               Подборки
             </Link>
             <Link
+              href="/admin/holidays"
+              className="flex h-11 items-center px-2 whitespace-nowrap"
+            >
+              Праздники
+            </Link>
+            <Link
               href="/admin/owners"
               className="flex h-11 items-center px-2 whitespace-nowrap"
             >

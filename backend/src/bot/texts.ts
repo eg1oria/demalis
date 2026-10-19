@@ -52,9 +52,23 @@ type Texts = {
   noAnswer: string;
   statusSaved: string;
   reminder: string;
+  holidayTitle: (night: string) => string;
+  holidayAsk: (place: string, title: string, nights: string) => string;
+  holidayStatusSaved: (place: string, status: AvailabilityStatus) => string;
+  holidayAskPrice: (place: string, night: string) => string;
+  holidaySkip: string;
+  holidayNoPrice: string;
+  holidayBadPrice: string;
+  holidayPriceSaved: (place: string, price: string) => string;
   weekdays: string[];
   leadStatuses: Record<LeadStatus, string>;
   statuses: Record<AvailabilityStatus, string>;
+};
+
+/** Статус с цветной точкой: «🟢 свободно». */
+const STATUS_LABEL: Record<BotLang, Record<AvailabilityStatus, string>> = {
+  ru: { free: '🟢 свободно', limited: '🟡 мало мест', full: '🔴 занято' },
+  kk: { free: '🟢 бос', limited: '🟡 орын аз', full: '🔴 бос емес' },
 };
 
 const ru: Texts = {
@@ -135,6 +149,20 @@ const ru: Texts = {
   statusSaved: 'Статус сохранён',
   reminder:
     'Обновите занятость на выходные — так гости увидят, что у вас свободно.',
+  holidayTitle: (night) =>
+    night.endsWith('-12-31') ? '🎄 Новый год' : '🎉 Праздники',
+  holidayAsk: (place, title, nights) =>
+    `${title}: ночь ${nights}.\n«${place}» — есть свободные места? Гости уже ищут, где встретить праздник.`,
+  holidayStatusSaved: (place, status) =>
+    `«${place}»: ${STATUS_LABEL.ru[status]}. Сохранено, гости увидят это на сайте.`,
+  holidayAskPrice: (place, night) =>
+    `Сколько стоит ночь ${night} в «${place}»? Напишите число в тенге, например 80000.`,
+  holidaySkip: 'Пропустить',
+  holidayNoPrice: 'Хорошо, без цены. Гости увидят обычную цену «от».',
+  holidayBadPrice:
+    'Не понял цену. Напишите число в тенге от 1 000 до 5 000 000, например 80000 — или нажмите «Пропустить».',
+  holidayPriceSaved: (place, price) =>
+    `Цена ${price} за праздничную ночь в «${place}» сохранена. Спасибо!`,
   weekdays: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
   leadStatuses: {
     new: 'новая',
@@ -215,6 +243,20 @@ const kk: Texts = {
   statusSaved: 'Күйі сақталды',
   reminder:
     'Демалыс күндеріндегі бос орындарды жаңартыңыз — қонақтар бос екенін көреді.',
+  holidayTitle: (night) =>
+    night.endsWith('-12-31') ? '🎄 Жаңа жыл' : '🎉 Мереке',
+  holidayAsk: (place, title, nights) =>
+    `${title}: ${nights} түні.\n«${place}» — бос орын бар ма? Қонақтар мерекені қайда қарсы алатынын іздеп жатыр.`,
+  holidayStatusSaved: (place, status) =>
+    `«${place}»: ${STATUS_LABEL.kk[status]}. Сақталды, қонақтар мұны сайттан көреді.`,
+  holidayAskPrice: (place, night) =>
+    `«${place}»: ${night} түні қанша тұрады? Санды теңгемен жазыңыз, мысалы 80000.`,
+  holidaySkip: 'Өткізіп жіберу',
+  holidayNoPrice: 'Жақсы, бағасыз. Қонақтар әдеттегі «бастап» бағаны көреді.',
+  holidayBadPrice:
+    'Бағаны түсінбедім. 1 000-нан 5 000 000-ға дейінгі санды теңгемен жазыңыз, мысалы 80000 — немесе «Өткізіп жіберу» батырмасын басыңыз.',
+  holidayPriceSaved: (place, price) =>
+    `«${place}»: мерекелік түннің бағасы ${price} сақталды. Рақмет!`,
   weekdays: ['Жс', 'Дс', 'Сс', 'Ср', 'Бс', 'Жм', 'Сн'],
   leadStatuses: {
     new: 'жаңа',

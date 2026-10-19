@@ -6,10 +6,28 @@ import {
 import { Prisma, PrismaClient } from '../generated/prisma/client';
 import { placeStats, placeStatsBetween } from '../common/stats';
 import { generateLinkCode } from '../bot/linkCode';
+import {
+  holidayRows,
+  isNightPrice,
+  sendHolidaySurvey,
+  setHolidayNight,
+} from '../bot/holiday';
 import { ownerReport, sendOwnerReport } from '../bot/monthly';
 import { getBotUsername } from '../telegram/api';
 import { dbDate } from '../prisma/dates';
-import { type IsoMonth, monthRange, shiftMonth } from '../shared/dates';
+import {
+  almatyToday,
+  isIsoDate,
+  type IsoDate,
+  type IsoMonth,
+  monthRange,
+  shiftMonth,
+  toIsoDate,
+} from '../shared/dates';
+import {
+  AVAILABILITY_STATUSES,
+  type AvailabilityStatus,
+} from '../shared/places/constants';
 import { LEAD_STATUSES } from '../shared/leads/constants';
 import { validatePayment } from '../shared/payments/validate';
 import { normalizeKzPhone } from '../shared/phone';
@@ -110,6 +128,53 @@ export class AdminService {
     return { result: await sendOwnerReport(ownerId, month) };
   }
 
+  // ── Праздники: опрос владельцев про одну ночь ───────────────────────────
+
+  holidays(night: IsoDate) {
+    return holidayRows(night);
+  }
+
+  /** Админ отмечает статус и цену за владельца (например, после звонка). */
+  async setHoliday(
+    placeId: string,
+    body: Record<string, unknown>,
+  ): Promise<{ error?: string }> {
+    const { night, status, price } = body;
+    if (!isIsoDate(night)) return { error: 'Нужна дата ночи YYYY-MM-DD' };
+    if (
+      status !== null &&
+      !(typeof status === 'string' && status in AVAILABILITY_STATUSES)
+    )
+      return { error: 'Неизвестный статус' };
+    if (price !== null && !isNightPrice(price))
+      return { error: 'Цена — целое число от 1 000 до 5 000 000 ₸ или пусто' };
+    const place = await this.prisma.place.findUnique({
+      where: { id: placeId },
+      select: { id: true },
+    });
+    if (!place) throw new NotFoundException({ error: 'Объект не найден' });
+    await setHolidayNight(
+      placeId,
+      night,
+      status as AvailabilityStatus | null,
+      status ? price : null,
+    );
+    return {};
+  }
+
+  async sendHolidaySurvey(
+    night: unknown,
+  ): Promise<{ error: string } | { result: { sent: number; failed: number } }> {
+    if (!isIsoDate(night)) return { error: 'Нужна дата ночи YYYY-MM-DD' };
+    if (night < toIsoDate(almatyToday(new Date())))
+      return { error: 'Эта ночь уже прошла' };
+    try {
+      return { result: await sendHolidaySurvey(night) };
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : String(e) };
+    }
+  }
+
   // ── Заявки ──────────────────────────────────────────────────────────────
 
   leads(status: string | undefined, limit: number) {
@@ -166,6 +231,9 @@ export class AdminService {
     const sort_order = Number(body.sort_order ?? 100);
     if (!Number.isInteger(sort_order))
       return { error: 'Порядок — целое число' };
+    const night = str('night');
+    if (night && !isIsoDate(night))
+      return { error: 'Ночь — дата в формате ГГГГ-ММ-ДД или пусто' };
 
     const data = {
       slug,
@@ -174,6 +242,7 @@ export class AdminService {
       intro_ru: str('intro_ru') || null,
       intro_kk: str('intro_kk') || null,
       filters: str('filters'),
+      night: night ? dbDate(night) : null,
       sort_order,
       published: body.published === true,
     };

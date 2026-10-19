@@ -138,6 +138,7 @@ const ru = {
     hoursMinutes: "{h} ч {m} мин",
     priceFrom: "от {price}",
     priceFromRich: "<muted>от</muted> <b>{price}</b>",
+    nightPriceRich: "<muted>{date}</muted> <b>{price}</b>",
     perNight: "/ ночь",
     perPerson: "/ чел.",
     unit_per_night_unit: "за домик или номер в ночь",
@@ -229,6 +230,9 @@ const ru = {
       "До 20 фото и видео|Плашка «Проверено» после проверки места|Статистика и напоминания в боте",
     plan_promo: "Продвижение",
     plan_promo_features: "Верх каталога и подборок|Пометка «Реклама»",
+    plan_promo_holiday: "Продвижение на праздники",
+    plan_promo_holiday_features:
+      "Новый год и другие праздники|Верх праздничных подборок и каталога|Пометка «Реклама»",
     plan_video: "Видео-обзор",
     plan_video_features:
       "Съёмка ролика о вашем месте|Публикация на сайте и в соцсетях",

@@ -119,12 +119,12 @@ export class PublicService {
     }));
   }
 
-  /** Статусы всех опубликованных объектов на одну ночь. */
+  /** Статусы (и цены на праздники) всех опубликованных объектов на одну ночь. */
   async night(date: string) {
     const [rows, freshness] = await Promise.all([
       this.prisma.availability.findMany({
         where: { date: dbDate(date), place: PUBLISHED },
-        select: { place_id: true, status: true },
+        select: { place_id: true, status: true, price: true },
       }),
       this.lastUpdated(),
     ]);

@@ -13,8 +13,10 @@ import {
   getCollectionBySlug,
 } from "@/lib/catalog/collections";
 import { findPlaces } from "@/lib/catalog/query";
+import { byNightStatus } from "@/lib/availability";
 import {
   collectionFilters,
+  collectionNight,
   collectionIntro,
   collectionTitle,
 } from "@/lib/collections";
@@ -60,20 +62,27 @@ export default async function CollectionPage({ params }: Props) {
   const collection = await getCollectionBySlug(slug);
   if (!collection) notFound();
 
+  const now = new Date();
   const filters = collectionFilters(collection.filters);
-  const [{ all, total }, others, t, tm, tf] = await Promise.all([
-    findPlaces(filters),
+  // Праздничная подборка (Новый год): статусы и цены на её ночь, свободные — первыми.
+  const night = collectionNight(collection, now);
+  const [found, others, t, tm, tf] = await Promise.all([
+    findPlaces(night ? { ...filters, when: night, all: true } : filters, now),
     collectionsWithCounts(),
     getTranslations("Collections"),
     getTranslations("Metadata"),
     getTranslations("Format"),
   ]);
-  const places = all.slice(0, MAX_PLACES);
+  const { total } = found;
+  const places = (night ? byNightStatus(found.all) : found.all).slice(
+    0,
+    MAX_PLACES,
+  );
   const title = collectionTitle(collection, locale);
   const intro = collectionIntro(collection, locale);
-  const placeQuery: Record<string, string> = filters.guests
-    ? { guests: String(filters.guests) }
-    : {};
+  const placeQuery: Record<string, string> = {};
+  if (filters.guests) placeQuery.guests = String(filters.guests);
+  if (night) placeQuery.when = night;
 
   const breadcrumbs = breadcrumbJsonLd([
     { name: tm("home"), url: absoluteUrl(`/${locale}`) },
@@ -113,7 +122,7 @@ export default async function CollectionPage({ params }: Props) {
             {tf("variants", { n: total })}
           </span>
           <Link
-            href={catalogHref({ ...filters, when: "this" })}
+            href={catalogHref({ ...filters, when: night ?? "this" })}
             className="flex h-10 items-center rounded-full border border-text px-4 text-sm transition-colors hover:bg-text hover:text-white"
           >
             {t("openCatalog")}

@@ -3,8 +3,10 @@ import {
   PAGE_SIZE,
   parseFilters,
   toSearchParams,
+  type WhenOption,
 } from "@/lib/catalog/filters";
 import type { Tables } from "@/lib/api/types";
+import { almatyToday, toIsoDate } from "@/lib/dates";
 
 export type Collection = Tables<"collections">;
 
@@ -41,4 +43,17 @@ export function collectionIntro(
   locale: string,
 ): string | null {
   return (locale === "kk" && c.intro_kk?.trim()) || c.intro_ru?.trim() || null;
+}
+
+/**
+ * Ночь праздничной подборки, пока она не прошла (по Алматы). После неё
+ * подборка показывается как обычная.
+ */
+export function collectionNight(
+  c: Pick<Collection, "night">,
+  now: Date,
+): WhenOption | null {
+  return c.night && c.night >= toIsoDate(almatyToday(now))
+    ? (c.night as WhenOption)
+    : null;
 }

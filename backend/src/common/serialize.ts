@@ -9,6 +9,7 @@ const DATE_ONLY = new Set([
   'pro_until',
   'pro_reminded_for',
   'paid_at',
+  'night',
 ]);
 
 function isDecimal(value: object): value is { toNumber(): number } {

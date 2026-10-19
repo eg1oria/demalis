@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/admin/auth";
 import { normalizeCollectionFilters } from "@/lib/collections";
+import { isIsoDate } from "@/lib/dates";
 import { isValidSlug, slugify } from "@/lib/slug";
 import { adminApi, ApiError } from "@/lib/api/client";
 
@@ -27,6 +28,9 @@ export async function saveCollection(
     };
   const sortOrder = Number(text(formData, "sort_order") || 100);
   if (!Number.isInteger(sortOrder)) return { error: "Порядок — целое число" };
+  const night = text(formData, "night");
+  if (night && !isIsoDate(night))
+    return { error: "Ночь — дата в формате ГГГГ-ММ-ДД или пусто" };
 
   const row = {
     slug,
@@ -35,6 +39,7 @@ export async function saveCollection(
     intro_ru: text(formData, "intro_ru") || null,
     intro_kk: text(formData, "intro_kk") || null,
     filters: normalizeCollectionFilters(text(formData, "filters")),
+    night: night || null,
     sort_order: sortOrder,
     published: formData.get("published") === "on",
   };

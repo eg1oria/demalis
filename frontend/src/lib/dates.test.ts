@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { almatyMidnight, monthRange, parseMonth, shiftMonth } from "./dates";
+import {
+  almatyMidnight,
+  isIsoDate,
+  monthRange,
+  parseMonth,
+  shiftMonth,
+} from "./dates";
+import { formatDayMonth } from "./format";
 
 describe("месяцы для отчётов", () => {
   const now = new Date("2026-10-31T20:00:00Z"); // в Алматы уже 1 ноября
@@ -23,5 +30,19 @@ describe("месяцы для отчётов", () => {
     const { from, to } = monthRange("2026-12");
     expect(from.toISOString()).toBe("2026-11-30T19:00:00.000Z");
     expect(to.toISOString()).toBe("2026-12-31T19:00:00.000Z");
+  });
+});
+
+describe("isIsoDate", () => {
+  it("только настоящие даты YYYY-MM-DD", () => {
+    expect(isIsoDate("2026-12-31")).toBe(true);
+    expect(isIsoDate("2026-02-30")).toBe(false);
+    expect(isIsoDate("2026-12-31T00:00")).toBe(false);
+    expect(isIsoDate("")).toBe(false);
+    expect(isIsoDate(20261231)).toBe(false);
+  });
+
+  it("«31.12» для подписи цены ночи", () => {
+    expect(formatDayMonth("2026-12-31")).toBe("31.12");
   });
 });

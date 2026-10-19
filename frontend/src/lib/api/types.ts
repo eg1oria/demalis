@@ -7,7 +7,8 @@ export type DbEnums = {
   event_type: "view" | "whatsapp_click" | "phone_click" | "instagram_click";
   lead_status:
     "new" | "sent_to_owner" | "confirmed" | "cancelled" | "no_answer";
-  payment_kind: "pro" | "promotion" | "video" | "leads" | "other";
+  payment_kind:
+    "pro" | "promotion" | "promotion_holiday" | "video" | "leads" | "other";
   place_direction:
     | "gory_almaty"
     | "talgar"
@@ -34,6 +35,7 @@ export type DbTables = {
   availability: {
     date: string;
     place_id: string;
+    price: number | null;
     status: Enums<"availability_status">;
     updated_at: string;
   };
@@ -43,6 +45,7 @@ export type DbTables = {
     id: string;
     intro_kk: string | null;
     intro_ru: string | null;
+    night: string | null;
     published: boolean;
     slug: string;
     sort_order: number;
@@ -70,6 +73,7 @@ export type DbTables = {
     status: Enums<"lead_status">;
   };
   owners: {
+    awaiting_input: string | null;
     created_at: string;
     id: string;
     language: string | null;

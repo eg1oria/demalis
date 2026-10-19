@@ -59,6 +59,9 @@ describe('callback_data', () => {
     { kind: 'save', placeId: ID, start: '2026-12-31', draft: DRAFT },
     { kind: 'lead', leadId: ID, action: 'contacted' },
     { kind: 'lead', leadId: ID, action: 'noAnswer' },
+    { kind: 'holiday', placeId: ID, night: '2026-12-31', status: 'free' },
+    { kind: 'holiday', placeId: ID, night: '2026-12-31', status: 'full' },
+    { kind: 'holidaySkip', placeId: ID, night: '2026-12-31' },
   ];
 
   it.each(all)('$kind: туда-обратно и не длиннее 64 байт', (cb) => {
@@ -80,6 +83,11 @@ describe('callback_data', () => {
     `s:${'a'.repeat(32)}:260927:${DRAFT.replace('0', 'z')}`,
     `lead:${'a'.repeat(32)}:x`,
     `lead:${'a'.repeat(32)}:c:extra`,
+    `hs:${'a'.repeat(32)}:261231:0`,
+    `hs:${'a'.repeat(32)}:261231:q`,
+    `hs:${'a'.repeat(32)}:261232:f`,
+    `hs:${'a'.repeat(32)}:261231`,
+    `hp:${'a'.repeat(32)}:261231:f`,
   ])('отклоняет «%s»', (data) => {
     expect(parseCallback(data)).toBeNull();
   });

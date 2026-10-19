@@ -33,6 +33,15 @@ import {
   leadKeyboard,
   mainMenu,
 } from './keyboards';
+import {
+  decodeAwaiting,
+  encodeAwaiting,
+  nightLabel,
+  parseNightPrice,
+  saveNightPrice,
+  setAwaiting,
+  skipPriceKeyboard,
+} from './holiday';
 import { normalizeLinkCode } from './linkCode';
 import {
   leadsListMessage,
@@ -40,6 +49,7 @@ import {
   ownerLeadMessage,
   statsMessage,
 } from './messages';
+import { formatTenge } from '../shared/format';
 import { BOT_TEXTS, type BotLang, menuAction } from './texts';
 
 type BotContext = Context & { owner: BotOwner | null };
@@ -191,10 +201,66 @@ async function handleCallback(ctx: BotContext, owner: BotOwner, cb: Callback) {
       return ctx.answerCallbackQuery(t.statusSaved);
     }
 
+    case 'holiday': {
+      const place = await ownerPlace(owner.id, cb.placeId);
+      if (!place || cb.night < today())
+        return ctx.answerCallbackQuery(t.expired);
+      const name = placeName(place, lang);
+      await saveStatuses([place.id], [{ date: cb.night, status: cb.status }]);
+      await ignoreNotModified(
+        ctx.editMessageText(t.holidayStatusSaved(name, cb.status)),
+      );
+      await ctx.answerCallbackQuery(t.statusSaved);
+      if (cb.status === 'full') return;
+      // Дальше ждём цену текстом: следующее сообщение владельца — цена.
+      await setAwaiting(
+        owner.id,
+        encodeAwaiting({ placeId: place.id, night: cb.night }),
+      );
+      return ctx.reply(t.holidayAskPrice(name, nightLabel(cb.night)), {
+        reply_markup: skipPriceKeyboard(place.id, cb.night, lang),
+      });
+    }
+
+    case 'holidaySkip':
+      await setAwaiting(owner.id, null);
+      await ignoreNotModified(ctx.editMessageText(t.holidayNoPrice));
+      return ctx.answerCallbackQuery();
+
     case 'lang':
       // Обрабатывается раньше, сюда не доходит.
       return ctx.answerCallbackQuery();
   }
+}
+
+/** Владелец прислал цену за праздничную ночь. false — это была не цена. */
+async function handlePrice(
+  ctx: BotContext,
+  owner: BotOwner,
+  text: string,
+): Promise<boolean> {
+  const awaiting = decodeAwaiting(owner.awaiting);
+  if (!awaiting) return false;
+  const lang = langOf(ctx);
+  const t = BOT_TEXTS[lang];
+  const price = parseNightPrice(text);
+  if (price === null) {
+    await ctx.reply(t.holidayBadPrice, {
+      reply_markup: skipPriceKeyboard(awaiting.placeId, awaiting.night, lang),
+    });
+    return true;
+  }
+  await setAwaiting(owner.id, null);
+  const place = await ownerPlace(owner.id, awaiting.placeId);
+  if (!place || !(await saveNightPrice(place.id, awaiting.night, price))) {
+    await ctx.reply(t.expired);
+    return true;
+  }
+  await ctx.reply(
+    t.holidayPriceSaved(placeName(place, lang), formatTenge(price, lang)),
+    { reply_markup: mainMenu(lang) },
+  );
+  return true;
 }
 
 export function createBot(token: string) {
@@ -254,8 +320,16 @@ export function createBot(token: string) {
     if (!owner) return greetStranger(ctx);
     if (!owner.language) return askLanguage(ctx);
     const lang = owner.language;
+    const text = ctx.message.text ?? '';
+    const action = menuAction(text);
 
-    switch (menuAction(ctx.message.text ?? '')) {
+    // Ждём цену за праздничную ночь: кнопка меню отменяет ожидание.
+    if (owner.awaiting) {
+      if (!action && (await handlePrice(ctx, owner, text))) return;
+      await setAwaiting(owner.id, null);
+    }
+
+    switch (action) {
       case 'dates':
         return startDates(ctx, owner);
       case 'weekendFree':

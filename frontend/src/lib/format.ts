@@ -7,3 +7,8 @@ export function formatTenge(amount: number, locale: string): string {
 export function splitMinutes(total: number): { h: number; m: number } {
   return { h: Math.floor(total / 60), m: total % 60 };
 }
+
+/** «31.12» — дата ночи без года. */
+export function formatDayMonth(iso: string): string {
+  return `${iso.slice(8, 10)}.${iso.slice(5, 7)}`;
+}

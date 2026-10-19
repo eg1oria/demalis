@@ -89,6 +89,8 @@ enum EventType {
 enum PaymentKind {
   pro
   promotion
+  /// Продвижение на праздники (Новый год и т. п.) — дороже обычного.
+  promotion_holiday
   video
   leads
   other
@@ -109,6 +111,8 @@ model Owner {
   language          String?
   /// За какой месяц (YYYY-MM) уже ушёл автоматический отчёт.
   last_report_month String?
+  /// Бот ждёт от владельца текст: «price:<placeId>:<YYYY-MM-DD>» — цену за ночь.
+  awaiting_input    String?
   created_at        DateTime @default(now()) @db.Timestamptz(6)
 
   places Place[]
@@ -173,6 +177,8 @@ model Availability {
   place_id   String             @db.Uuid
   date       DateTime           @db.Date
   status     AvailabilityStatus
+  /// Цена за эту ночь, ₸ (праздники). null — обычная цена объекта.
+  price      Int?
   updated_at DateTime           @default(now()) @updatedAt @db.Timestamptz(6)
 
   place Place @relation(fields: [place_id], references: [id], onDelete: Cascade)
@@ -235,6 +241,8 @@ model Collection {
   intro_ru   String?
   intro_kk   String?
   filters    String   @default("")
+  /// Подборка на одну ночь (Новый год): статусы и цены на эту дату.
+  night      DateTime? @db.Date
   /// Порядок на главной и в списках: меньше — выше.
   sort_order Int      @default(100)
   published  Boolean  @default(true)

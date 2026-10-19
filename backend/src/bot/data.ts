@@ -8,23 +8,38 @@ import { dbDate, isoDate, isoDateOrNull } from '../prisma/dates';
 import type { DraftStatus } from './callbacks';
 import { type BotLang, isBotLang } from './texts';
 
-/** Владелец, привязанный к чату бота. language: null — ещё не выбран. */
-export type BotOwner = { id: string; name: string; language: BotLang | null };
+/**
+ * Владелец, привязанный к чату бота. language: null — ещё не выбран.
+ * awaiting: что бот ждёт текстом (цену за праздничную ночь), null — ничего.
+ */
+export type BotOwner = {
+  id: string;
+  name: string;
+  language: BotLang | null;
+  awaiting: string | null;
+};
 
 export type BotPlace = { id: string; name_ru: string; name_kk: string | null };
 
-const OWNER_SELECT = { id: true, name: true, language: true } as const;
+const OWNER_SELECT = {
+  id: true,
+  name: true,
+  language: true,
+  awaiting_input: true,
+} as const;
 const PLACE_SELECT = { id: true, name_ru: true, name_kk: true } as const;
 
 function toOwner(row: {
   id: string;
   name: string;
   language: string | null;
+  awaiting_input: string | null;
 }): BotOwner {
   return {
     id: row.id,
     name: row.name,
     language: isBotLang(row.language) ? row.language : null,
+    awaiting: row.awaiting_input,
   };
 }
 

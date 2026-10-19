@@ -41,6 +41,25 @@ export function isAvailable(status: DisplayStatus): boolean {
   return status === "free" || status === "limited";
 }
 
+const STATUS_RANK: Record<DisplayStatus, number> = {
+  free: 0,
+  limited: 1,
+  stale: 2,
+  unknown: 2,
+  full: 3,
+};
+
+/**
+ * Сначала свободные, потом «мало мест», «уточняйте», в конце занятые.
+ * Сортировка устойчивая: внутри статуса порядок (и продвижение) не меняется.
+ */
+export function byNightStatus<T extends { status?: DisplayStatus }>(
+  places: T[],
+): T[] {
+  const rank = (p: T) => STATUS_RANK[p.status ?? "unknown"];
+  return [...places].sort((a, b) => rank(a) - rank(b));
+}
+
 /**
  * Ночь, по которой решаем «свободно / занято» для выбора дат:
  * для выходных — суббота (раздел 4 ТЗ), для конкретной даты — она сама.

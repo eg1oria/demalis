@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  byNightStatus,
   daysSince,
   displayStatus,
   isAvailable,
@@ -70,5 +71,26 @@ describe("хелперы", () => {
   it("дней с обновления", () => {
     expect(daysSince(daysAgo(0), now)).toBe(0);
     expect(daysSince(daysAgo(2.5), now)).toBe(2);
+  });
+});
+
+describe("byNightStatus", () => {
+  it("свободно → мало мест → уточняйте → занято, порядок внутри сохраняется", () => {
+    const places = [
+      { id: "a", status: "full" as const },
+      { id: "b", status: "unknown" as const },
+      { id: "c", status: "free" as const },
+      { id: "d", status: "limited" as const },
+      { id: "e", status: "stale" as const },
+      { id: "f", status: "free" as const },
+    ];
+    expect(byNightStatus(places).map((p) => p.id)).toEqual([
+      "c",
+      "f",
+      "d",
+      "b",
+      "e",
+      "a",
+    ]);
   });
 });

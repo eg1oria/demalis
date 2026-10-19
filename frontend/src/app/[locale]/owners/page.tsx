@@ -151,7 +151,7 @@ export default async function OwnersPage({
           <p className="mt-2 max-w-2xl text-[15px] text-text-secondary">
             {t("pricingNote")}
           </p>
-          <ul className="mt-6 grid gap-3 md:mt-10 md:grid-cols-2 md:gap-4 xl:grid-cols-4">
+          <ul className="mt-6 grid gap-3 md:mt-10 md:grid-cols-2 md:gap-4 xl:grid-cols-5">
             {PRICING.map((plan) => (
               <li
                 key={plan.id}

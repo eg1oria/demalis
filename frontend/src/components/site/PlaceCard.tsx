@@ -60,16 +60,31 @@ export function PlaceCard({
           <h3 className="text-base leading-snug font-medium group-hover:underline group-hover:underline-offset-4">
             {name}
           </h3>
-          {place.price_from != null && (
+          {place.nightPrice ? (
             <span className="tabular flex-none text-[15px] whitespace-nowrap">
-              {f.t.rich("priceFromRich", {
-                price: f.tenge(place.price_from),
+              {f.t.rich("nightPriceRich", {
+                date: f.dayMonth(place.nightPrice.night),
+                price: f.tenge(place.nightPrice.price),
                 muted: (chunks) => (
                   <span className="text-[13px] text-text-muted">{chunks}</span>
                 ),
                 b: (chunks) => <span className="font-medium">{chunks}</span>,
               })}
             </span>
+          ) : (
+            place.price_from != null && (
+              <span className="tabular flex-none text-[15px] whitespace-nowrap">
+                {f.t.rich("priceFromRich", {
+                  price: f.tenge(place.price_from),
+                  muted: (chunks) => (
+                    <span className="text-[13px] text-text-muted">
+                      {chunks}
+                    </span>
+                  ),
+                  b: (chunks) => <span className="font-medium">{chunks}</span>,
+                })}
+              </span>
+            )
           )}
         </div>
         <p className="text-sm text-text-muted">

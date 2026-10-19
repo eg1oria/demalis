@@ -179,6 +179,27 @@ export class AdminController {
     return this.admin.sendOwnerReport(id, parseMonth(body.month, new Date()));
   }
 
+  // ── Праздники ───────────────────────────────────────────────────────────
+
+  @Get('holidays')
+  holidays(@Query('night') night?: string) {
+    return this.admin.holidays(isoDateParam(night, 'night'));
+  }
+
+  @Put('holidays/:placeId')
+  setHoliday(
+    @Param('placeId', uuid) placeId: string,
+    @Body() body: Record<string, unknown>,
+  ) {
+    return this.admin.setHoliday(placeId, body);
+  }
+
+  @Post('holidays/survey')
+  @HttpCode(200)
+  holidaySurvey(@Body() body: { night?: unknown }) {
+    return this.admin.sendHolidaySurvey(body.night);
+  }
+
   // ── Заявки ──────────────────────────────────────────────────────────────
 
   @Get('leads')
