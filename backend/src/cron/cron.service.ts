@@ -1,6 +1,18 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { runDailyJobs } from '../bot/daily';
+import { reportError } from '../common/alerts';
+
+/** Сколько сообщений владельцам не ушло (например, бот заблокирован). */
+export function dailyFailures(
+  result: Awaited<ReturnType<typeof runDailyJobs>>,
+): number {
+  return (
+    result.proReminders.failed +
+    (result.weekly?.failed ?? 0) +
+    (result.monthly?.failed ?? 0)
+  );
+}
 
 @Injectable()
 export class CronService {
@@ -17,9 +29,16 @@ export class CronService {
   })
   async daily() {
     try {
-      this.logger.log(JSON.stringify(await runDailyJobs()));
+      const result = await runDailyJobs();
+      this.logger.log(JSON.stringify(result));
+      const failed = dailyFailures(result);
+      if (failed > 0)
+        await reportError(
+          'ежедневные задачи',
+          `не доставлено сообщений владельцам: ${failed} (подробности — в логах бэкенда)`,
+        );
     } catch (e) {
-      this.logger.error('daily jobs', e);
+      await reportError('ежедневные задачи', e);
     }
   }
 }

@@ -1,12 +1,8 @@
-import { Logger } from '@nestjs/common';
+import { reportError } from './alerts';
 
-const logger = new Logger('Notify');
-
-/** Уведомление после ответа посетителю: ошибка — только в лог. */
+/** Уведомление после ответа посетителю: ошибка — в лог и админу в Telegram. */
 export function runInBackground(name: string, job: () => Promise<unknown>) {
   setImmediate(() => {
-    job().catch((e) =>
-      logger.error(`${name}: ${e instanceof Error ? e.stack : e}`),
-    );
+    job().catch((e) => reportError(name, e));
   });
 }

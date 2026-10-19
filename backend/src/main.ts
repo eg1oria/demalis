@@ -3,11 +3,17 @@ import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import express from 'express';
 import { AppModule } from './app.module';
+import { reportError } from './common/alerts';
 import {
   PHOTO_EXT,
   PHOTO_MAX_BYTES,
   uploadsDir,
 } from './photos/photos.service';
+
+// Ошибка вне запроса (таймер, забытый await) — не роняем процесс, сообщаем админу.
+process.on('unhandledRejection', (reason) => {
+  void reportError('unhandledRejection', reason);
+});
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);

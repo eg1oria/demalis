@@ -1,7 +1,8 @@
-import { Controller, HttpCode, Logger, Post, Req, Res } from '@nestjs/common';
+import { Controller, HttpCode, Post, Req, Res } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { webhookCallback } from 'grammy';
 import { createBot } from '../bot/bot';
+import { reportError } from '../common/alerts';
 import { botToken } from './api';
 
 type Handler = (req: Request, res: Response) => Promise<void>;
@@ -12,7 +13,6 @@ type Handler = (req: Request, res: Response) => Promise<void>;
  */
 @Controller('telegram')
 export class TelegramController {
-  private readonly logger = new Logger(TelegramController.name);
   private handler: Handler | null = null;
 
   @Post('webhook')
@@ -31,7 +31,7 @@ export class TelegramController {
       await this.handler(req, res);
     } catch (e) {
       // Отвечаем 200: иначе Telegram будет бесконечно присылать то же сообщение.
-      this.logger.error('telegram webhook', e);
+      void reportError('бот: webhook', e);
       if (!res.headersSent) res.status(200).end();
     }
   }

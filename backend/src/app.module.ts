@@ -1,12 +1,14 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
+import { AlertingExceptionFilter } from './common/exceptions.filter';
 import { SerializeInterceptor } from './common/serialize.interceptor';
 import { BotModule } from './cron/cron.module';
 import { HealthController } from './health.controller';
+import { InternalController } from './internal.controller';
 import { PhotosModule } from './photos/photos.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { PublicModule } from './public/public.module';
@@ -25,7 +27,10 @@ import { PublicModule } from './public/public.module';
     PhotosModule,
     BotModule,
   ],
-  controllers: [HealthController],
-  providers: [{ provide: APP_INTERCEPTOR, useClass: SerializeInterceptor }],
+  controllers: [HealthController, InternalController],
+  providers: [
+    { provide: APP_INTERCEPTOR, useClass: SerializeInterceptor },
+    { provide: APP_FILTER, useClass: AlertingExceptionFilter },
+  ],
 })
 export class AppModule {}
