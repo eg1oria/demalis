@@ -22,6 +22,13 @@ import {
   validateGroupRequest,
 } from '../shared/groups/validate';
 import { ownerRequestTelegramMessage } from '../shared/owners/message';
+import { reviewTelegramMessage } from '../shared/reviews/message';
+import {
+  type ReviewErrorCode,
+  type ReviewField,
+  validateReview,
+} from '../shared/reviews/validate';
+import { isReviewToken, reviewTokenHash } from '../common/reviews';
 import {
   type OwnerRequestError,
   type OwnerRequestField,
@@ -59,6 +66,16 @@ export type GroupRequestResult =
       form?: 'rateLimit' | 'server';
     }
   | { status: 'sent' };
+
+export type ReviewResult =
+  | {
+      status: 'error';
+      errors?: Partial<Record<ReviewField, ReviewErrorCode>>;
+      form?: 'rateLimit' | 'used' | 'notFound';
+    }
+  | { status: 'sent' };
+
+const REVIEW_FIELDS: ReviewField[] = ['rating', 'text', 'name', 'consent'];
 
 const LEAD_FIELDS: LeadField[] = [
   'name',
@@ -215,6 +232,54 @@ export class FormsService {
         groupRequestTelegramMessage(
           request,
           site ? `${site}/admin/groups` : null,
+        ),
+      );
+    });
+    return { status: 'sent' };
+  }
+
+  /** Отзыв гостя по ссылке: один раз, дальше — проверка админом. */
+  async submitReview(
+    token: string,
+    body: Record<string, unknown>,
+    ip: string,
+  ): Promise<ReviewResult> {
+    if (str(body[HONEYPOT_FIELD]).trim()) return { status: 'sent' };
+    if (!isReviewToken(token)) return { status: 'error', form: 'notFound' };
+
+    const review = await this.prisma.review.findUnique({
+      where: { token_hash: reviewTokenHash(token) },
+      select: { id: true, status: true, place: { select: { name_ru: true } } },
+    });
+    if (!review) return { status: 'error', form: 'notFound' };
+    if (review.status !== 'invited') return { status: 'error', form: 'used' };
+
+    const result = validateReview(pick(body, REVIEW_FIELDS));
+    if (!result.ok) return { status: 'error', errors: result.errors };
+
+    const allowed = await hitRateLimit(
+      this.prisma,
+      rateLimitKey(ip, rateSecret(), 'review'),
+      LEAD_RATE_LIMIT.max,
+      LEAD_RATE_LIMIT.window,
+    );
+    if (!allowed) return { status: 'error', form: 'rateLimit' };
+
+    // Только из «invited»: две вкладки с одной ссылкой не запишут два отзыва.
+    const { count } = await this.prisma.review.updateMany({
+      where: { id: review.id, status: 'invited' },
+      data: { ...result.data, status: 'pending', submitted_at: new Date() },
+    });
+    if (!count) return { status: 'error', form: 'used' };
+
+    runInBackground('submitReview telegram', () => {
+      const site = siteUrl();
+      return sendTelegramMessage(
+        process.env.ADMIN_TELEGRAM_CHAT_ID,
+        reviewTelegramMessage(
+          result.data,
+          review.place.name_ru,
+          site ? `${site}/admin/reviews` : null,
         ),
       );
     });

@@ -256,6 +256,28 @@ export class AdminController {
     return this.admin.updateLead(id, body);
   }
 
+  @Post('leads/:id/review-invite')
+  @HttpCode(200)
+  reviewInvite(@Param('id', uuid) id: string) {
+    return this.admin.reviewInvite(id);
+  }
+
+  // ── Отзывы ──────────────────────────────────────────────────────────────
+
+  @Get('reviews')
+  reviews(@Query('status') status?: string, @Query('limit') limit?: string) {
+    const take = Math.min(Math.max(Number(limit) || 200, 1), 1000);
+    return this.admin.reviews(status, take);
+  }
+
+  @Patch('reviews/:id')
+  updateReview(
+    @Param('id', uuid) id: string,
+    @Body() body: { status?: unknown },
+  ) {
+    return this.admin.setReviewStatus(id, body.status);
+  }
+
   // ── Подбор для компаний ─────────────────────────────────────────────────
 
   @Get('group-requests')

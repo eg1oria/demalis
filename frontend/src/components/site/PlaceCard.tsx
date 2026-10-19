@@ -25,6 +25,7 @@ export function PlaceCard({
   const tTypes = useTranslations("Types");
   const tAmenities = useTranslations("Amenities");
   const tPlans = useTranslations("Plans");
+  const tReviews = useTranslations("Reviews");
   const f = useFormat();
   const name = placeName(place, locale);
   const href = { pathname: `/place/${place.slug}`, query };
@@ -102,6 +103,16 @@ export function PlaceCard({
           )}
         </div>
         <p className="text-sm text-text-muted">
+          {place.review_count > 0 && place.rating_avg != null && (
+            <span className="text-text">
+              <span aria-hidden="true">★ </span>
+              <span className="sr-only">
+                {tReviews("rating", { rating: f.rating(place.rating_avg) })}
+              </span>
+              <span aria-hidden="true">{f.rating(place.rating_avg)}</span> (
+              {place.review_count}){" · "}
+            </span>
+          )}
           {details.join(" · ")}
           {amenities.length > 0 && (
             <span className="text-text-secondary">

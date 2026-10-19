@@ -55,5 +55,7 @@ export const CARD_SELECT = {
   plan: true,
   pro_until: true,
   featured_until: true,
+  review_count: true,
+  rating_avg: true,
   units: { select: UNIT_SELECT, orderBy: [...UNIT_ORDER] },
 } as const satisfies Prisma.PlaceSelect;

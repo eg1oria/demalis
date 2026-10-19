@@ -2,12 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LeadBillableToggle } from "@/components/admin/LeadBillableToggle";
 import { LeadStatusSelect } from "@/components/admin/LeadStatusSelect";
+import { ReviewInviteButton } from "@/components/admin/ReviewInviteButton";
 import { inputClass, secondaryButtonClass } from "@/components/admin/ui";
 import { TIME_ZONE } from "@/config/site";
 import { requireAdminPage } from "@/lib/admin/auth";
 import { LEAD_STATUSES, type LeadStatus } from "@/lib/leads/constants";
 import { adminApi, query } from "@/lib/api/client";
 import type { Tables } from "@/lib/api/types";
+import { almatyToday, toIsoDate } from "@/lib/dates";
+import { REVIEW_STATUSES, type ReviewStatus } from "@/lib/reviews/validate";
 
 export const metadata: Metadata = { title: "Заявки" };
 
@@ -41,8 +44,13 @@ export default async function LeadsPage({
       : null;
 
   const leads = await adminApi<
-    (Tables<"leads"> & { place: { id: string; name_ru: string } | null })[]
+    (Tables<"leads"> & {
+      place: { id: string; name_ru: string } | null;
+      review: { status: ReviewStatus } | null;
+    })[]
   >(`/admin/leads${query({ status, limit: LIMIT })}`);
+  // Отзыв просим только у подтверждённых заявок после выезда.
+  const today = toIsoDate(almatyToday(new Date()));
 
   return (
     <div className="flex flex-col gap-4">
@@ -113,6 +121,26 @@ export default async function LeadsPage({
             <div className="flex flex-col gap-1">
               <LeadStatusSelect id={lead.id} status={lead.status} />
               <LeadBillableToggle id={lead.id} billable={lead.billable} />
+              {lead.review && lead.review.status !== "invited" ? (
+                <Link
+                  href={`/admin/reviews?status=${lead.review.status}`}
+                  className="text-xs text-text-secondary hover:underline"
+                >
+                  Отзыв: {REVIEW_STATUSES[lead.review.status].toLowerCase()}
+                </Link>
+              ) : (
+                lead.status === "confirmed" &&
+                lead.date_to &&
+                lead.date_to <= today && (
+                  <ReviewInviteButton
+                    id={lead.id}
+                    name={lead.name}
+                    phone={lead.phone}
+                    placeName={lead.place?.name_ru ?? ""}
+                    invited={lead.review?.status === "invited"}
+                  />
+                )
+              )}
             </div>
           </li>
         ))}

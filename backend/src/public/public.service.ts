@@ -3,7 +3,9 @@ import { type Prisma, PrismaClient } from '../generated/prisma/client';
 import { CARD_SELECT, UNIT_SELECT } from '../common/place-data';
 import { UNIT_ORDER } from '../units/units';
 import { dbDate, isoDate } from '../prisma/dates';
+import { isReviewToken, reviewTokenHash } from '../common/reviews';
 import { AMENITIES, type Amenity } from '../shared/places/constants';
+import { firstName } from '../shared/reviews/validate';
 
 export type CatalogQuery = {
   drive?: number;
@@ -20,6 +22,9 @@ export type CatalogQuery = {
 const MAX_PLACES = 1000;
 
 const PUBLISHED = { status: 'published' } as const;
+
+/** Сколько отзывов показываем на странице объекта. */
+const REVIEWS_ON_PAGE = 20;
 
 const int = (value: unknown): number | undefined => {
   const n = Number(value);
@@ -84,11 +89,71 @@ export class PublicService {
     });
   }
 
-  placeBySlug(slug: string) {
-    return this.prisma.place.findFirst({
+  async placeBySlug(slug: string) {
+    const place = await this.prisma.place.findFirst({
       where: { ...PUBLISHED, slug },
-      include: { units: { select: UNIT_SELECT, orderBy: [...UNIT_ORDER] } },
+      include: {
+        units: { select: UNIT_SELECT, orderBy: [...UNIT_ORDER] },
+        reviews: {
+          where: { status: 'published' },
+          select: {
+            id: true,
+            author_name: true,
+            rating: true,
+            text: true,
+            stay_date: true,
+            published_at: true,
+          },
+          orderBy: { published_at: 'desc' },
+          take: REVIEWS_ON_PAGE,
+        },
+      },
     });
+    if (!place) return null;
+    // Фамилию гостя на сайт не отдаём.
+    return {
+      ...place,
+      reviews: place.reviews.map((r) => ({
+        ...r,
+        author_name: firstName(r.author_name),
+      })),
+    };
+  }
+
+  /** Страница «Оставьте отзыв» по ссылке из WhatsApp. */
+  async reviewByToken(token: string) {
+    if (!isReviewToken(token)) return null;
+    const review = await this.prisma.review.findUnique({
+      where: { token_hash: reviewTokenHash(token) },
+      select: {
+        status: true,
+        author_name: true,
+        stay_date: true,
+        lead: { select: { date_to: true } },
+        place: {
+          select: {
+            name_ru: true,
+            name_kk: true,
+            slug: true,
+            status: true,
+            photos: true,
+            photos_permission: true,
+          },
+        },
+      },
+    });
+    if (!review) return null;
+    const { lead, place, ...rest } = review;
+    return {
+      ...rest,
+      date_to: lead.date_to,
+      place: {
+        name_ru: place.name_ru,
+        name_kk: place.name_kk,
+        slug: place.status === 'published' ? place.slug : null,
+        photo: place.photos_permission ? (place.photos[0] ?? null) : null,
+      },
+    };
   }
 
   placeById(id: string) {

@@ -8,7 +8,8 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: "*",
         allow: "/",
         // Админка и служебные адреса (клики, заявки, бот) — не для поиска.
-        disallow: ["/admin", "/api/"],
+        // Личные ссылки на отзыв (/ru/review/…) — тоже.
+        disallow: ["/admin", "/api/", "/*/review/"],
       },
       {
         // Робот Google Ads проверяет посадочные страницы и переходы по кнопкам

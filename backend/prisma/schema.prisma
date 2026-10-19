@@ -118,6 +118,16 @@ enum GroupStatus {
   @@map("group_status")
 }
 
+/// invited — ссылку отправили, pending — гость написал, ждёт проверки.
+enum ReviewStatus {
+  invited
+  pending
+  published
+  rejected
+
+  @@map("review_status")
+}
+
 // ── Таблицы ───────────────────────────────────────────────────────────────
 
 model Owner {
@@ -182,6 +192,9 @@ model Place {
   pro_reminded_for  DateTime?      @db.Date
   owner_id          String?        @db.Uuid
   photos_permission Boolean        @default(false)
+  /// Опубликованные отзывы: число и средняя оценка (пересчёт при модерации).
+  review_count      Int            @default(0)
+  rating_avg        Decimal?       @db.Decimal(2, 1)
   created_at        DateTime       @default(now()) @db.Timestamptz(6)
   updated_at        DateTime       @default(now()) @updatedAt @db.Timestamptz(6)
 
@@ -191,6 +204,7 @@ model Place {
   events       Event[]
   payments     Payment[]
   units        Unit[]
+  reviews      Review[]
 
   @@index([status])
   @@index([owner_id])
@@ -265,7 +279,8 @@ model Lead {
   billable   Boolean    @default(false)
   created_at DateTime   @default(now()) @db.Timestamptz(6)
 
-  place Place @relation(fields: [place_id], references: [id], onDelete: Cascade)
+  place  Place   @relation(fields: [place_id], references: [id], onDelete: Cascade)
+  review Review?
 
   @@index([place_id, created_at])
   @@index([created_at])
@@ -369,4 +384,31 @@ model GroupRequest {
 
   @@index([created_at])
   @@map("group_requests")
+}
+
+/// Отзыв гостя с подтверждённой заявкой: одна заявка — один отзыв.
+/// Ссылку с токеном админ отправляет гостю в WhatsApp, храним только хэш.
+model Review {
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  place_id     String       @db.Uuid
+  lead_id      String       @unique @db.Uuid
+  token_hash   String       @unique
+  status       ReviewStatus @default(invited)
+  /// 1–5, пока гость не написал — null.
+  rating       Int?
+  text         String?
+  /// Подставляется из заявки, гость может поправить. На сайте — только имя.
+  author_name  String
+  /// Дата заезда из заявки — на сайте «отдыхали в октябре 2026».
+  stay_date    DateTime?    @db.Date
+  submitted_at DateTime?    @db.Timestamptz(6)
+  published_at DateTime?    @db.Timestamptz(6)
+  created_at   DateTime     @default(now()) @db.Timestamptz(6)
+
+  place Place @relation(fields: [place_id], references: [id], onDelete: Cascade)
+  lead  Lead  @relation(fields: [lead_id], references: [id], onDelete: Cascade)
+
+  @@index([place_id, status])
+  @@index([status, submitted_at])
+  @@map("reviews")
 }

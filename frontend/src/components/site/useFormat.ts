@@ -1,5 +1,10 @@
 import { useLocale, useTranslations } from "next-intl";
-import { formatDayMonth, formatTenge, splitMinutes } from "@/lib/format";
+import {
+  formatDayMonth,
+  formatRating,
+  formatTenge,
+  splitMinutes,
+} from "@/lib/format";
 
 /** Подписи «55 мин», «1 ч 10 мин», «от 42 000 ₸» в текущем языке. */
 export function useFormat() {
@@ -14,6 +19,7 @@ export function useFormat() {
     },
     tenge: (amount: number) => formatTenge(amount, locale),
     dayMonth: formatDayMonth,
+    rating: (rating: number) => formatRating(rating, locale),
     priceFrom: (amount: number) =>
       t("priceFrom", { price: formatTenge(amount, locale) }),
     t,

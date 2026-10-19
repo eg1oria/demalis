@@ -11,6 +11,7 @@ export type DbEnums = {
     "new" | "sent_to_owner" | "confirmed" | "cancelled" | "no_answer";
   payment_kind:
     "pro" | "promotion" | "promotion_holiday" | "video" | "leads" | "other";
+  review_status: "invited" | "pending" | "published" | "rejected";
   place_direction:
     | "gory_almaty"
     | "talgar"
@@ -144,6 +145,8 @@ export type DbTables = {
     pro_until: string | null;
     price_weekday: number | null;
     price_weekend: number | null;
+    rating_avg: number | null;
+    review_count: number;
     slug: string;
     status: Enums<"place_status">;
     type: Enums<"place_type">;
@@ -151,6 +154,19 @@ export type DbTables = {
     video_url: string | null;
     whatsapp_phone: string;
     winter_ok: boolean;
+  };
+  reviews: {
+    author_name: string;
+    created_at: string;
+    id: string;
+    lead_id: string;
+    place_id: string;
+    published_at: string | null;
+    rating: number | null;
+    status: Enums<"review_status">;
+    stay_date: string | null;
+    submitted_at: string | null;
+    text: string | null;
   };
   unit_availability: {
     date: string;

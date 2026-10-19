@@ -142,6 +142,21 @@ export class PublicController {
     return this.forms.submitGroupRequest(body, clientIp(req));
   }
 
+  @Get('reviews/:token')
+  async review(@Param('token') token: string) {
+    return found(await this.data.reviewByToken(token));
+  }
+
+  @Post('reviews/:token')
+  @HttpCode(200)
+  submitReview(
+    @Param('token') token: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: Request,
+  ) {
+    return this.forms.submitReview(token, body, clientIp(req));
+  }
+
   @Post('owner-requests')
   @HttpCode(200)
   ownerRequest(@Body() body: Record<string, unknown>, @Req() req: Request) {

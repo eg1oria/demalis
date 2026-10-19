@@ -12,3 +12,11 @@ export function splitMinutes(total: number): { h: number; m: number } {
 export function formatDayMonth(iso: string): string {
   return `${iso.slice(8, 10)}.${iso.slice(5, 7)}`;
 }
+
+/** Средняя оценка «4,8» (одна цифра после запятой). */
+export function formatRating(rating: number, locale: string): string {
+  return new Intl.NumberFormat(locale === "kk" ? "kk-KZ" : "ru-RU", {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  }).format(rating);
+}

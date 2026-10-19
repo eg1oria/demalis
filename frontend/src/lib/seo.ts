@@ -111,7 +111,16 @@ export function lodgingJsonLd(place: {
   priceRange: string | null;
   amenities: string[];
   petsAllowed: boolean;
+  /** Опубликованные отзывы гостей с подтверждённой заявкой. */
+  rating?: { average: number; count: number } | null;
+  reviews?: {
+    author: string;
+    rating: number;
+    text: string | null;
+    date: string | null;
+  }[];
 }) {
+  const reviews = place.reviews ?? [];
   return {
     "@context": "https://schema.org",
     "@type": "LodgingBusiness",
@@ -147,5 +156,29 @@ export function lodgingJsonLd(place: {
       })),
     }),
     petsAllowed: place.petsAllowed,
+    ...(place.rating &&
+      place.rating.count > 0 && {
+        aggregateRating: {
+          "@type": "AggregateRating",
+          ratingValue: place.rating.average,
+          reviewCount: place.rating.count,
+          bestRating: 5,
+          worstRating: 1,
+        },
+      }),
+    ...(reviews.length > 0 && {
+      review: reviews.map((r) => ({
+        "@type": "Review",
+        author: { "@type": "Person", name: r.author },
+        reviewRating: {
+          "@type": "Rating",
+          ratingValue: r.rating,
+          bestRating: 5,
+          worstRating: 1,
+        },
+        ...(r.text && { reviewBody: r.text }),
+        ...(r.date && { datePublished: r.date.slice(0, 10) }),
+      })),
+    }),
   };
 }

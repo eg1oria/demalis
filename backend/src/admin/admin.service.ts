@@ -14,7 +14,7 @@ import {
 } from '../bot/holiday';
 import { ownerReport, sendOwnerReport } from '../bot/monthly';
 import { getBotUsername } from '../telegram/api';
-import { dbDate } from '../prisma/dates';
+import { dbDate, isoDate } from '../prisma/dates';
 import {
   almatyToday,
   isIsoDate,
@@ -34,6 +34,12 @@ import { validatePayment } from '../shared/payments/validate';
 import { normalizeKzPhone } from '../shared/phone';
 import { isValidSlug } from '../shared/slug';
 import { str } from '../common/uuid';
+import {
+  canInviteReview,
+  newReviewToken,
+  refreshPlaceRating,
+} from '../common/reviews';
+import { REVIEW_STATUSES } from '../shared/reviews/validate';
 
 const isUnique = (e: unknown) =>
   e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002';
@@ -184,10 +190,53 @@ export class AdminService {
         status && status in LEAD_STATUSES
           ? { status: status as keyof typeof LEAD_STATUSES }
           : {},
-      include: { place: { select: { id: true, name_ru: true } } },
+      include: {
+        place: { select: { id: true, name_ru: true } },
+        review: { select: { status: true } },
+      },
       orderBy: { created_at: 'desc' },
       take: limit,
     });
+  }
+
+  /**
+   * Ссылка на отзыв для гостя (админ отправляет её в WhatsApp).
+   * Повторный запрос до отзыва выдаёт новый токен — старая ссылка перестаёт работать.
+   */
+  async reviewInvite(
+    leadId: string,
+  ): Promise<{ token: string } | { error: string }> {
+    const lead = await this.prisma.lead.findUnique({
+      where: { id: leadId },
+      include: { review: { select: { status: true } } },
+    });
+    if (!lead) throw new NotFoundException({ error: 'Не найдено' });
+    const today = toIsoDate(almatyToday(new Date()));
+    if (
+      !canInviteReview(
+        { status: lead.status, date_to: lead.date_to && isoDate(lead.date_to) },
+        today,
+      )
+    )
+      return {
+        error: 'Отзыв можно попросить у подтверждённой заявки после выезда',
+      };
+    if (lead.review && lead.review.status !== 'invited')
+      return { error: 'Гость уже оставил отзыв' };
+
+    const { token, hash } = newReviewToken();
+    await this.prisma.review.upsert({
+      where: { lead_id: lead.id },
+      create: {
+        lead_id: lead.id,
+        place_id: lead.place_id,
+        token_hash: hash,
+        author_name: lead.name,
+        stay_date: lead.date_from,
+      },
+      update: { token_hash: hash },
+    });
+    return { token };
   }
 
   async updateLead(id: string, body: { status?: unknown; billable?: unknown }) {
@@ -197,6 +246,47 @@ export class AdminService {
     if (typeof body.billable === 'boolean') data.billable = body.billable;
     if (Object.keys(data).length === 0) return { error: 'Нечего менять' };
     await this.prisma.lead.update({ where: { id }, data });
+    return {};
+  }
+
+  // ── Отзывы ──────────────────────────────────────────────────────────────
+
+  reviews(status: string | undefined, limit: number) {
+    return this.prisma.review.findMany({
+      where:
+        status && status in REVIEW_STATUSES
+          ? { status: status as keyof typeof REVIEW_STATUSES }
+          : { status: { not: 'invited' } },
+      include: {
+        place: { select: { id: true, name_ru: true, slug: true } },
+        lead: { select: { phone: true, date_from: true, date_to: true } },
+      },
+      orderBy: [{ submitted_at: 'desc' }, { created_at: 'desc' }],
+      take: limit,
+    });
+  }
+
+  /** Модерация: опубликовать, отклонить или скрыть (= отклонить) отзыв. */
+  async setReviewStatus(id: string, status: unknown) {
+    if (status !== 'published' && status !== 'rejected')
+      return { error: 'Можно только опубликовать или отклонить' };
+    const review = await this.prisma.review.findUnique({
+      where: { id },
+      select: { status: true, place_id: true, published_at: true },
+    });
+    if (!review) throw new NotFoundException({ error: 'Не найдено' });
+    if (review.status === 'invited')
+      return { error: 'Гость ещё не написал отзыв' };
+    await this.prisma.review.update({
+      where: { id },
+      data: {
+        status,
+        // Дата первой публикации — порядок отзывов на сайте.
+        ...(status === 'published' &&
+          !review.published_at && { published_at: new Date() }),
+      },
+    });
+    await refreshPlaceRating(this.prisma, review.place_id);
     return {};
   }
 

@@ -53,6 +53,8 @@ export type PlaceCardData = Pick<
   | "plan"
   | "pro_until"
   | "featured_until"
+  | "review_count"
+  | "rating_avg"
 > & {
   /** Домики (Этап 14): вместимость и цены; пусто — объект целиком. */
   units: UnitCardData[];
@@ -199,7 +201,16 @@ export async function statusesForStay(
   );
 }
 
-export type PlaceWithUnits = Tables<"places"> & { units: UnitCardData[] };
+/** Опубликованный отзыв на странице объекта (имя — без фамилии). */
+export type PublicReview = Pick<
+  Tables<"reviews">,
+  "id" | "author_name" | "text" | "stay_date" | "published_at"
+> & { rating: number };
+
+export type PlaceWithUnits = Tables<"places"> & {
+  units: UnitCardData[];
+  reviews: PublicReview[];
+};
 
 export async function getPlaceBySlug(slug: string) {
   return apiOrNull<PlaceWithUnits>(

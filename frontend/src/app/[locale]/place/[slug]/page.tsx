@@ -22,6 +22,7 @@ import { VerifiedBadge } from "@/components/site/VerifiedBadge";
 import { AvailabilityCalendar } from "@/components/place/AvailabilityCalendar";
 import { Description } from "@/components/place/Description";
 import { Gallery } from "@/components/place/Gallery";
+import { Reviews, Stars } from "@/components/place/Reviews";
 import { LeadForm } from "@/components/place/LeadForm";
 import { ShareButton } from "@/components/place/ShareButton";
 import { StatusBlock } from "@/components/place/StatusBlock";
@@ -48,7 +49,12 @@ import { stayEstimate, stayStatus } from "@/lib/stay";
 import { almatyToday, nextDays, toIsoDate } from "@/lib/dates";
 import { goHref } from "@/lib/go";
 import { planFeatures } from "@/lib/plans";
-import { formatDayMonth, formatTenge, splitMinutes } from "@/lib/format";
+import {
+  formatDayMonth,
+  formatRating,
+  formatTenge,
+  splitMinutes,
+} from "@/lib/format";
 import {
   placeAmenities,
   placeDescription,
@@ -230,6 +236,26 @@ export default async function PlacePage({ params, searchParams }: Props) {
     locale: currentLocale,
   });
   const tLead = await getTranslations("LeadForm");
+  const tReviews = await getTranslations("Reviews");
+  // Рейтинг — только по опубликованным отзывам гостей с подтверждённой заявкой.
+  const rating =
+    place.review_count > 0 && place.rating_avg != null
+      ? { average: place.rating_avg, count: place.review_count }
+      : null;
+  const ratingLink = rating && (
+    <a
+      href="#reviews"
+      className="flex items-center gap-1.5 text-text hover:underline hover:underline-offset-4"
+    >
+      <Stars rating={rating.average} size={14} />
+      <span className="font-medium">
+        {formatRating(rating.average, currentLocale)}
+      </span>
+      <span className="text-text-muted">
+        · {tReviews("count", { n: rating.count })}
+      </span>
+    </a>
+  );
   const tm = await getTranslations("Metadata");
 
   const placeUrl = absoluteUrl(`/${currentLocale}/place/${place.slug}`);
@@ -253,6 +279,13 @@ export default async function PlacePage({ params, searchParams }: Props) {
           : null,
       amenities: amenities.map((a) => tAmenities(a)),
       petsAllowed: place.pets_allowed,
+      rating,
+      reviews: place.reviews.map((r) => ({
+        author: r.author_name,
+        rating: r.rating,
+        text: r.text,
+        date: r.published_at,
+      })),
     }),
     breadcrumbJsonLd([
       { name: tm("home"), url: absoluteUrl(`/${currentLocale}`) },
@@ -354,6 +387,7 @@ export default async function PlacePage({ params, searchParams }: Props) {
               {name}
             </h1>
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-text-secondary">
+              {ratingLink}
               {features.verified && <VerifiedBadge onPhoto={false} link />}
               {place.drive_minutes != null && (
                 <span className="flex items-center gap-1.5">
@@ -467,6 +501,19 @@ export default async function PlacePage({ params, searchParams }: Props) {
                 <h2 className={h2}>{t("about")}</h2>
                 <div className="mt-4">
                   <Description text={description} />
+                </div>
+              </section>
+            )}
+
+            {rating && place.reviews.length > 0 && (
+              <section id="reviews" className={`${section} scroll-mt-6`}>
+                <h2 className={h2}>{tReviews("title")}</h2>
+                <div className="mt-5">
+                  <Reviews
+                    reviews={place.reviews}
+                    count={rating.count}
+                    average={rating.average}
+                  />
                 </div>
               </section>
             )}
@@ -601,6 +648,7 @@ export default async function PlacePage({ params, searchParams }: Props) {
           <aside className="hidden lg:block">
             <div className="sticky top-8 flex flex-col gap-5 rounded-2xl border border-line bg-surface p-6">
               {priceBlock}
+              {ratingLink && <div className="-mt-2 text-sm">{ratingLink}</div>}
               <div className="flex items-start gap-2.5 border-y border-line py-4">
                 <span className="mt-1.5 flex">
                   <StatusDot status={nightStatus} />

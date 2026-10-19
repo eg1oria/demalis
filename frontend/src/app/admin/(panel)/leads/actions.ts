@@ -3,6 +3,7 @@
 import { requireAdmin } from "@/lib/admin/auth";
 import { adminApi } from "@/lib/api/client";
 import { LEAD_STATUSES, type LeadStatus } from "@/lib/leads/constants";
+import { absoluteUrl } from "@/lib/seo";
 
 async function updateLead(
   id: string,
@@ -33,4 +34,24 @@ export async function setLeadBillable(
   billable: boolean,
 ): Promise<{ error?: string }> {
   return updateLead(id, { billable });
+}
+
+/**
+ * Ссылка на отзыв для гостя: бэкенд выдаёт одноразовый токен,
+ * админ отправляет ссылку в WhatsApp. Повторный вызов — новая ссылка.
+ */
+export async function createReviewInvite(
+  id: string,
+): Promise<{ url?: string; error?: string }> {
+  await requireAdmin();
+  try {
+    const result = await adminApi<{ token?: string; error?: string }>(
+      `/admin/leads/${id}/review-invite`,
+      { method: "POST" },
+    );
+    if (!result.token) return { error: result.error ?? "Ошибка" };
+    return { url: absoluteUrl(`/ru/review/${result.token}`) };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Ошибка" };
+  }
 }

@@ -128,4 +128,47 @@ describe("JSON-LD", () => {
       priceRange: "от 42 000 ₸",
     });
   });
+
+  it("LodgingBusiness: рейтинг и отзывы", () => {
+    const ld = lodgingJsonLd({
+      name: "Дом",
+      description: null,
+      url: "https://x/ru/place/dom",
+      images: [],
+      address: null,
+      locality: null,
+      region: "Алматинская область",
+      lat: null,
+      lng: null,
+      phone: "+77011234567",
+      priceRange: null,
+      amenities: [],
+      petsAllowed: false,
+      rating: { average: 4.7, count: 3 },
+      reviews: [
+        {
+          author: "Айгерим",
+          rating: 5,
+          text: "Отлично",
+          date: "2026-10-12T08:00:00.000Z",
+        },
+      ],
+    });
+    expect(ld).toMatchObject({
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: 4.7,
+        reviewCount: 3,
+      },
+      review: [
+        {
+          "@type": "Review",
+          author: { "@type": "Person", name: "Айгерим" },
+          reviewRating: { "@type": "Rating", ratingValue: 5 },
+          reviewBody: "Отлично",
+          datePublished: "2026-10-12",
+        },
+      ],
+    });
+  });
 });
