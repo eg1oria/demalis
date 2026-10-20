@@ -150,7 +150,10 @@ export class AdminService {
     if (!isIsoDate(night)) return { error: 'Нужна дата ночи YYYY-MM-DD' };
     if (
       status !== null &&
-      !(typeof status === 'string' && status in AVAILABILITY_STATUSES)
+      !(
+        typeof status === 'string' &&
+        Object.hasOwn(AVAILABILITY_STATUSES, status)
+      )
     )
       return { error: 'Неизвестный статус' };
     if (price !== null && !isNightPrice(price))
@@ -187,7 +190,7 @@ export class AdminService {
   leads(status: string | undefined, limit: number) {
     return this.prisma.lead.findMany({
       where:
-        status && status in LEAD_STATUSES
+        status && Object.hasOwn(LEAD_STATUSES, status)
           ? { status: status as keyof typeof LEAD_STATUSES }
           : {},
       include: {
@@ -241,7 +244,10 @@ export class AdminService {
 
   async updateLead(id: string, body: { status?: unknown; billable?: unknown }) {
     const data: Prisma.LeadUpdateInput = {};
-    if (typeof body.status === 'string' && body.status in LEAD_STATUSES)
+    if (
+      typeof body.status === 'string' &&
+      Object.hasOwn(LEAD_STATUSES, body.status)
+    )
       data.status = body.status as keyof typeof LEAD_STATUSES;
     if (typeof body.billable === 'boolean') data.billable = body.billable;
     if (Object.keys(data).length === 0) return { error: 'Нечего менять' };
@@ -254,7 +260,7 @@ export class AdminService {
   reviews(status: string | undefined, limit: number) {
     return this.prisma.review.findMany({
       where:
-        status && status in REVIEW_STATUSES
+        status && Object.hasOwn(REVIEW_STATUSES, status)
           ? { status: status as keyof typeof REVIEW_STATUSES }
           : { status: { not: 'invited' } },
       include: {
@@ -295,7 +301,7 @@ export class AdminService {
   groupRequests(status: string | undefined, limit: number) {
     return this.prisma.groupRequest.findMany({
       where:
-        status && status in GROUP_STATUSES
+        status && Object.hasOwn(GROUP_STATUSES, status)
           ? { status: status as keyof typeof GROUP_STATUSES }
           : {},
       orderBy: { created_at: 'desc' },
@@ -308,7 +314,10 @@ export class AdminService {
     body: { status?: unknown; admin_note?: unknown },
   ) {
     const data: Prisma.GroupRequestUpdateInput = {};
-    if (typeof body.status === 'string' && body.status in GROUP_STATUSES)
+    if (
+      typeof body.status === 'string' &&
+      Object.hasOwn(GROUP_STATUSES, body.status)
+    )
       data.status = body.status as keyof typeof GROUP_STATUSES;
     if (typeof body.admin_note === 'string') {
       const note = body.admin_note.trim();

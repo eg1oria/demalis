@@ -14,7 +14,7 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    // Макеты дизайна — не код проекта.
+    // Логотип и аватары (design/brand) — не код проекта.
     "design/**",
   ]),
 ]);

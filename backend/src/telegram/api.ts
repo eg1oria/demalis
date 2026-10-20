@@ -21,13 +21,19 @@ export function createBotApi(): Api | null {
 export async function getBotUsername(): Promise<string | null> {
   const api = createBotApi();
   if (!api) return null;
+  let timer: NodeJS.Timeout | undefined;
   try {
-    const timeout = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Telegram getMe: таймаут')), 3000),
-    );
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(
+        () => reject(new Error('Telegram getMe: таймаут')),
+        3000,
+      );
+    });
     return (await Promise.race([api.getMe(), timeout])).username;
   } catch (e) {
     console.error('getBotUsername', e);
     return null;
+  } finally {
+    clearTimeout(timer);
   }
 }

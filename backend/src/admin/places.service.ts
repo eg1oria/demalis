@@ -7,6 +7,7 @@ import {
   AVAILABILITY_DAYS,
   AVAILABILITY_STATUSES,
   type AvailabilityStatus,
+  PLACE_STATUSES,
 } from '../shared/places/constants';
 import {
   type FieldError,
@@ -47,7 +48,9 @@ export class AdminPlacesService {
     const search = q?.trim();
     return this.prisma.place.findMany({
       where: {
-        ...(status ? { status: status as PlaceInput['status'] } : {}),
+        ...(status && Object.hasOwn(PLACE_STATUSES, status)
+          ? { status: status as PlaceInput['status'] }
+          : {}),
         ...(search
           ? {
               OR: [
@@ -240,7 +243,10 @@ export class AdminPlacesService {
       return { error: 'Дата вне диапазона 60 дней' };
     if (
       status !== null &&
-      !(typeof status === 'string' && status in AVAILABILITY_STATUSES)
+      !(
+        typeof status === 'string' &&
+        Object.hasOwn(AVAILABILITY_STATUSES, status)
+      )
     )
       return { error: 'Неизвестный статус' };
     if (unitId) {

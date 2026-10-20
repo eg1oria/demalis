@@ -82,6 +82,23 @@ describe("validateGroupRequest", () => {
     ).toEqual({ ok: false, errors: { dateFrom: "past" } });
   });
 
+  it("свойства прототипа — не повод, не направление и не удобство", () => {
+    const r = validateGroupRequest(
+      {
+        ...base,
+        occasion: "constructor",
+        direction: "toString",
+        amenities: "has_chan,__proto__",
+      },
+      TODAY,
+    );
+    expect(!r.ok && r.errors).toEqual({
+      occasion: "required",
+      direction: "invalid",
+      amenities: "invalid",
+    });
+  });
+
   it("собирает все ошибки сразу", () => {
     const result = validateGroupRequest(
       {

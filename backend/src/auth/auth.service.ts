@@ -27,8 +27,18 @@ export type AdminTokenPayload = { sub: string };
 const hash = (token: string) =>
   createHash('sha256').update(token).digest('hex');
 
-export function isDevLoginAllowed(): boolean {
-  return process.env.NODE_ENV !== 'production';
+const LOOPBACK = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
+
+/**
+ * Вход без письма: не production и запрос с этого же компьютера (сервер
+ * Next.js при локальной разработке). Бэкенд, запущенный на сервере без
+ * NODE_ENV=production, так не откроет админку всем, кто знает email.
+ */
+export function isDevLoginAllowed(
+  ip: string | undefined,
+  env: string | undefined = process.env.NODE_ENV,
+): boolean {
+  return env !== 'production' && ip !== undefined && LOOPBACK.has(ip);
 }
 
 @Injectable()
@@ -126,8 +136,11 @@ export class AuthService {
   }
 
   /** Вход без письма — только при локальной разработке. */
-  devLogin(rawEmail: unknown): { token: string; email: string } {
-    if (!isDevLoginAllowed())
+  devLogin(
+    rawEmail: unknown,
+    ip: string | undefined,
+  ): { token: string; email: string } {
+    if (!isDevLoginAllowed(ip))
       throw new NotFoundException({ error: 'Вход без письма отключён' });
     const email = this.checkEmail(rawEmail);
     return { token: this.issue(email), email };

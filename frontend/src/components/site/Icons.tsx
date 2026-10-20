@@ -2,7 +2,7 @@ import type { SVGProps } from "react";
 import { MARK_PATH, MARK_SUN } from "@/config/brand";
 import type { Amenity } from "@/lib/places/constants";
 
-// Линейные иконки из макета (design/html), толщина 1.6–1.8.
+// Линейные иконки, толщина 1.6–1.8.
 type IconProps = SVGProps<SVGSVGElement> & { size?: number };
 
 function Icon({ size = 20, strokeWidth = 1.7, children, ...props }: IconProps) {

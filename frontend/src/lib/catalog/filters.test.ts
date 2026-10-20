@@ -53,6 +53,12 @@ describe("parseFilters", () => {
     ).toEqual(EMPTY_FILTERS);
   });
 
+  it("свойства прототипа — не тип и не направление", () => {
+    expect(parseFilters({ type: "constructor", dir: "toString" })).toEqual(
+      EMPTY_FILTERS,
+    );
+  });
+
   it("понимает конкретную дату и массивы из Next.js searchParams", () => {
     expect(
       parseFilters({ when: "2026-10-03", guests: ["4", "8"] }),

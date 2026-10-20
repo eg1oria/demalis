@@ -42,7 +42,8 @@ export default async function ReviewsPage({
   const params = await searchParams;
   // По умолчанию — новые, которые ждут проверки.
   const status =
-    typeof params.status === "string" && params.status in REVIEW_STATUSES
+    typeof params.status === "string" &&
+    Object.hasOwn(REVIEW_STATUSES, params.status)
       ? (params.status as ReviewStatus)
       : params.status === "all"
         ? null

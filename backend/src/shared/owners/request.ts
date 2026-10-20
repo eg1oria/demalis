@@ -62,10 +62,10 @@ export function validateOwnerRequest(
   if (instagram === undefined) errors.instagram = 'invalid';
 
   const direction = raw.direction ?? '';
-  if (!(direction in DIRECTIONS)) errors.direction = 'required';
+  if (!Object.hasOwn(DIRECTIONS, direction)) errors.direction = 'required';
 
   const type = raw.type ?? '';
-  if (!(type in PLACE_TYPES)) errors.type = 'required';
+  if (!Object.hasOwn(PLACE_TYPES, type)) errors.type = 'required';
 
   // Без согласия не принимаем: публиковать фото без разрешения нельзя (ТЗ, раздел 5).
   if (raw.consent !== 'on') errors.consent = 'required';

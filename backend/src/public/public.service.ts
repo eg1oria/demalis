@@ -4,7 +4,14 @@ import { CARD_SELECT, UNIT_SELECT } from '../common/place-data';
 import { UNIT_ORDER } from '../units/units';
 import { dbDate, isoDate } from '../prisma/dates';
 import { isReviewToken, reviewTokenHash } from '../common/reviews';
-import { AMENITIES, type Amenity } from '../shared/places/constants';
+import {
+  AMENITIES,
+  type Amenity,
+  DIRECTIONS,
+  type Direction,
+  PLACE_TYPES,
+  type PlaceType,
+} from '../shared/places/constants';
 import { firstName } from '../shared/reviews/validate';
 
 export type CatalogQuery = {
@@ -13,15 +20,28 @@ export type CatalogQuery = {
   price_min?: number;
   price_max?: number;
   amenities: Amenity[];
-  type?: string;
-  dir?: string;
-  sort?: string;
+  type?: PlaceType;
+  dir?: Direction;
+  sort?: CatalogSort;
 };
+
+const SORTS = ['price', 'near'] as const;
+type CatalogSort = (typeof SORTS)[number];
+
+/** Значение из списка допустимых; мусор из адреса — undefined (а не 500 от Prisma). */
+const known = <K extends string>(
+  options: Record<K, unknown>,
+  value: string | undefined,
+): K | undefined =>
+  value && Object.hasOwn(options, value) ? (value as K) : undefined;
 
 /** Больше объектов в каталоге пока не ожидаем; при росте — перенести фильтр дат в SQL. */
 const MAX_PLACES = 1000;
 
 const PUBLISHED = { status: 'published' } as const;
+
+/** Служебные поля объекта, которые сайту не нужны. */
+const INTERNAL = { owner_id: true, pro_reminded_for: true } as const;
 
 /** Сколько отзывов показываем на странице объекта. */
 const REVIEWS_ON_PAGE = 20;
@@ -38,16 +58,16 @@ export function parseCatalogQuery(
 ): CatalogQuery {
   const amenities = (q.amenities ?? '')
     .split(',')
-    .filter((a): a is Amenity => a in AMENITIES);
+    .filter((a): a is Amenity => Object.hasOwn(AMENITIES, a));
   return {
     drive: int(q.drive),
     guests: int(q.guests),
     price_min: int(q.price_min),
     price_max: int(q.price_max),
     amenities,
-    type: q.type || undefined,
-    dir: q.dir || undefined,
-    sort: q.sort || undefined,
+    type: known(PLACE_TYPES, q.type),
+    dir: known(DIRECTIONS, q.dir),
+    sort: SORTS.find((s) => s === q.sort),
   };
 }
 
@@ -63,8 +83,8 @@ export class PublicService {
     if (q.price_min !== undefined || q.price_max !== undefined)
       where.price_from = { gte: q.price_min, lte: q.price_max };
     for (const amenity of q.amenities) where[amenity] = true;
-    if (q.type) where.type = q.type as Prisma.PlaceWhereInput['type'];
-    if (q.dir) where.direction = q.dir as Prisma.PlaceWhereInput['direction'];
+    if (q.type) where.type = q.type;
+    if (q.dir) where.direction = q.dir;
 
     const orderBy: Prisma.PlaceOrderByWithRelationInput[] = [];
     if (q.sort === 'price')
@@ -92,6 +112,7 @@ export class PublicService {
   async placeBySlug(slug: string) {
     const place = await this.prisma.place.findFirst({
       where: { ...PUBLISHED, slug },
+      omit: INTERNAL,
       include: {
         units: { select: UNIT_SELECT, orderBy: [...UNIT_ORDER] },
         reviews: {
@@ -157,7 +178,10 @@ export class PublicService {
   }
 
   placeById(id: string) {
-    return this.prisma.place.findFirst({ where: { ...PUBLISHED, id } });
+    return this.prisma.place.findFirst({
+      where: { ...PUBLISHED, id },
+      omit: INTERNAL,
+    });
   }
 
   /** Похожие: то же направление или тот же тип (порядок — на фронтенде). */

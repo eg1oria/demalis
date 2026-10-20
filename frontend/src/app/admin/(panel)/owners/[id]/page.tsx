@@ -58,7 +58,7 @@ export default async function OwnerPage({
     report: { text: string; lang: "ru" | "kk" } | null;
   }>(`/admin/owners/${owner.id}/report?month=${reportMonth}`);
   const reportResult =
-    typeof sentResult === "string" && sentResult in REPORT_RESULTS
+    typeof sentResult === "string" && Object.hasOwn(REPORT_RESULTS, sentResult)
       ? (sentResult as keyof typeof REPORT_RESULTS)
       : null;
   const deepLink =

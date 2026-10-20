@@ -46,7 +46,7 @@ export function fillLegal(text: string, site: string): string {
   return text
     .replaceAll("{site}", site)
     .replace(/\{(\w+)\}/g, (match, key: string) =>
-      key in LEGAL ? LEGAL[key as LegalKey] : match,
+      Object.hasOwn(LEGAL, key) ? LEGAL[key as LegalKey] : match,
     );
 }
 

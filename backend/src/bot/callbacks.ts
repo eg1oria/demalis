@@ -31,7 +31,7 @@ export function encodeDraft(statuses: DraftStatus[]): string {
 }
 
 export function decodeDraft(draft: string): DraftStatus[] {
-  return [...draft].map((c) => FROM_CHAR[c] ?? null);
+  return draft.split('').map((c) => FROM_CHAR[c] ?? null);
 }
 
 /** По кругу: 🟢 → 🟡 → 🔴 → 🟢. Не отмеченный день становится 🟢. */

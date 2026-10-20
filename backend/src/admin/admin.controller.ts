@@ -16,19 +16,18 @@ import {
 } from '@nestjs/common';
 import { AdminGuard } from '../auth/admin.guard';
 import { isUuid } from '../common/uuid';
-import { parseMonth } from '../shared/dates';
+import { isIsoDate, parseMonth } from '../shared/dates';
 import type { RawPlaceInput } from '../shared/places/validate';
 import { AdminService } from './admin.service';
 import { AdminPlacesService } from './places.service';
 import { AdminUnitsService } from './units.service';
 
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const uuid = new ParseUUIDPipe({
   exceptionFactory: () => new NotFoundException({ error: 'Не найдено' }),
 });
 
 function isoDateParam(value: string | undefined, name: string): string {
-  if (!value || !ISO_DATE.test(value))
+  if (!isIsoDate(value))
     throw new BadRequestException({ error: `${name}: нужна дата YYYY-MM-DD` });
   return value;
 }

@@ -72,7 +72,8 @@ export default async function GroupsPage({
   await requireAdminPage();
   const params = await searchParams;
   const status =
-    typeof params.status === "string" && params.status in GROUP_STATUSES
+    typeof params.status === "string" &&
+    Object.hasOwn(GROUP_STATUSES, params.status)
       ? (params.status as GroupStatus)
       : null;
 

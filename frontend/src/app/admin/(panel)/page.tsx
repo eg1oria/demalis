@@ -32,7 +32,8 @@ export default async function PlacesPage({
   const params = await searchParams;
   const q = typeof params.q === "string" ? params.q.trim() : "";
   const status =
-    typeof params.status === "string" && params.status in PLACE_STATUSES
+    typeof params.status === "string" &&
+    Object.hasOwn(PLACE_STATUSES, params.status)
       ? (params.status as PlaceStatus)
       : null;
 

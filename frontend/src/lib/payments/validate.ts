@@ -30,7 +30,7 @@ export function validatePayment(
     return { ok: false, error: "Сумма: целое число тенге больше нуля" };
 
   const kind = raw.kind ?? "";
-  if (!(kind in PAYMENT_KINDS))
+  if (!Object.hasOwn(PAYMENT_KINDS, kind))
     return { ok: false, error: "Выберите, за что оплата" };
 
   const paidAt = raw.paid_at ?? "";

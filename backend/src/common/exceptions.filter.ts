@@ -3,10 +3,20 @@ import {
   Catch,
   HttpException,
   HttpStatus,
+  NotFoundException,
 } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 import type { Request } from 'express';
+import { Prisma } from '../generated/prisma/client';
 import { reportError } from './alerts';
+
+/** update/delete по несуществующему id (P2025) — это 404, а не сбой сервера. */
+export function normalizeException(exception: unknown): unknown {
+  return exception instanceof Prisma.PrismaClientKnownRequestError &&
+    exception.code === 'P2025'
+    ? new NotFoundException({ error: 'Не найдено' })
+    : exception;
+}
 
 /**
  * Все ошибки отвечают как обычно (BaseExceptionFilter), а непойманные и 5xx
@@ -14,7 +24,8 @@ import { reportError } from './alerts';
  */
 @Catch()
 export class AlertingExceptionFilter extends BaseExceptionFilter {
-  catch(exception: unknown, host: ArgumentsHost) {
+  catch(raw: unknown, host: ArgumentsHost) {
+    const exception = normalizeException(raw);
     const status =
       exception instanceof HttpException
         ? exception.getStatus()

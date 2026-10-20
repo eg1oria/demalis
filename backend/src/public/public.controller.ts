@@ -13,10 +13,10 @@ import {
 import type { Request } from 'express';
 import { clientIp } from '../common/client-ip';
 import { isUuid } from '../common/uuid';
+import { isIsoDate } from '../shared/dates';
 import { FormsService } from './forms.service';
 import { parseCatalogQuery, PublicService } from './public.service';
 
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const EVENT_TYPES = new Set([
   'view',
   'whatsapp_click',
@@ -25,7 +25,7 @@ const EVENT_TYPES = new Set([
 ]);
 
 function isoDateParam(value: string | undefined, name: string): string {
-  if (!value || !ISO_DATE.test(value))
+  if (!isIsoDate(value))
     throw new BadRequestException({ error: `${name}: нужна дата YYYY-MM-DD` });
   return value;
 }

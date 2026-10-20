@@ -1,7 +1,8 @@
 import { timingSafeEqual } from 'node:crypto';
 import type { Request } from 'express';
 
-function sameSecret(a: string, b: string): boolean {
+/** Сравнение секретов за постоянное время. */
+export function sameSecret(a: string, b: string): boolean {
   const left = Buffer.from(a);
   const right = Buffer.from(b);
   return left.length === right.length && timingSafeEqual(left, right);

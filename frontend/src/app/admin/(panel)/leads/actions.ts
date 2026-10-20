@@ -24,7 +24,8 @@ export async function setLeadStatus(
   id: string,
   status: LeadStatus,
 ): Promise<{ error?: string }> {
-  if (!(status in LEAD_STATUSES)) return { error: "Неизвестный статус" };
+  if (!Object.hasOwn(LEAD_STATUSES, status))
+    return { error: "Неизвестный статус" };
   return updateLead(id, { status });
 }
 

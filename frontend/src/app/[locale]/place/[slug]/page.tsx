@@ -141,6 +141,7 @@ export default async function PlacePage({ params, searchParams }: Props) {
     similar,
     availability,
     index,
+    similarStatuses,
   ] = await Promise.all([
     getTranslations("Place"),
     getTranslations("Format"),
@@ -157,8 +158,8 @@ export default async function PlacePage({ params, searchParams }: Props) {
         : last,
     ),
     stayIndex(nights, now, place.id),
+    statusesForStay(nights, now),
   ]);
-  const similarStatuses = await statusesForStay(nights, now);
 
   // Без календаря в тарифе гость видит только «Уточняйте наличие».
   const dayStatus = (date: string): DisplayStatus =>

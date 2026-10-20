@@ -122,7 +122,7 @@ export function validateGroupRequest(
   else if (!phone) errors.phone = 'invalid';
 
   const occasion = raw.occasion ?? '';
-  if (!(occasion in GROUP_OCCASIONS)) errors.occasion = 'required';
+  if (!Object.hasOwn(GROUP_OCCASIONS, occasion)) errors.occasion = 'required';
 
   const guestsRaw = raw.guests?.trim() ?? '';
   const guests = Number(guestsRaw);
@@ -161,12 +161,14 @@ export function validateGroupRequest(
     errors.budget = 'invalid';
 
   const direction = raw.direction?.trim() || null;
-  if (direction && !(direction in DIRECTIONS)) errors.direction = 'invalid';
+  if (direction && !Object.hasOwn(DIRECTIONS, direction))
+    errors.direction = 'invalid';
 
   const amenities = [
     ...new Set((raw.amenities ?? '').split(',').filter(Boolean)),
   ];
-  if (amenities.some((a) => !(a in AMENITIES))) errors.amenities = 'invalid';
+  if (amenities.some((a) => !Object.hasOwn(AMENITIES, a)))
+    errors.amenities = 'invalid';
 
   const comment = raw.comment?.trim() ?? '';
   if (comment.length > GROUP_LIMITS.comment) errors.comment = 'tooLong';

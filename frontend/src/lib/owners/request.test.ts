@@ -44,6 +44,18 @@ describe("validateOwnerRequest", () => {
     });
   });
 
+  it("свойства прототипа — не тип и не направление", () => {
+    const r = validateOwnerRequest({
+      ...valid,
+      type: "constructor",
+      direction: "toString",
+    });
+    expect(!r.ok && r.errors).toEqual({
+      type: "required",
+      direction: "required",
+    });
+  });
+
   it("Instagram необязателен", () => {
     const r = validateOwnerRequest({ ...valid, instagram: "" });
     expect(r.ok && r.data.instagram_url).toBeNull();

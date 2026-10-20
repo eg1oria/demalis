@@ -2,7 +2,7 @@ import { Body, Controller, Get, HttpCode, Post, Req } from '@nestjs/common';
 import type { Request } from 'express';
 import { isAdminEmail } from '../shared/emails';
 import { bearerToken } from './admin.guard';
-import { AuthService, isDevLoginAllowed } from './auth.service';
+import { AuthService } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
@@ -22,8 +22,13 @@ export class AuthController {
 
   @Post('dev-login')
   @HttpCode(200)
-  devLogin(@Body() body: { email?: string }) {
-    return this.auth.devLogin(body.email);
+  devLogin(@Body() body: { email?: string }, @Req() req: Request) {
+    // IP соединения, а не X-Forwarded-For: подделать loopback снаружи нельзя.
+    // Запрос через прокси (есть X-Forwarded-For) — не локальный, даже с 127.0.0.1.
+    const ip = req.header('x-forwarded-for')
+      ? undefined
+      : req.socket.remoteAddress;
+    return this.auth.devLogin(body.email, ip);
   }
 
   /** Кто вошёл: anonymous — нет токена, forbidden — email больше не в ADMIN_EMAILS. */
@@ -35,10 +40,5 @@ export class AuthController {
       status: isAdminEmail(email) ? ('admin' as const) : ('forbidden' as const),
       email,
     };
-  }
-
-  @Get('config')
-  config() {
-    return { devLogin: isDevLoginAllowed() };
   }
 }

@@ -1,6 +1,6 @@
 # Демалыс
 
-Подборщик загородного отдыха на выходные вокруг Алматы. Полное техническое задание — [TZ.md](TZ.md), макеты — [design/](design/README.md).
+Подборщик загородного отдыха на выходные вокруг Алматы. Логотип и аватар бота — [design/brand/](design/brand/README.md).
 
 Стек: Next.js (App Router) + TypeScript + Tailwind CSS + next-intl (`/ru`, `/kk`). Тесты — Vitest. Данные — API бэкенда (`../backend`, NestJS + PostgreSQL).
 
@@ -87,6 +87,6 @@ docs/SETUP.md      сервер для бэкенда, Vercel, Telegram и ку�
 
 Тексты лежат в `messages/ru.ts` и `messages/kk.ts`. Казахские строки, переведённые не носителем, помечены комментарием `// TODO: проверить носителю`.
 
-## Прогресс
+## Идеи
 
-Что сделано и что дальше — в [PROGRESS.md](PROGRESS.md). Идеи вне ТЗ — в [IDEAS.md](IDEAS.md).
+Идеи на будущее — в [IDEAS.md](IDEAS.md).

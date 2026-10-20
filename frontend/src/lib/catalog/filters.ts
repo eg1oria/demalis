@@ -152,8 +152,11 @@ export function parseFilters(params: SearchParamsInput): CatalogFilters {
     amenities: (Object.keys(AMENITY_FILTERS) as AmenityFilter[]).filter(
       (key) => get(key) === "1",
     ),
-    type: type && type in PLACE_TYPES ? (type as PlaceType) : undefined,
-    dir: dir && dir in DIRECTIONS ? (dir as Direction) : undefined,
+    type:
+      type && Object.hasOwn(PLACE_TYPES, type)
+        ? (type as PlaceType)
+        : undefined,
+    dir: dir && Object.hasOwn(DIRECTIONS, dir) ? (dir as Direction) : undefined,
     sort: oneOf(get("sort"), SORT_OPTIONS) ?? "recommended",
     limit:
       Number.isInteger(limit) && limit > PAGE_SIZE && limit <= 240

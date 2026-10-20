@@ -2,11 +2,11 @@
 
 Подборщик загородного отдыха на выходные вокруг Алматы.
 
-| Папка                  | Что там                                                            |
-| ---------------------- | ------------------------------------------------------------------ |
-| [frontend/](frontend/) | Сайт и админка: Next.js, next-intl, Tailwind. ТЗ, макеты, прогресс |
-| [backend/](backend/)   | API: NestJS + PostgreSQL (Prisma), вход, фото, Telegram-бот, cron  |
-| `docker-compose.yml`   | Локальные Postgres и Mailpit (почта для входа в админку)           |
+| Папка                  | Что там                                                           |
+| ---------------------- | ----------------------------------------------------------------- |
+| [frontend/](frontend/) | Сайт и админка: Next.js, next-intl, Tailwind                      |
+| [backend/](backend/)   | API: NestJS + PostgreSQL (Prisma), вход, фото, Telegram-бот, cron |
+| `docker-compose.yml`   | Локальные Postgres и Mailpit (почта для входа в админку)          |
 
 ## Запуск локально
 

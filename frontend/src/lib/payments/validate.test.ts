@@ -27,6 +27,7 @@ describe("validatePayment", () => {
     [{ amount: "15.5" }, "Сумма"],
     [{ amount: "" }, "Сумма"],
     [{ kind: "gift" }, "за что"],
+    [{ kind: "constructor" }, "за что"],
     [{ paid_at: "2026-02-30" }, "Дата"],
     [{ paid_at: "" }, "Дата"],
     [{ comment: "я".repeat(501) }, "Комментарий"],

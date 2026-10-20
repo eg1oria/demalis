@@ -87,11 +87,22 @@ export async function remindProEnding(
   return { sent, failed };
 }
 
+/** Ссылки для входа живут 15 минут; через сутки они не нужны даже для разбора. */
+export async function cleanupLoginTokens(now: Date): Promise<number> {
+  const { count } = await db().loginToken.deleteMany({
+    where: {
+      expires_at: { lt: new Date(now.getTime() - 24 * 60 * 60 * 1000) },
+    },
+  });
+  return count;
+}
+
 /**
  * Ежедневные задачи (CronService, 12:00 по Алматы):
  * истёкший Pro → free, напоминание о конце Pro, по четвергам — «обновите занятость»,
  * 1-го числа — отчёт владельцам за прошлый месяц (если запуск 1-го сорвался,
- * досылаем 2-го и 3-го: кому уже отправлено, повторно не придёт).
+ * досылаем 2-го и 3-го: кому уже отправлено, повторно не придёт),
+ * чистка старых ссылок для входа в админку.
  */
 export async function runDailyJobs(now: Date = new Date()) {
   const todayDate = almatyToday(now);
@@ -106,5 +117,6 @@ export async function runDailyJobs(now: Date = new Date()) {
     todayDate.getUTCDate() <= MONTHLY_REPORT_LAST_DAY
       ? await sendMonthlyReports(shiftMonth(today.slice(0, 7), -1))
       : null;
-  return { today, expired, proReminders, weekly, monthly };
+  const loginTokens = await cleanupLoginTokens(now);
+  return { today, expired, proReminders, weekly, monthly, loginTokens };
 }

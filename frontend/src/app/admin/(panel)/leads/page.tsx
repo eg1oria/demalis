@@ -39,7 +39,8 @@ export default async function LeadsPage({
   await requireAdminPage();
   const params = await searchParams;
   const status =
-    typeof params.status === "string" && params.status in LEAD_STATUSES
+    typeof params.status === "string" &&
+    Object.hasOwn(LEAD_STATUSES, params.status)
       ? (params.status as LeadStatus)
       : null;
 

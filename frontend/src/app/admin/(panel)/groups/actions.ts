@@ -23,7 +23,8 @@ export async function setGroupStatus(
   id: string,
   status: GroupStatus,
 ): Promise<{ error?: string }> {
-  if (!(status in GROUP_STATUSES)) return { error: "Неизвестный статус" };
+  if (!Object.hasOwn(GROUP_STATUSES, status))
+    return { error: "Неизвестный статус" };
   return updateGroupRequest(id, { status });
 }
 
