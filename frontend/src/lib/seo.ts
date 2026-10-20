@@ -4,7 +4,7 @@ import { routing } from "@/i18n/routing";
 
 /**
  * Адрес сайта для канонических ссылок, sitemap и Open Graph.
- * На Vercel без NEXT_PUBLIC_SITE_URL берём основной домен проекта.
+ * Без NEXT_PUBLIC_SITE_URL на Vercel — основной домен проекта (запасной вариант).
  */
 export const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ||

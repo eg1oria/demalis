@@ -2,11 +2,13 @@
 #   docker build -t demalis-backend backend
 # На сервере — через docker-compose.prod.yml в корне репозитория.
 
-# Prisma (движок миграций) нужен OpenSSL.
+# Prisma (движок миграций) нужен OpenSSL. jemalloc — чтобы sharp (сжатие фото)
+# не раздувал память на glibc.
 FROM node:24-slim AS base
 RUN apt-get update -y \
-    && apt-get install -y --no-install-recommends openssl \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get install -y --no-install-recommends openssl libjemalloc2 \
+    && rm -rf /var/lib/apt/lists/* \
+    && ln -s /usr/lib/*-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so.2
 
 # ── Сборка: все зависимости, клиент Prisma, nest build ─────
 FROM base AS build
@@ -32,7 +34,8 @@ FROM base
 # Без production бэкенд разрешает «Войти без письма» (src/auth/auth.service.ts).
 ENV NODE_ENV=production \
     PORT=4000 \
-    UPLOADS_DIR=/app/uploads
+    UPLOADS_DIR=/app/uploads \
+    LD_PRELOAD=/usr/local/lib/libjemalloc.so.2
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist

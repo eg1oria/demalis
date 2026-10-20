@@ -1,6 +1,6 @@
 /**
- * IP посетителя. На Vercel первый адрес в x-forwarded-for ставит сама
- * платформа, подделать его из браузера нельзя.
+ * IP посетителя. На сервере x-forwarded-for ставит Caddy (deploy/Caddyfile):
+ * присланный браузером заголовок он заменяет, подделать IP нельзя.
  */
 export function clientIp(headers: Headers): string {
   const forwarded = headers.get("x-forwarded-for")?.split(",")[0]?.trim();

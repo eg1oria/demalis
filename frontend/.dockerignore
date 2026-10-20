@@ -1,0 +1,14 @@
+# Не копируется в образ: собирается заново внутри или не нужно на сервере.
+node_modules
+.next
+coverage
+*.tsbuildinfo
+*.log
+.DS_Store
+docs
+design
+
+# Секреты — только секретом сборки и env_file, не внутри образа.
+.env
+.env.*
+!.env.example
