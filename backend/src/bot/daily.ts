@@ -2,6 +2,7 @@ import { addDays, almatyToday, shiftMonth, toIsoDate } from '../shared/dates';
 import { placeName } from '../shared/places/present';
 import { proReminderDue } from '../shared/plans';
 import { PRO_REMINDER_DAYS } from '../shared/pricing';
+import { cleanupOrphanPhotos } from '../photos/cleanup';
 import { db } from '../prisma/prisma';
 import { dbDate, isoDate } from '../prisma/dates';
 import { createBotApi } from '../telegram/api';
@@ -102,7 +103,7 @@ export async function cleanupLoginTokens(now: Date): Promise<number> {
  * истёкший Pro → free, напоминание о конце Pro, по четвергам — «обновите занятость»,
  * 1-го числа — отчёт владельцам за прошлый месяц (если запуск 1-го сорвался,
  * досылаем 2-го и 3-го: кому уже отправлено, повторно не придёт),
- * чистка старых ссылок для входа в админку.
+ * чистка старых ссылок для входа в админку и фото, которые не попали в объекты.
  */
 export async function runDailyJobs(now: Date = new Date()) {
   const todayDate = almatyToday(now);
@@ -118,5 +119,14 @@ export async function runDailyJobs(now: Date = new Date()) {
       ? await sendMonthlyReports(shiftMonth(today.slice(0, 7), -1))
       : null;
   const loginTokens = await cleanupLoginTokens(now);
-  return { today, expired, proReminders, weekly, monthly, loginTokens };
+  const orphanPhotos = await cleanupOrphanPhotos(now);
+  return {
+    today,
+    expired,
+    proReminders,
+    weekly,
+    monthly,
+    loginTokens,
+    orphanPhotos,
+  };
 }
