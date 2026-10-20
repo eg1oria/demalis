@@ -372,8 +372,14 @@ export function createBot(token: string) {
       await ctx.answerCallbackQuery();
       await ignoreNotModified(ctx.editMessageReplyMarkup());
       if (!ctx.owner) return greetStranger(ctx, cb.lang);
+      const changed = Boolean(ctx.owner.language);
       await setOwnerLanguage(ctx.owner.id, cb.lang);
       ctx.owner = { ...ctx.owner, language: cb.lang };
+      // Смена языка из меню — просто меню на новом языке, без приветствия.
+      if (changed)
+        return ctx.reply(BOT_TEXTS[cb.lang].menuHint, {
+          reply_markup: mainMenu(cb.lang),
+        });
       return sendLinked(ctx, ctx.owner, cb.lang);
     }
 
@@ -409,6 +415,8 @@ export function createBot(token: string) {
         return ctx.reply(leadsListMessage(await recentLeads(owner.id), lang));
       case 'stats':
         return ctx.reply(statsMessage(await ownerStats(owner.id), lang));
+      case 'language':
+        return askLanguage(ctx);
       default:
         return ctx.reply(BOT_TEXTS[lang].menuHint, {
           reply_markup: mainMenu(lang),

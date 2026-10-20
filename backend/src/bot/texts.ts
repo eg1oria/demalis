@@ -1,7 +1,7 @@
 import type { AvailabilityStatus } from '../shared/places/constants';
 import type { LeadStatus } from '../shared/leads/constants';
 
-/** Язык бота: выбирается при первом /start. */
+/** Язык бота: выбирается при первом /start, сменить — кнопкой в меню. */
 export const BOT_LANGS = ['ru', 'kk'] as const;
 export type BotLang = (typeof BOT_LANGS)[number];
 
@@ -22,6 +22,7 @@ type Texts = {
     weekendFull: string;
     leads: string;
     stats: string;
+    language: string;
   };
   pickPlace: string;
   pickUnit: (place: string) => string;
@@ -92,6 +93,8 @@ const ru: Texts = {
     weekendFull: '🔴 Всё занято на выходные',
     leads: '📨 Мои заявки',
     stats: '📊 Статистика',
+    // Одинаково на обоих языках: найдёт и тот, кто ошибся с выбором.
+    language: '🌐 Язык / Тіл',
   },
   pickPlace: 'Какой объект?',
   pickUnit: (place) =>
@@ -198,6 +201,8 @@ const kk: Texts = {
     weekendFull: '🔴 Демалыста бәрі бос емес',
     leads: '📨 Менің өтінімдерім',
     stats: '📊 Статистика',
+    // Одинаково на обоих языках: найдёт и тот, кто ошибся с выбором.
+    language: '🌐 Язык / Тіл',
   },
   pickPlace: 'Қай нысан?',
   pickUnit: (place) =>

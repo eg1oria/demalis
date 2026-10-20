@@ -6,6 +6,7 @@ describe('тексты бота', () => {
     expect(menuAction(BOT_TEXTS.ru.menu.dates)).toBe('dates');
     expect(menuAction(BOT_TEXTS.kk.menu.weekendFull)).toBe('weekendFull');
     expect(menuAction(` ${BOT_TEXTS.kk.menu.stats} `)).toBe('stats');
+    expect(menuAction(BOT_TEXTS.kk.menu.language)).toBe('language');
     expect(menuAction('привет')).toBeNull();
   });
 

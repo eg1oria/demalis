@@ -21,6 +21,8 @@ export function mainMenu(lang: BotLang): Keyboard {
     .row()
     .text(m.leads)
     .text(m.stats)
+    .row()
+    .text(m.language)
     .resized()
     .persistent();
 }
