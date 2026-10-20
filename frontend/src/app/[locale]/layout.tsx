@@ -39,6 +39,7 @@ const CLIENT_NAMESPACES = [
   "Plans",
   "Favorites",
   "Consent",
+  "ErrorPage",
 ] as const;
 
 const METRIKA_ID = process.env.NEXT_PUBLIC_YANDEX_METRIKA_ID;
