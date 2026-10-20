@@ -2,11 +2,12 @@
 
 Подборщик загородного отдыха на выходные вокруг Алматы.
 
-| Папка                  | Что там                                                           |
-| ---------------------- | ----------------------------------------------------------------- |
-| [frontend/](frontend/) | Сайт и админка: Next.js, next-intl, Tailwind                      |
-| [backend/](backend/)   | API: NestJS + PostgreSQL (Prisma), вход, фото, Telegram-бот, cron |
-| `docker-compose.yml`   | Локальные Postgres и Mailpit (почта для входа в админку)          |
+| Папка                                         | Что там                                                           |
+| --------------------------------------------- | ----------------------------------------------------------------- |
+| [frontend/](frontend/)                        | Сайт и админка: Next.js, next-intl, Tailwind                      |
+| [backend/](backend/)                          | API: NestJS + PostgreSQL (Prisma), вход, фото, Telegram-бот, cron |
+| `docker-compose.yml`                          | Локальные Postgres и Mailpit (почта для входа в админку)          |
+| `docker-compose.prod.yml`, [deploy/](deploy/) | Всё на сервере: сайт, API, база, https, резервные копии           |
 
 ## Запуск локально
 
@@ -26,3 +27,11 @@ npm run dev                               # сайт на http://localhost:3000
 ```
 
 Подробнее — [backend/README.md](backend/README.md) и [frontend/README.md](frontend/README.md).
+
+## На сервере
+
+Сервер и домен — по [frontend/docs/SETUP.md](frontend/docs/SETUP.md) (в начале — чек-лист по шагам). Запуск и каждое обновление — одна команда:
+
+```bash
+./deploy/deploy.sh
+```

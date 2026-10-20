@@ -60,7 +60,7 @@ scripts/                   seed, webhook бота
 
 ## Сервер
 
-Бэкенду нужен постоянно работающий процесс и диск для `uploads/` (Vercel для этого не подходит) — VPS с Docker. Пошаговая инструкция для владельца — `frontend/docs/SETUP.md`, раздел 1.
+Бэкенду нужен постоянно работающий процесс и диск для `uploads/` — VPS с Docker, там же работает и сайт (`docker-compose.prod.yml`, `deploy/deploy.sh`). Пошаговая инструкция для владельца — `frontend/docs/SETUP.md`, раздел 1.
 
 ```
 Dockerfile                    образ: npm ci → prisma generate → nest build; запуск node dist/main

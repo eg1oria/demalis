@@ -37,7 +37,7 @@ npm run dev
 
 `npm run dev` перед запуском сам проверяет библиотеки, настройки в `.env.local` и что бэкенд отвечает, и пишет, что сделать, если что-то не так.
 
-Сервер для бэкенда и Vercel для сайта — в [docs/SETUP.md](docs/SETUP.md). Метрика, Search Console, Яндекс Вебмастер, Google Ads — в [docs/SEO.md](docs/SEO.md).
+Сервер для сайта и бэкенда (Docker, `../deploy/deploy.sh`) — в [docs/SETUP.md](docs/SETUP.md). Метрика, Search Console, Яндекс Вебмастер, Google Ads — в [docs/SEO.md](docs/SEO.md).
 
 ## Команды
 
@@ -80,7 +80,7 @@ src/app/api/       маршруты: счётчик вариантов, клик
 src/lib/plans.ts   тарифы: Pro на дату, продвижение, напоминание о конце Pro
 src/proxy.ts       редирект на язык (/ → /ru)
 public/places_template.csv  шаблон для импорта объектов
-docs/SETUP.md      сервер для бэкенда, Vercel, Telegram и куда вставить ключи
+docs/SETUP.md      сервер, домен, Telegram и куда вставить ключи
 ```
 
 ## Переводы
